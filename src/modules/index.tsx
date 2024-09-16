@@ -2,7 +2,7 @@
 import React from "react";
 import { RouterProvider } from "react-router-dom";
 import { Provider } from 'react-redux';
-import { store } from '../providers/redux/store';
+import { store } from '../store';
 
 // Routes
 import { router } from "../routes";

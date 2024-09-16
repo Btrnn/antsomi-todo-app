@@ -9,7 +9,7 @@ import {
   addTask, 
   updateTask,
   reorderTask, 
-  deleteTask } from '../../../../../providers/redux';
+  deleteTask } from 'store';
 
 
 // Icons
@@ -41,7 +41,7 @@ import React, { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 // Models
-import { Task } from "../../../../../models";
+import { Task } from "models";
 import { Group } from "models/Group";
 import { User } from "models/User";
 
@@ -68,19 +68,20 @@ export const TaskList: React.FC<TaskList> = (props) => {
         isEdit: false,
         edittedTaskIndex: 0,
     })
+    const {inputTask} = state || {}
 
     // Store
     const dispatch: AppDispatch = useDispatch();
     const taskList = useSelector((state: RootState) => state.task.taskList);
 
     const onClickAddTask = () => {
-        if (state.inputTask.length === 0)
+        if (inputTask.length === 0)
             setState(prev => ({ ...prev, error: "This field is required", inputTask: "" }))
-        else if (state.inputTask.length > 255) {
+        else if (inputTask.length > 255) {
             setState(prev => ({ ...prev, error: "Name is too long, max length is 255 characters", inputTask: "" }))
         } else {
             const newTask = {
-              name: state.inputTask,
+              name: inputTask,
               description: "This task is for doing something",
               estTime: "",
               startDate: new Date(),
@@ -151,7 +152,7 @@ export const TaskList: React.FC<TaskList> = (props) => {
     };
 
     return (
-        <div>
+        <>
             <div className="flex-auto h-screen w-full">
                 <div className="items-center mb-5 overflow-hidden">
                     {renderTasks(taskList)}
@@ -160,7 +161,7 @@ export const TaskList: React.FC<TaskList> = (props) => {
                     <Input
                         className="p-2"
                         placeholder="Add new task"
-                        value={state.inputTask}
+                        value={inputTask}
                         onChange={onChangeInputTask}
                     />
                     <Button className="w-9 h-9" onClick={onClickAddTask}>
@@ -169,6 +170,6 @@ export const TaskList: React.FC<TaskList> = (props) => {
                 </div>
                 <div className="text-red-400">{state.error}</div>
             </div>
-        </div>
+        </>
     );
 };

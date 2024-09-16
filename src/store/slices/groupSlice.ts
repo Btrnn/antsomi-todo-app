@@ -4,6 +4,7 @@ import { Group } from 'models/Group'
 
 interface GroupState {
   groupList: Group[];
+  groupActived: number
 }
 
 const initialState: GroupState = {
@@ -12,6 +13,7 @@ const initialState: GroupState = {
     {id: 1, name: 'Doing', position: 1, created_at: new Date(), type: 'Status', color: '#ffc53d'},
     {id: 2, name: 'Done', position: 2, created_at: new Date(), type: 'Status', color: '#95de64'},
   ],
+  groupActived: 0
 };
 
 

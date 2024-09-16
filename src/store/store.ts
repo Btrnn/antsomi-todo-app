@@ -1,7 +1,10 @@
+// Libraries
 import { configureStore } from '@reduxjs/toolkit'
-import groupReducer from './groupSlice'
-import userReducer from './userSlice'
-import taskReducer from './taskSlice'
+
+// Slices
+import groupReducer from './slices/groupSlice'
+import userReducer from './slices/userSlice'
+import taskReducer from './slices/taskSlice'
 
 export const store = configureStore({
   reducer: {
@@ -9,6 +12,7 @@ export const store = configureStore({
     user: userReducer,
     task: taskReducer,
   },
+  devTools: true
 })
 
 export type RootState = ReturnType<typeof store.getState>

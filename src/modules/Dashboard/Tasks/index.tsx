@@ -41,7 +41,8 @@ import {
   AppDispatch,
   addGroup, 
   updateGroup, 
-  deleteGroup } from '../../../providers/redux';
+  deleteGroup 
+} from '../../../store';
 
 // Models
 import { Task } from "../../../models";
@@ -127,6 +128,7 @@ export const Groups: React.FC<GroupProps> = (props) => {
   })
 
 
+  // Handlers
   const onChangeInputGroup = (event: any) => {
     setState(prev => ({ ...prev, inputGroupName: event.target.value }))
   };
@@ -148,7 +150,7 @@ export const Groups: React.FC<GroupProps> = (props) => {
 
 
   return(
-    <Flex justify={'space-between'} align={'flex-start'} className='gap-5 overflow-x-auto w-full flex-shrink-0'>
+    <Flex justify='space-between' align={'flex-start'} className='gap-5 overflow-x-auto w-full flex-shrink-0'>
       <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
         <Input
             className="p-2"

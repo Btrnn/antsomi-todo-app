@@ -9,7 +9,7 @@ import {
   addUser, 
   updatedUser, 
   deleteUser,
-  updateTask, } from '../../../../../providers/redux';
+  updateTask, } from '../../../../../store';
 
 // Icons
 import {
