@@ -1,93 +1,184 @@
 // Libraries
-import { AddIcon } from "components/icons";
-import { Button } from "components/ui";
-import { TASK_STATUS, TASK_STATUS_KEY } from "../../../constants";
+import { nanoid } from 'nanoid'
+
+// Icons
+import {
+  AddIcon,
+  DeleteIcon,
+  DoneIcon,
+  FilterIcon,
+  DragIcon,
+  EditIcon,
+} from "components/icons";
+
+// Components
+import {
+  Button,
+  Input,
+  Select,
+  Popconfirm,
+  notification,
+  FlexProps, 
+  SegmentedProps,
+  Flex,
+  Tag,
+  Modal,
+  ColorPicker,
+  Color
+} from "components/ui";
+
+// Constants
+import { TASK_STATUS_KEY } from "../../../constants";
+
+// Libraries
 import React, { useState } from "react";
+import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
+import { useSelector, useDispatch } from 'react-redux';
 
-interface TasksProps {}
+// Providers
+import { 
+  RootState, 
+  AppDispatch,
+  addGroup, 
+  updateGroup, 
+  deleteGroup } from '../../../providers/redux';
 
-interface TaskItemProps {
-  id: number;
-  name: string;
-  index: number;
-  status: any;
+// Models
+import { Task } from "../../../models";
+import { Group } from 'models/Group';
+import { User } from 'models/User';
 
-  // callback
-  onClick: (task: any) => void;
+// Utils
+import { reorder } from "utils";
+
+// 
+import { TaskList } from './components/TaskList';
+
+
+interface TasksProp{}
+
+interface GroupProps {
+  id: any;
+  groupTitle: string;
+  type: string;
+  tasks: Task[];
+  onChangeName: [any, string];
+  onRemove: any; 
 }
 
-export const Tasks: React.FC<TasksProps> = (props) => {
-  const { ...restProps } = props;
+export const Tasks:React.FC<TasksProp> = (props) => {
+  
+  // State
+  const [state, setState] = useState({
+    groupType: 0,
+    groupTitle: "",
+    tasks: [],
+    error: "",
+    groupList: [
+      {id: 0, title: 'Status'},
+      {id: 1, title: 'Assignee'},
+      {id: 2, title: 'Priority'}
+    ]
+  })
 
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      name: "Task 1",
-      status: TASK_STATUS_KEY.TODO,
-    },
-    {
-      id: 2,
-      name: "Task 2",
-      status: TASK_STATUS_KEY.DOING,
-    },
-    {
-      id: 3,
-      name: "Task 3",
-      status: TASK_STATUS_KEY.DONE,
-    },
-  ]);
-  const [clickedTask, setClickedTask] = useState<any>(undefined);
-
-  const renderTasks = () => {
-    return tasks
-      ?.filter((task) => task.status === TASK_STATUS_KEY.DOING)
-      .map((task, index) => {
-        return (
-          <TaskItem
-            key={index}
-            {...task}
-            index={index}
-            onClick={(task) => {
-              setClickedTask(task.name);
-            }}
-          />
-        );
-      });
-  };
-
-  const onClickReversTasks = () => {
-    setTasks([...tasks.reverse()]);
-  };
+  const onChangeGroupType = (value: any) => {
+    setState(prev => ({...prev, groupType: value}))
+  }
 
   return (
-    <div className="flex items-center gap-2.5">
-      {renderTasks()}
-
-      <Button type="primary" shape="round" onClick={onClickReversTasks}>
-        <AddIcon fill="#fff" />
-        Reverse tasks
-      </Button>
-
-      {clickedTask ? `Task is Clicked: ${clickedTask}` : `No task is clicked`}
+    <div>
+      <Select
+        defaultValue="Status"
+        className="w-28 h-9"
+        onChange={onChangeGroupType}
+        suffixIcon={<FilterIcon className="h-5" />}
+        options = {state.groupList.map(group => ({
+          value: group.id,  
+          label: group.title   
+        }))}
+      />
+      <Groups
+        id = {state.groupType} 
+        groupTitle = {""}
+        type = {''}
+        tasks = {[]}
+        onChangeName = {[1,'']}
+        onRemove = {''}
+      />
     </div>
-  );
-};
+  )
+}
 
-export const TaskItem: React.FC<TaskItemProps> = (props) => {
-  const { id, name = "Default name", index, status, onClick } = props;
 
-  return (
-    <div
-      key={id}
-      className={`flex flex-col gap-5 shadow-md p-3 rounded hover:bg-slate-300`}
-      style={{
-        backgroundColor: (TASK_STATUS as any)[status]?.color,
-      }}
-      onClick={() => onClick({ id, name, hello: "world" })}
-    >
-      <div className={``}>
-        {`${index + 1}.`} {name}
+export const Groups: React.FC<GroupProps> = (props) => {
+  const {id, groupTitle, type, tasks, onChangeName, onRemove} = (props);
+
+
+  // Store
+  const dispatch: AppDispatch = useDispatch();
+  const groupList = useSelector((state: RootState) => state.group.groupList);
+
+  // State
+  const [state, setState] = useState({
+    groupType: groupTitle,
+    tasks: [],
+    error: "",
+    inputGroupName: "",
+  })
+
+
+  const onChangeInputGroup = (event: any) => {
+    setState(prev => ({ ...prev, inputGroupName: event.target.value }))
+  };
+
+
+  const onClickAddGroup = () => {
+    const newGroup = { name: state.inputGroupName, type: type};
+    dispatch(addGroup(newGroup));
+  };
+
+  const onChangeSetColor = (value: Color, index: number) =>{
+    if (typeof value === 'string') 
+      dispatch(updateGroup({id: index, updatedGroup: {color: value}}))
+    else if (value && 'toHexString' in value) 
+      dispatch(updateGroup({id: index, updatedGroup: {color: value.toHexString()}}))
+    else
+      dispatch(updateGroup({id: index, updatedGroup: {color: '#ffff'}}))
+  }
+
+
+  return(
+    <Flex justify={'space-between'} align={'flex-start'} className='gap-5 overflow-x-auto w-full flex-shrink-0'>
+      <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
+        <Input
+            className="p-2"
+            placeholder="Add new group"
+            value={state.inputGroupName}
+            onChange={onChangeInputGroup}
+        />
+        <Button className="w-9 h-9" onClick={onClickAddGroup}>
+            <AddIcon />
+        </Button>
       </div>
-    </div>
-  );
+      {groupList.map((group, index) =>{
+        return (
+          <div key={index} className='flex-shrink-0 w-1/5'>
+            <ColorPicker trigger="hover" onChange={(value) => onChangeSetColor(value, index)}>
+              <Tag bordered ={false} color= {group.color}>
+                {group.name}
+              </Tag>
+            </ColorPicker>
+            <TaskList
+              groupInfo = {group}
+            />
+          </div>
+        )
+      })}
+    </Flex>
+  )
+
 };
+
+
+
+

@@ -12,10 +12,7 @@ type UseCounterReturn = {
   setCount: Dispatch<SetStateAction<number>>;
 };
 
-export function useCounter(
-  initialValue?: number,
-  step: number = 1
-): UseCounterReturn {
+export function useCounter(initialValue?: number,step: number = 1): UseCounterReturn {
   const [count, setCount] = useState(initialValue ?? 0);
 
   const increment = useCallback(() => {

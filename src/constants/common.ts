@@ -8,16 +8,16 @@ export const TASK_STATUS = {
   [TASK_STATUS_KEY.TODO]: {
     key: TASK_STATUS_KEY.TODO,
     label: "To Do",
-    color: "pink",
+    color: "#ffa39e",
   },
   [TASK_STATUS_KEY.DOING]: {
     key: TASK_STATUS_KEY.DOING,
     label: "Doing",
-    color: "#f8961e",
+    color: "#fffb8f",
   },
   [TASK_STATUS_KEY.DONE]: {
     key: TASK_STATUS_KEY.DONE,
     label: "Done",
-    color: "#90be6d",
+    color: "#b7eb8f",
   },
 };

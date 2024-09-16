@@ -7,6 +7,11 @@ export const THEME: ThemeConfig = {
     colorInfo: "#005fb8",
     borderRadius: 10,
   },
+  "components": {
+    "Tag": {
+      "borderRadiusSM": 13
+    }
+  },
 };
 
 export const globalToken = theme.getDesignToken(THEME);

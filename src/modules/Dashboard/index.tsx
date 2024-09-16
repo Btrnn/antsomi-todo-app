@@ -30,12 +30,12 @@ const MENU_ITEMS: MenuProps["items"] = [
 ];
 
 export const Dashboard: React.FC<DashboardProps> = (props) => {
-  const { ...restProps } = props;
+  //const { ...restProps } = props;
   const location = useLocation();
   console.log("🚀 ~ location:", location);
 
   console.log("render dashboard :: ");
-  const items = MENU_ITEMS.map((item: any) => {
+  const items = MENU_ITEMS?.map((item: any) => {
     return {
       ...item,
       label: <NavLink to={item?.key}>{item?.label}</NavLink>,
@@ -65,7 +65,9 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         />
       </Sider>
       <Layout className="h-screen">
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Header className="flex justify-center" style={{ padding: 5, background: colorBgContainer }}>
+          TO DO APP
+        </Header> 
         <Content style={{ margin: "24px 16px 0" }}>
           <div
             style={{
