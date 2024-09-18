@@ -50,10 +50,14 @@ const taskSlice = createSlice({
       }
     },
 
-    deleteTask(state, action: PayloadAction<number>) {
-      state.taskList = state.taskList.filter(
-        (task) => task.id !== action.payload
-      );
+    deleteTaskByID(state, action: PayloadAction<{id: React.Key}>) {
+      const { id } = action.payload;
+      state.taskList = state.taskList.filter((task) => task.id !== id);
+    },
+
+    deleteTaskByGroupID(state, action: PayloadAction<{groupID: React.Key}>) {
+      const { groupID } = action.payload;
+      state.taskList = state.taskList.filter((task) => task.status_id !== groupID);
     },
 
     reorderTask(state, action: PayloadAction<{source: any, destination: any, taskID: string}>){
@@ -68,15 +72,13 @@ const taskSlice = createSlice({
           state.taskList = [...remainingList,...reorderSingleArray(destinationList, source.index, destination.index)];
         else{
           state.taskList = [...remainingList, ...reorderDoubleArrays(sourceList, destinationList, source.index, destination.index)];
+          const task = state.taskList.find((task) => String(task.id) === taskID);
+          if (task) {
+            Object.assign(task, {status_id: destination.droppableId});
+          }
         }
-
-        const task = state.taskList.find((task) => String(task.id) === taskID);
-        if (task) {
-          Object.assign(task, {status_id: destination.droppableId});
-        }
-        
   },
 }});
 
-export const { addTask, updateTask, deleteTask, reorderTask } = taskSlice.actions;
+export const { addTask, updateTask, deleteTaskByID, deleteTaskByGroupID, reorderTask } = taskSlice.actions;
 export default taskSlice.reducer;

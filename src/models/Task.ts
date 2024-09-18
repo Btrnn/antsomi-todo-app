@@ -5,7 +5,7 @@ export interface Task {
   name: string;
   description: string;
   status_id: React.Key;
-  assignee_id: React.Key;
+  assignee_id: React.Key|undefined;
   est_time: string;
   start_date: Date;
   end_date: Date;

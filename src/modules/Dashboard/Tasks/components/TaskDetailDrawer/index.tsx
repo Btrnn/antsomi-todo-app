@@ -43,6 +43,7 @@ type FormType = Task;
 export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
   const { task, isOpened, isClosed } = props;
 
+  // State
   const [state, setState] = useState({
     isOpen: isOpened,
   });
@@ -67,6 +68,8 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
     });
   }, [task, isOpen]);
 
+
+  // Handlers
   const onFinishForm = (values: FormType) => {
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
     setState((prev) => ({ ...prev, isOpen: false }));

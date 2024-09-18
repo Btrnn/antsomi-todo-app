@@ -28,7 +28,8 @@ import {
   addGroup,
   updateGroup,
   deleteGroup,
-  reorderTask
+  reorderTask,
+  deleteTaskByGroupID
 } from "store";
 
 // Models
@@ -54,6 +55,7 @@ export const Groups: React.FC<GroupProps> = (props) => {
   // Store
   const dispatch: AppDispatch = useDispatch();
   const groupList = useSelector((state: RootState) => state.group.groupList);
+  const taskList = useSelector((state: RootState) => state.task.taskList);
 
   // State
   const [state, setState] = useState({
@@ -85,8 +87,9 @@ export const Groups: React.FC<GroupProps> = (props) => {
     confirmDelete = true;
   };
 
-  const handleDeleteGroup = (groupID: any) => {
-    dispatch(deleteGroup(groupID));
+  const handleDeleteGroup = (groupID: React.Key) => {
+    dispatch(deleteTaskByGroupID({groupID}));
+    dispatch(deleteGroup({id: groupID}));
     confirmDelete = false;
   };
 
@@ -97,14 +100,13 @@ export const Groups: React.FC<GroupProps> = (props) => {
 
 
   const onClickAction = (event: any, groupID: any) => {
-    if (event.key == 1) {
-      console.log("Rename");
+    if (event.key == 2) {
       setState((prev) => ({
         ...prev,
         isRenaming: true,
         groupSelected: groupID,
       }));
-    } else if (event.key == 2 && confirmDelete) {
+    } else if (event.key == 1 && confirmDelete) {
       handleDeleteGroup(groupID);
     }
   };
@@ -138,10 +140,6 @@ export const Groups: React.FC<GroupProps> = (props) => {
 
   const items: MenuProps["items"] = [
     {
-      label: <div className="flex p-2">Rename</div>,
-      key: "1",
-    },
-    {
       label: (
         <Popconfirm
           placement="topLeft"
@@ -154,8 +152,17 @@ export const Groups: React.FC<GroupProps> = (props) => {
           <div className="flex p-2">Delete</div>
         </Popconfirm>
       ),
+      key: "1",
+    },
+    {
+      label: <div className="flex p-2">Rename</div>,
       key: "2",
     },
+
+    // {
+    //   label: (<div className="flex p-2">Hide</div>),
+    //   key: "3",
+    // },
   ];
 
   return (

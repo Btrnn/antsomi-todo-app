@@ -58,7 +58,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
     
   });
 
-  // Redux Store
+  // Store
   const userList = useSelector((state: RootState) => state.user.userList);
   const groupList = useSelector((state: RootState) => state.group.groupList);
 

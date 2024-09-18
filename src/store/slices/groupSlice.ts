@@ -6,6 +6,9 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 // Models
 import { Group } from 'models/Group'
 
+// Store
+import taskSlice from "./taskSlice";
+
 interface GroupState {
   groupList: Group[];
   groupActived: number
@@ -45,8 +48,9 @@ const groupSlice = createSlice({
       }
     },
 
-    deleteGroup(state, action: PayloadAction<number>) {
-      state.groupList = state.groupList.filter(group => group.id !== action.payload);
+    deleteGroup(state, action: PayloadAction<{id: React.Key}>) {
+      const { id } = action.payload;
+      state.groupList = state.groupList.filter((group) => group.id !== id);
     },
   },
 });
