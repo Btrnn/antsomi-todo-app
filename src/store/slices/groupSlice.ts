@@ -28,7 +28,7 @@ const groupSlice = createSlice({
     addGroup(state, action: PayloadAction<Omit<Group, 'id' | 'position' | 'created_at' | 'color'>>) {
       const newGroup: Group = {
         id: nanoid(),
-        position: Math.max(...state.groupList.map(group => group.position), 0) + 1, 
+        position: state.groupList.length, 
         created_at: new Date(),
         color: '#597ef7',
         ...action.payload,

@@ -2,13 +2,16 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { nanoid } from "nanoid";
+import React from "react";
 
 // Models
 import { Task } from "models/Task";
 
 
 // Utils
-import { reorder } from "utils";
+import { reorderSingleArray, reorderDoubleArrays } from "utils";
+import { stat } from "fs";
+
 
 interface TaskState {
   taskList: Task[];
@@ -28,7 +31,7 @@ const taskSlice = createSlice({
     ) {
       const newTask: Task = {
         id: nanoid(),
-        position: Math.max(...state.taskList.map((group) => group.position), 0) + 1,
+        position: state.taskList.length,
         created_at: new Date(),
         ...action.payload,
       };
@@ -38,10 +41,10 @@ const taskSlice = createSlice({
 
     updateTask(
       state,
-      action: PayloadAction<{ id: React.Key; updatedTask: Partial<Task> }>
+      action: PayloadAction<{ id: string; updatedTask: Partial<Task> }>
     ) {
       const { id, updatedTask } = action.payload;
-      const task = state.taskList.find((task) => task.id === id);
+      const task = state.taskList.find((task) => String(task.id) === id);
       if (task) {
         Object.assign(task, updatedTask);
       }
@@ -53,13 +56,27 @@ const taskSlice = createSlice({
       );
     },
 
-    reorderTask(state, action: PayloadAction<{source: number, destination: number}>){
-        const { source, destination } = action.payload;
-        state.taskList = reorder(state.taskList, source, destination);
-        console.log(state.taskList)
-    }
+    reorderTask(state, action: PayloadAction<{source: any, destination: any, taskID: string}>){
+
+        const { source, destination, taskID } = action.payload;
+      
+        const destinationList = state.taskList.filter((task) => String(task.status_id) == destination.droppableId);
+        const sourceList = state.taskList.filter((task) => String(task.status_id) === source.droppableId);
+        const remainingList = state.taskList.filter((task) => (String(task.status_id) !== destination.droppableId && String(task.status_id) !== source.droppableId));
+
+        if(source.droppableId === destination.droppableId)
+          state.taskList = [...remainingList,...reorderSingleArray(destinationList, source.index, destination.index)];
+        else{
+          state.taskList = [...remainingList, ...reorderDoubleArrays(sourceList, destinationList, source.index, destination.index)];
+        }
+
+        const task = state.taskList.find((task) => String(task.id) === taskID);
+        if (task) {
+          Object.assign(task, {status_id: destination.droppableId});
+        }
+        
   },
-});
+}});
 
 export const { addTask, updateTask, deleteTask, reorderTask } = taskSlice.actions;
 export default taskSlice.reducer;

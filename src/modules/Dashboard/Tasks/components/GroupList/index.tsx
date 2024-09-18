@@ -28,6 +28,7 @@ import {
   addGroup,
   updateGroup,
   deleteGroup,
+  reorderTask
 } from "store";
 
 // Models
@@ -35,6 +36,7 @@ import { Task } from "models";
 
 //
 import { TaskList } from "../TaskList";
+import { some } from "lodash";
 
 
 
@@ -93,6 +95,7 @@ export const Groups: React.FC<GroupProps> = (props) => {
     setState((prev) => ({...prev, isRenaming: false, groupNewName: ""}));
   };
 
+
   const onClickAction = (event: any, groupID: any) => {
     if (event.key == 1) {
       console.log("Rename");
@@ -118,6 +121,19 @@ export const Groups: React.FC<GroupProps> = (props) => {
       );
     else
       dispatch(updateGroup({ id: groupID, updatedGroup: { color: "#ffff" } }));
+  };
+
+  const onDragEnd = (result: any) => {
+    const { source, destination, draggableId } = result;
+    console.log(result)
+    if (!destination || source === destination) return;
+    dispatch(
+      reorderTask({
+        source: source,
+        destination: destination,
+        taskID: draggableId,
+      })
+    );
   };
 
   const items: MenuProps["items"] = [
@@ -160,8 +176,8 @@ export const Groups: React.FC<GroupProps> = (props) => {
           <AddIcon />
         </Button>
       </div>
-      {groupList.map((group, index) => {
-        return (
+      <DragDropContext onDragEnd={onDragEnd}>
+        {groupList.map((group, index) => (
           <div key={index} className="flex-shrink-0 w-1/5">
             <Dropdown
               menu={{
@@ -192,10 +208,18 @@ export const Groups: React.FC<GroupProps> = (props) => {
                 </div>
               )}
             </Dropdown>
-            <TaskList groupInfo={group} />
+            <Droppable key={index} droppableId={String(group.id)}>
+              {(provided) => (
+                <div ref={provided.innerRef}>
+                  <TaskList groupInfo={group} />
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
           </div>
-        );
-      })}
+        ))}
+        ;
+      </DragDropContext>
     </Flex>
   );
 };
