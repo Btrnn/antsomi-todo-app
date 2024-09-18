@@ -2,7 +2,7 @@ import React from "react";
 
 
 export interface Group {
-  id: number;
+  id: React.Key;
   name: string;
   position: number;
   created_at: Date;

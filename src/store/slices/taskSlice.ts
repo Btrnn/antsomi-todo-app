@@ -1,9 +1,14 @@
+// Libraries
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { Task } from "models/Task";
 import { nanoid } from "nanoid";
 
-import { reorder } from "../../utils";
+// Models
+import { Task } from "models/Task";
+
+
+// Utils
+import { reorder } from "utils";
 
 interface TaskState {
   taskList: Task[];

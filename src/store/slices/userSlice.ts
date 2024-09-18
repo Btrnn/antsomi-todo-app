@@ -1,5 +1,9 @@
+// Libraries
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import { nanoid } from 'nanoid';
+
+// Models
 import { User } from 'models/User';
 
 interface UserState {
@@ -8,9 +12,9 @@ interface UserState {
 
 const initialState: UserState = {
   userList: [
-    {id: 0, name: 'User A', created_at: new Date(), email: 'a123@gmail.com'},
-    {id: 1, name: 'User B', created_at: new Date(), email: 'b123@gmail.com'},
-    {id: 2, name: 'User C', created_at: new Date(), email: 'c123@gmail.com'},
+    {id: nanoid(), name: 'User A', created_at: new Date(), email: 'a123@gmail.com'},
+    {id: nanoid(), name: 'User B', created_at: new Date(), email: 'b123@gmail.com'},
+    {id: nanoid(), name: 'User C', created_at: new Date(), email: 'c123@gmail.com'},
   ],
 };
 
@@ -21,7 +25,7 @@ const userSlice = createSlice({
   reducers: {
     addUser(state, action: PayloadAction<Omit<User, 'id' | 'created_at'>>) {
       const newUser: User = {
-        id: Math.max(...state.userList.map(user => user.id), 0) + 1,
+        id: nanoid(),
         created_at: new Date(),
         ...action.payload,
       };

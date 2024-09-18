@@ -1,1 +1,1 @@
-export { Input } from 'antd';
+export { Input, InputNumber } from 'antd';

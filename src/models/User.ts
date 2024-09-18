@@ -1,7 +1,7 @@
 import React from "react";
 
 export interface User {
-  id: number;
+  id: React.Key;
   name: string;
   email: string;
   created_at: Date;

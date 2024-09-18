@@ -12,6 +12,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "antd": "^5.20.6",
+    "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",

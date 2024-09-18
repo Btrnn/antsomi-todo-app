@@ -1,6 +1,8 @@
 // Libraries
 import { nanoid } from "nanoid";
 import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from "react";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 // Providers
 import { 
@@ -34,39 +36,35 @@ import {
     Flex,
     Modal,
     Form,
+    Drawer,
 } from "components/ui";
-
-// Libraries
-import React, { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 // Models
 import { Task } from "models";
 import { Group } from "models/Group";
-import { User } from "models/User";
+
 
 // Utils
 import { reorder } from "utils";
 
 // 
 import { TaskItem } from "../TaskItem";
-import { Divider } from "antd";
+import { TaskDetail } from "../TaskDetailDrawer";
 
 interface TaskList {
-    groupInfo: Group;
+  groupInfo: Group;
 }
 
 export const TaskList: React.FC<TaskList> = (props) => {
     // State
     const { groupInfo } = props;
 
-    //const [tasks, setTasks] = useState<Task[]>([]);
+    const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
 
     const [state, setState] = useState({
         inputTask: "",
         error: "",
-        isEdit: false,
-        edittedTaskIndex: 0,
+        isOpen: false,
     })
     const {inputTask} = state || {}
 
@@ -79,14 +77,18 @@ export const TaskList: React.FC<TaskList> = (props) => {
             setState(prev => ({ ...prev, error: "This field is required", inputTask: "" }))
         else if (inputTask.length > 255) {
             setState(prev => ({ ...prev, error: "Name is too long, max length is 255 characters", inputTask: "" }))
-        } else {
+        }
+        else if(taskList.some(task => task.name === inputTask)) {
+            setState((prev) => ({ ...prev, error: "Task already exists!" }));
+        }
+        else {
             const newTask = {
               name: inputTask,
-              description: "This task is for doing something",
-              estTime: "",
-              startDate: new Date(),
-              endDate: new Date(),
-              assignee_id: -1,
+              description: "",
+              est_time: "",
+              start_date: new Date(),
+              end_date: new Date(),
+              assignee_id: '',
               status_id: groupInfo.id,
             };
             dispatch(addTask(newTask));
@@ -95,11 +97,19 @@ export const TaskList: React.FC<TaskList> = (props) => {
         }
     };
 
-    const onClickDeleteTask = (index: number) => {
-      dispatch(deleteTask(index));
+    const onClickShowDetail = (taskID: React.Key) => {
+      setState((prev) => ({ ...prev, isOpen: true }));
+      setSelectedTask(taskList.find((task) => task.id === taskID));
     };
 
+    // const onClickDeleteTask = (index: number) => {
+    //   dispatch(deleteTask(index));
+    // };
 
+    const onCloseTaskDetail = () => {
+      setState((prev) => ({ ...prev, isOpen: false}));
+      setSelectedTask(undefined)
+    }
 
     const onChangeInputTask = (event: any) => {
         setState(prev => ({ ...prev, inputTask: event.target.value }))
@@ -112,12 +122,12 @@ export const TaskList: React.FC<TaskList> = (props) => {
     };
 
     const renderTasks = (tasks: Task[]) => {
-      return taskList?.filter((task) => task.status_id === groupInfo.id).length >
-        0 ? (
+      return taskList?.filter((task) => task.status_id === groupInfo.id)
+        .length > 0 ? (
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="tasks">
             {(tasksProvided) => (
-              <div ref={tasksProvided.innerRef} className="mt-10">
+              <div ref={tasksProvided.innerRef} >
                 {tasks
                   .filter((task) => task.status_id === groupInfo.id)
                   .map((task, index) => {
@@ -129,7 +139,7 @@ export const TaskList: React.FC<TaskList> = (props) => {
                       >
                         {(taskProvided) => (
                           <div
-                            className="items-center gap-y-2 overflow-hidden"
+                            className="items-center overflow-hidden mt-5"
                             ref={taskProvided.innerRef}
                             {...taskProvided.draggableProps}
                             {...taskProvided.dragHandleProps}
@@ -137,6 +147,9 @@ export const TaskList: React.FC<TaskList> = (props) => {
                             <TaskItem
                               index={index}
                               task={task}
+                              onClickShowDetail={() =>
+                                onClickShowDetail(task.id)
+                              }
                             />
                           </div>
                         )}
@@ -148,28 +161,38 @@ export const TaskList: React.FC<TaskList> = (props) => {
             )}
           </Droppable>
         </DragDropContext>
-      ):(<></>);
+      ) : (
+        <></>
+      );
     };
 
     return (
-        <>
-            <div className="flex-auto h-screen w-full">
-                <div className="items-center mb-5 overflow-hidden">
-                    {renderTasks(taskList)}
-                </div>
-                <div className="flex gap-1">
-                    <Input
-                        className="p-2"
-                        placeholder="Add new task"
-                        value={inputTask}
-                        onChange={onChangeInputTask}
-                    />
-                    <Button className="w-9 h-9" onClick={onClickAddTask}>
-                        <AddIcon />
-                    </Button>
-                </div>
-                <div className="text-red-400">{state.error}</div>
-            </div>
-        </>
+      <>
+        <div className="flex-auto h-screen w-full">
+          <div className="items-center overflow-hidden">
+            {renderTasks(taskList)}
+          </div>
+          <div className="flex gap-1 mt-5">
+            <Input
+              className="p-2"
+              placeholder="Add new task"
+              value={inputTask}
+              onChange={onChangeInputTask}
+              onPressEnter={onClickAddTask}
+            />
+            <Button className="w-9 h-9" onClick={onClickAddTask}>
+              <AddIcon />
+            </Button>
+          </div>
+          <div className="text-red-400">{state.error}</div>
+        </div>
+        {selectedTask && (
+          <TaskDetail
+            task={selectedTask}
+            isOpened={state.isOpen}
+            isClosed={onCloseTaskDetail}
+          />
+        )}
+      </>
     );
 };
