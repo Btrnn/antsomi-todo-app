@@ -2,11 +2,32 @@
 import React, { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  DndContext,
+  useDroppable,
+  useDraggable,
+  UniqueIdentifier,
+  DragOverlay,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  closestCenter,
+  DragEndEvent,
+  closestCorners,
+  rectIntersection,
+  pointerWithin,
+} from "@dnd-kit/core";
+import {
+  useSortable,
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // Icons
-import {
-  AddIcon,
-} from "components/icons";
+import { AddIcon, DeleteIcon, DragIcon, EditIcon } from "components/icons";
 
 // Components
 import {
@@ -29,7 +50,8 @@ import {
   updateGroup,
   deleteGroup,
   reorderTask,
-  deleteTaskByGroupID
+  deleteTaskByGroupID,
+  reorderGroup,
 } from "store";
 
 // Models
@@ -37,20 +59,34 @@ import { Task } from "models";
 
 //
 import { TaskList } from "../TaskList";
-import { some } from "lodash";
+import { TaskItem } from "../TaskItem";
+import { GroupItem } from "../GroupItem";
 
+import {
+  defaultDropAnimationSideEffects,
+  DropAnimation,
+} from "components/ui/DragDrop";
 
-
-interface GroupProps {
+interface GroupsProps {
   id: any;
   groupTitle: string;
   type: string;
   tasks: Task[];
 }
 
-export const Groups: React.FC<GroupProps> = (props) => {
+const dropAnimation: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: "0.5",
+      },
+    },
+  }),
+};
+
+export const Groups: React.FC<GroupsProps> = (props) => {
   const { id, groupTitle, type, tasks } = props;
-  let confirmDelete = false;
+  const sensors = useSensors(useSensor(MouseSensor));
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -67,6 +103,7 @@ export const Groups: React.FC<GroupProps> = (props) => {
     isRenaming: false,
     groupSelected: "",
     groupNewName: "",
+    activeTask: null,
   });
 
   // Handlers
@@ -74,159 +111,90 @@ export const Groups: React.FC<GroupProps> = (props) => {
     setState((prev) => ({ ...prev, inputGroupName: event.target.value }));
   };
 
-  const onChangeGroupNewName = (event: any) => {
-    setState((prev) => ({ ...prev, groupNewName: event.target.value }));
-  };
-
   const onClickAddGroup = () => {
     const newGroup = { name: state.inputGroupName, type: type };
     dispatch(addGroup(newGroup));
   };
 
-  const onConfirmDelete = () => {
-    confirmDelete = true;
-  };
+  const onDragEnd = (event: any) => {
+    const { active, over } = event;
 
-  const handleDeleteGroup = (groupID: React.Key) => {
-    dispatch(deleteTaskByGroupID({groupID}));
-    dispatch(deleteGroup({id: groupID}));
-    confirmDelete = false;
-  };
+    if (!over) return;
 
-  const onEnterRenameGroup = (groupID: React.Key) => {
-    dispatch(updateGroup({ id: groupID, updatedGroup: { name: state.groupNewName } }));
-    setState((prev) => ({...prev, isRenaming: false, groupNewName: ""}));
-  };
-
-
-  const onClickAction = (event: any, groupID: any) => {
-    if (event.key == 2) {
-      setState((prev) => ({
-        ...prev,
-        isRenaming: true,
-        groupSelected: groupID,
-      }));
-    } else if (event.key == 1 && confirmDelete) {
-      handleDeleteGroup(groupID);
+    if (active.data.current.containerId !== "" && over.data.current.containerId !== "") {
+      dispatch(reorderTask({ source: active, destination: over }));
+    } else {
+      dispatch(reorderGroup({ source: active, destination: over }));
+      console.log("group: ");
     }
+
+    setState((prev) => ({ ...prev, activeTask: null }));
   };
 
-  const onChangeSetColor = (value: Color, groupID: React.Key) => {
-    if (typeof value === "string")
-      dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
-    else if (value && "toHexString" in value)
-      dispatch(
-        updateGroup({
-          id: groupID,
-          updatedGroup: { color: value.toHexString() },
-        })
-      );
-    else
-      dispatch(updateGroup({ id: groupID, updatedGroup: { color: "#ffff" } }));
+  const onDragStart = (event: any) => {
+    setState((prev) => ({
+      ...prev,
+      activeTask: event.active.id,
+    }));
   };
 
-  const onDragEnd = (result: any) => {
-    const { source, destination, draggableId } = result;
-    console.log(result)
-    if (!destination || source === destination) return;
-    dispatch(
-      reorderTask({
-        source: source,
-        destination: destination,
-        taskID: draggableId,
-      })
-    );
+  const onDragCancel = () => {
+    setState((prev) => ({
+      ...prev,
+      activeTask: null,
+    }));
   };
-
-  const items: MenuProps["items"] = [
-    {
-      label: (
-        <Popconfirm
-          placement="topLeft"
-          title={"Are you sure to delete this group?"}
-          description={"Delete the group"}
-          okText="Yes"
-          cancelText="No"
-          onConfirm={onConfirmDelete}
-        >
-          <div className="flex p-2">Delete</div>
-        </Popconfirm>
-      ),
-      key: "1",
-    },
-    {
-      label: <div className="flex p-2">Rename</div>,
-      key: "2",
-    },
-
-    // {
-    //   label: (<div className="flex p-2">Hide</div>),
-    //   key: "3",
-    // },
-  ];
 
   return (
-    <Flex
-      justify="space-between"
-      align={"flex-start"}
-      className="gap-5 overflow-x-auto w-full flex-shrink-0"
+    <DndContext
+      sensors={sensors}
+      onDragEnd={onDragEnd}
+      onDragStart={onDragStart}
+      collisionDetection={closestCenter}
+      onDragCancel={onDragCancel}
     >
-      <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
-        <Input
-          className="p-2"
-          placeholder="Add new group"
-          value={state.inputGroupName}
-          onChange={onChangeInputGroup}
-          onPressEnter={onClickAddGroup}
-        />
-        <Button className="w-9 h-9" onClick={onClickAddGroup}>
-          <AddIcon />
-        </Button>
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        {groupList.map((group, index) => (
-          <div key={index} className="flex-shrink-0 w-1/5">
-            <Dropdown
-              menu={{
-                items,
-                onClick: (event) => onClickAction(event, group.id),
-              }}
-              trigger={["contextMenu"]}
-            >
-              {state.isRenaming && group.id === state.groupSelected ? (
-                <div>
-                  <Input
-                    className="w-3/6"
-                    value={state.groupNewName || group.name}
-                    onChange={onChangeGroupNewName}
-                    onPressEnter={() => onEnterRenameGroup(group.id)}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <ColorPicker
-                    trigger="click"
-                    onChange={(value) => onChangeSetColor(value, group.id)}
-                  >
-                    <Tag bordered={false} color={group.color}>
-                      {group.name}
-                    </Tag>
-                  </ColorPicker>
-                </div>
-              )}
-            </Dropdown>
-            <Droppable key={index} droppableId={String(group.id)}>
-              {(provided) => (
-                <div ref={provided.innerRef}>
-                  <TaskList groupInfo={group} />
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
-        ))}
+      <Flex
+        justify="space-between"
+        align={"flex-start"}
+        className="gap-5 overflow-x-auto w-full flex-shrink-0"
+      >
+        <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
+          <Input
+            className="p-2"
+            placeholder="Add new group"
+            value={state.inputGroupName}
+            onChange={onChangeInputGroup}
+            onPressEnter={onClickAddGroup}
+          />
+          <Button className="w-9 h-9" onClick={onClickAddGroup}>
+            <AddIcon />
+          </Button>
+        </div>
+        <SortableContext
+          items={groupList.map((group) => String(group.id))}
+          strategy={horizontalListSortingStrategy}
+        >
+          {groupList.map((group, index) => (
+            <GroupItem
+              key={group.id}
+              group={group}
+              activeTask={state.activeTask}
+              isActive={false}
+            />
+          ))}
+        </SortableContext>
         ;
-      </DragDropContext>
-    </Flex>
+      </Flex>
+      <DragOverlay dropAnimation={dropAnimation}>
+        {state.activeTask ? (
+          <TaskItem
+            groupID={""}
+            task={taskList.find((task) => task.id === state.activeTask)}
+            onClickShowDetail={() => {}}
+            isActive={false}
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };

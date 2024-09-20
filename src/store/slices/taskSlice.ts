@@ -60,21 +60,34 @@ const taskSlice = createSlice({
       state.taskList = state.taskList.filter((task) => task.status_id !== groupID);
     },
 
-    reorderTask(state, action: PayloadAction<{source: any, destination: any, taskID: string}>){
+    reorderTask(state, action: PayloadAction<{source: any, destination: any}>){
+        const { source, destination } = action.payload;
 
-        const { source, destination, taskID } = action.payload;
-      
-        const destinationList = state.taskList.filter((task) => String(task.status_id) == destination.droppableId);
-        const sourceList = state.taskList.filter((task) => String(task.status_id) === source.droppableId);
-        const remainingList = state.taskList.filter((task) => (String(task.status_id) !== destination.droppableId && String(task.status_id) !== source.droppableId));
+        // GroupID
+        const sourceGroup= source.data.current.containerId
+        const destinationGroup = destination.data.current.containerId
 
-        if(source.droppableId === destination.droppableId)
-          state.taskList = [...remainingList,...reorderSingleArray(destinationList, source.index, destination.index)];
+        // Groups
+        const destinationList = state.taskList.filter((task) => task.status_id === destinationGroup);
+        const sourceList = state.taskList.filter((task) => task.status_id === sourceGroup);
+        const remainingList = state.taskList.filter((task) => (String(task.status_id) !== destinationGroup && String(task.status_id) !== sourceGroup));
+
+        // TaskID
+        const sourceIndex= sourceList.findIndex(task => task.id === source.id)
+        //const destinationIndex = destinationList.findIndex(task => task.id === destination.id);
+        const destinationIndex = destination.id === '-1' ? 0 
+              : destination.id === '1' ? destinationList.length 
+              : destinationList.findIndex(task => task.id === destination.id);
+
+
+
+        if(sourceGroup === destinationGroup)
+          state.taskList = [...remainingList,...reorderSingleArray(destinationList, sourceIndex, destinationIndex)];
         else{
-          state.taskList = [...remainingList, ...reorderDoubleArrays(sourceList, destinationList, source.index, destination.index)];
-          const task = state.taskList.find((task) => String(task.id) === taskID);
+          state.taskList = [...remainingList, ...reorderDoubleArrays(sourceList, destinationList, sourceIndex, destinationIndex)];
+          const task = state.taskList.find((task) => String(task.id) === source.id);
           if (task) {
-            Object.assign(task, {status_id: destination.droppableId});
+            Object.assign(task, {status_id: destination.data.current.containerId});
           }
         }
   },

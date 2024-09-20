@@ -102,10 +102,15 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
             </Form.Item>
           </Flex>
         }
-        closeIcon = {false}
+        closeIcon={false}
       >
         <Form<FormType>
-          style={{ maxWidth: 700, width: "full", height: "full", padding: '12px'}}
+          style={{
+            maxWidth: 700,
+            width: "full",
+            height: "full",
+            padding: "12px",
+          }}
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 19 }}
           layout="horizontal"
@@ -150,10 +155,10 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
           </Form.Item>
           <Form.Item<FormType> label="Estimate time:" name="est_time">
             <InputNumber
-              placeholder="Enter the estimated time to complete the task in hours"
+              placeholder="Enter the estimated time to complete the task"
               className="w-11/12"
-            />{" "}
-            hours.
+              addonAfter = "hours"
+            />
           </Form.Item>
           <Form.Item<FormType> label="Start Date:" name="start_date">
             <DatePicker />

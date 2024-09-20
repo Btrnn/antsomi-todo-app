@@ -18,6 +18,13 @@ export const reorderDoubleArrays = (listSource: any[], listDestination: any[], s
   const sourceArray = Array.from(listSource);
   const destinationArray = Array.from(listDestination);
   const [removed] = sourceArray.splice(startIndex, 1);
-  destinationArray.splice(endIndex, 0, removed);
+  if (endIndex >= destinationArray.length-1 && destinationArray.length-1 !== 0) {
+    destinationArray.push(removed);
+  }
+  else {
+    destinationArray.splice(endIndex, 0, removed);
+  }
   return [...sourceArray, ...destinationArray];
+
 };
+

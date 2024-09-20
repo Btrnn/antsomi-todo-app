@@ -5,9 +5,9 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 
 // Models
 import { Group } from 'models/Group'
+import { reorderSingleArray } from "utils";
+import { cloneDeep } from "lodash";
 
-// Store
-import taskSlice from "./taskSlice";
 
 interface GroupState {
   groupList: Group[];
@@ -52,10 +52,20 @@ const groupSlice = createSlice({
       const { id } = action.payload;
       state.groupList = state.groupList.filter((group) => group.id !== id);
     },
+
+    reorderGroup(state, action: PayloadAction<{source: any, destination: any}>){
+      const { source, destination } = action.payload;
+      const sourceIndex = state.groupList.findIndex(group=> group.id === source.id)
+      const destinationIndex = state.groupList.findIndex(group=> group.id === destination.id)
+
+      console.log("debug:: ", cloneDeep(reorderSingleArray(state.groupList,sourceIndex, destinationIndex)))
+
+      state.groupList= reorderSingleArray(state.groupList,sourceIndex, destinationIndex)
+    }
   },
 });
 
-export const { addGroup, updateGroup, deleteGroup } = groupSlice.actions;
+export const { addGroup, updateGroup, deleteGroup, reorderGroup } = groupSlice.actions;
 export default groupSlice.reducer;
 
 

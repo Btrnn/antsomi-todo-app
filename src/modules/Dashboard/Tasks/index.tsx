@@ -19,10 +19,10 @@ import {
 
 
 // Providers
-import { 
-
-} from 'store';
-
+import {
+  RootState,
+  AppDispatch,
+} from "store";
 // Models
 import { Groups } from './components/GroupList';
 
@@ -47,6 +47,7 @@ export const Tasks:React.FC<TasksProp> = (props) => {
 
   const onChangeGroupType = (value: any) => {
     setState(prev => ({...prev, groupType: value}))
+    console.log(value)
   }
 
   return (
