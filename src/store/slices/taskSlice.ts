@@ -7,11 +7,9 @@ import React from "react";
 // Models
 import { Task } from "models/Task";
 
-
 // Utils
 import { reorderSingleArray, reorderDoubleArrays } from "utils";
-import { stat } from "fs";
-
+import { get } from "lodash";
 
 interface TaskState {
   taskList: Task[];
@@ -50,48 +48,93 @@ const taskSlice = createSlice({
       }
     },
 
-    deleteTaskByID(state, action: PayloadAction<{id: React.Key}>) {
+    deleteTaskByID(state, action: PayloadAction<{ id: React.Key }>) {
       const { id } = action.payload;
       state.taskList = state.taskList.filter((task) => task.id !== id);
     },
 
-    deleteTaskByGroupID(state, action: PayloadAction<{groupID: React.Key}>) {
+    deleteTaskByGroupID(state, action: PayloadAction<{ groupID: React.Key }>) {
       const { groupID } = action.payload;
-      state.taskList = state.taskList.filter((task) => task.status_id !== groupID);
+      state.taskList = state.taskList.filter(
+        (task) => task.status_id !== groupID
+      );
     },
 
-    reorderTask(state, action: PayloadAction<{source: any, destination: any}>){
-        const { source, destination } = action.payload;
+    reorderTask(
+      state,
+      action: PayloadAction<{ source: any; destination: any }>
+    ) {
+      const { source, destination } = action.payload;
 
-        // GroupID
-        const sourceGroup= source.data.current.containerId
-        const destinationGroup = destination.data.current.containerId
+      if (get(destination, 'data.current.type', '') === "group") {
+        const task = state.taskList.find(
+          (task) => String(task.id) === source.id
+        );
 
-        // Groups
-        const destinationList = state.taskList.filter((task) => task.status_id === destinationGroup);
-        const sourceList = state.taskList.filter((task) => task.status_id === sourceGroup);
-        const remainingList = state.taskList.filter((task) => (String(task.status_id) !== destinationGroup && String(task.status_id) !== sourceGroup));
+        if (task) {
+          Object.assign(task, { status_id: destination.id });
+        }
+      } else {
+        const sourceGroup = source.data.current.groupID;
+        const destinationGroup = destination.data.current.groupID;
 
-        // TaskID
-        const sourceIndex= sourceList.findIndex(task => task.id === source.id)
-        //const destinationIndex = destinationList.findIndex(task => task.id === destination.id);
-        const destinationIndex = destination.id === '-1' ? 0 
-              : destination.id === '1' ? destinationList.length 
-              : destinationList.findIndex(task => task.id === destination.id);
+        const destinationList = state.taskList.filter(
+          (task) => task.status_id === destinationGroup
+        );
+        const sourceList = state.taskList.filter(
+          (task) => task.status_id === sourceGroup
+        );
+        const remainingList = state.taskList.filter(
+          (task) =>
+            String(task.status_id) !== destinationGroup &&
+            String(task.status_id) !== sourceGroup
+        );
 
+        const sourceIndex = sourceList.findIndex(
+          (task) => task.id === source.id
+        );
+        const destinationIndex = destinationList.findIndex(
+          (task) => task.id === destination.id
+        );
 
-
-        if(sourceGroup === destinationGroup)
-          state.taskList = [...remainingList,...reorderSingleArray(destinationList, sourceIndex, destinationIndex)];
-        else{
-          state.taskList = [...remainingList, ...reorderDoubleArrays(sourceList, destinationList, sourceIndex, destinationIndex)];
-          const task = state.taskList.find((task) => String(task.id) === source.id);
+        if (sourceGroup === destinationGroup)
+          state.taskList = [
+            ...remainingList,
+            ...reorderSingleArray(
+              destinationList,
+              sourceIndex,
+              destinationIndex
+            ),
+          ];
+        else {
+          state.taskList = [
+            ...remainingList,
+            ...reorderDoubleArrays(
+              sourceList,
+              destinationList,
+              sourceIndex,
+              destinationIndex
+            ),
+          ];
+          const task = state.taskList.find(
+            (task) => String(task.id) === source.id
+          );
           if (task) {
-            Object.assign(task, {status_id: destination.data.current.containerId});
+            Object.assign(task, {
+              status_id: destination.data.current.groupID,
+            });
           }
         }
+      }
+    },
   },
-}});
+});
 
-export const { addTask, updateTask, deleteTaskByID, deleteTaskByGroupID, reorderTask } = taskSlice.actions;
+export const {
+  addTask,
+  updateTask,
+  deleteTaskByID,
+  deleteTaskByGroupID,
+  reorderTask,
+} = taskSlice.actions;
 export default taskSlice.reducer;

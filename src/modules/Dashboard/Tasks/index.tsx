@@ -17,12 +17,6 @@ import {
   Select,
 } from "components/ui";
 
-
-// Providers
-import {
-  RootState,
-  AppDispatch,
-} from "store";
 // Models
 import { Groups } from './components/GroupList';
 
@@ -54,7 +48,7 @@ export const Tasks:React.FC<TasksProp> = (props) => {
     <div>
       <Select
         defaultValue="Status"
-        className="w-28 h-9"
+        className="w-28 h-9 mb-2"
         onChange={onChangeGroupType}
         suffixIcon={<FilterIcon className="h-5" />}
         options = {state.groupList.map(group => ({
@@ -66,7 +60,6 @@ export const Tasks:React.FC<TasksProp> = (props) => {
         id = {state.groupType} 
         groupTitle = {""}
         type = {''}
-        tasks = {[]}
       />
     </div>
   )

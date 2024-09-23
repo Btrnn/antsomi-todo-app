@@ -13,7 +13,6 @@ import { Layout, Menu } from "components/ui";
 // Constants
 import { globalToken } from "../../constants";
 
-interface DashboardProps {}
 
 const { Sider, Header, Content, Footer } = Layout;
 const { colorBgContainer, borderRadiusLG } = globalToken;
@@ -29,7 +28,7 @@ const MENU_ITEMS: MenuProps["items"] = [
   },
 ];
 
-export const Dashboard: React.FC<DashboardProps> = (props) => {
+export const Dashboard: React.FC = () => {
   //const { ...restProps } = props;
   const location = useLocation();
   console.log("🚀 ~ location:", location);

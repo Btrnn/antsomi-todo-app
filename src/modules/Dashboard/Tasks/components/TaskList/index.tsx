@@ -1,48 +1,25 @@
 // Libraries
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import React, { useState } from "react";
-import { Draggable } from "react-beautiful-dnd";
+
 import {
-  DndContext,
-  useDroppable,
-  useDraggable,
-  UniqueIdentifier,
-  DragOverlay,
-  useSensor,
-  useSensors,
-  MouseSensor,
-} from "@dnd-kit/core";
-import {
-  useSortable,
-  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
-  rectSortingStrategy,
-  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+
 
 // Store
-import { RootState, AppDispatch, addTask, deleteTaskByID } from "store";
+import { AppDispatch, addTask } from "store";
 
 // Icons
 import {
   AddIcon,
-  DeleteIcon,
-  DoneIcon,
-  FilterIcon,
-  DragIcon,
-  EditIcon,
 } from "components/icons";
 
 // Components
 import {
   Button,
   Input,
-  Popconfirm,
-  notification,
-  Dropdown,
-  type MenuProps,
 } from "components/ui";
 
 // Models
@@ -52,17 +29,15 @@ import { Group } from "models/Group";
 //
 import { TaskItem } from "../TaskItem";
 import { TaskDetail } from "../TaskDetailDrawer";
-import { transitionProperty } from "@dnd-kit/sortable/dist/hooks/defaults";
-import { group } from "console";
 
 interface TaskList {
   groupInfo: Group;
-  activeTask: React.Key | null;
+  taskList: Task[];
 }
 
 export const TaskList: React.FC<TaskList> = (props) => {
   // State
-  const { activeTask, groupInfo } = props;
+  const { groupInfo, taskList } = props;
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const [state, setState] = useState({
     inputTask: "",
@@ -71,17 +46,8 @@ export const TaskList: React.FC<TaskList> = (props) => {
   });
   const { inputTask } = state || {};
 
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id: String(groupInfo.id),
-      data: { containerId: undefined },
-    });
-
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const taskList = useSelector((state: RootState) => state.task.taskList);
-
-
 
   // Handlers
   const onClickAddTask = () => {
@@ -120,34 +86,20 @@ export const TaskList: React.FC<TaskList> = (props) => {
     setSelectedTask(taskList.find((task) => task.id === taskID));
   };
 
-
   const onCloseTaskDetail = () => {
     setState((prev) => ({ ...prev, isOpen: false }));
     setSelectedTask(undefined);
   };
 
-  
-
   const onChangeInputTask = (event: any) => {
     setState((prev) => ({ ...prev, inputTask: event.target.value }));
   };
-
   
   const renderTasks = (tasks: Task[]) => {
     const filteredTasks = tasks.filter(
       (task) => task.status_id === groupInfo.id
     );
 
-    if (filteredTasks.length === 0) {
-      return (
-        <TaskItem
-          groupID={groupInfo.id}
-          task={undefined}
-          onClickShowDetail={() => {}}
-          isActive={false}
-        />
-      );
-    }
     return (
       <>
         {filteredTasks.map((task, index) => (
@@ -156,7 +108,6 @@ export const TaskList: React.FC<TaskList> = (props) => {
               groupID={groupInfo.id}
               task={task}
               onClickShowDetail={() => onClickShowTaskDetail(task.id)}
-              isActive={activeTask === task.id}
             />
         ))}
       </>

@@ -1,71 +1,27 @@
 // Libraries
-import { nanoid } from "nanoid";
 import { useSelector, useDispatch } from "react-redux";
 import React, { useEffect, useState } from "react";
-import { Draggable } from "react-beautiful-dnd";
-import {
-  DndContext,
-  useDroppable,
-  useDraggable,
-  UniqueIdentifier,
-  DragOverlay,
-  useSensor,
-  useSensors,
-  MouseSensor,
-} from "@dnd-kit/core";
-import {
-  useSortable,
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 //Providers
-import {
-  RootState,
-  AppDispatch,
-  addUser,
-  updatedUser,
-  deleteUser,
-  updateTask,
-  deleteTaskByID,
-} from "store";
+import { RootState, AppDispatch, deleteTaskByID } from "store";
 
 // Icons
-import {
-  AddIcon,
-  DeleteIcon,
-  DoneIcon,
-  FilterIcon,
-  DragIcon,
-  EditIcon,
-} from "components/icons";
+import { DeleteIcon, DragIcon, EditIcon } from "components/icons";
 
 // Components
-import {
-  Button,
-  Popconfirm,
-  notification,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Flex,
-  Dropdown,
-  type MenuProps,
-} from "components/ui";
+import { Popconfirm, Tag, Dropdown, type MenuProps } from "components/ui";
 
 // Models
 import { Task } from "models";
+import { SORTABLE_TYPE } from "constants/tasks";
 
 interface TaskItemProp {
   groupID: React.Key;
   task: Task | undefined;
   onClickShowDetail: (taskIndex: React.Key) => void;
-  isActive: boolean;
 }
 
 export const TaskItem: React.FC<TaskItemProp> = (props) => {
@@ -81,7 +37,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
     isDragging,
   } = useSortable({
     id: String(task?.id),
-    data: { containerId: groupID, type: "task" },
+    data: { groupID: groupID, type: SORTABLE_TYPE.TASK },
   });
 
   // Store
@@ -93,8 +49,8 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
   let confirmDelete = false;
 
   const onClickAction = (event: any, taskID: any) => {
-    if (event.key == 2) onClickShowDetail(taskID);
-    else if (event.key == 1 && confirmDelete) handleDeleteTask(taskID);
+    if (event.key === "2") onClickShowDetail(taskID);
+    else if (event.key === "1" && confirmDelete) handleDeleteTask(taskID);
   };
 
   const handleDeleteTask = (id: React.Key) => {
@@ -171,20 +127,25 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
                   {task.description}
                 </div>
               </div>
-              <div>
+              <div className="flex flex-col gap-y-2">
                 <Tag
                   bordered={false}
                   color={
                     groupList.find((group) => group.id === task.status_id)
                       ?.color
                   }
-                  className="justify-center"
+                  className="justify-center items-center"
                 >
                   {groupList.find((group) => group.id === task.status_id)?.name}
                 </Tag>
-                <Tag bordered={false} color={"cyan"} className="justify-center">
-                  {userList.find((user) => user.id === task.assignee_id)?.name}
-                </Tag>
+                {task.assignee_id !== undefined && (
+                  <Tag bordered={false} className="justify-center">
+                    {
+                      userList.find((user) => user.id === task.assignee_id)
+                        ?.name
+                    }
+                  </Tag>
+                )}
               </div>
             </div>
             <div {...listeners}>

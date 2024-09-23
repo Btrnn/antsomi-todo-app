@@ -6,7 +6,6 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 // Models
 import { Group } from 'models/Group'
 import { reorderSingleArray } from "utils";
-import { cloneDeep } from "lodash";
 
 
 interface GroupState {
@@ -43,6 +42,7 @@ const groupSlice = createSlice({
     updateGroup(state, action: PayloadAction<{ id: React.Key; updatedGroup: Partial<Group> }>) {
       const { id, updatedGroup } = action.payload;
       const group = state.groupList.find(group => group.id === id);
+      
       if (group) {
         Object.assign(group, updatedGroup); 
       }
@@ -50,17 +50,15 @@ const groupSlice = createSlice({
 
     deleteGroup(state, action: PayloadAction<{id: React.Key}>) {
       const { id } = action.payload;
+
       state.groupList = state.groupList.filter((group) => group.id !== id);
     },
 
-    reorderGroup(state, action: PayloadAction<{source: any, destination: any}>){
-      const { source, destination } = action.payload;
-      const sourceIndex = state.groupList.findIndex(group=> group.id === source.id)
-      const destinationIndex = state.groupList.findIndex(group=> group.id === destination.id)
+    reorderGroup(state, action: PayloadAction<{source: any, destinationIndex: any}>){
+      const { source, destinationIndex } = action.payload;
+      const sourceIndex = state.groupList.findIndex(group => group.id === source.id);
 
-      console.log("debug:: ", cloneDeep(reorderSingleArray(state.groupList,sourceIndex, destinationIndex)))
-
-      state.groupList= reorderSingleArray(state.groupList,sourceIndex, destinationIndex)
+      state.groupList = reorderSingleArray(state.groupList,sourceIndex, destinationIndex);
     }
   },
 });

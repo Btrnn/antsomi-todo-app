@@ -1,40 +1,19 @@
 // Libraries
 import React, { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  DndContext,
-  useDroppable,
-  useDraggable,
-  UniqueIdentifier,
-  DragOverlay,
-  useSensor,
-  useSensors,
-  MouseSensor,
-  closestCenter,
-  DragEndEvent,
-  closestCorners,
-  rectIntersection,
-  pointerWithin,
-} from "@dnd-kit/core";
+import { useDispatch } from "react-redux";
+
 import {
   useSortable,
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 // Icons
-import { AddIcon, DeleteIcon, DragIcon, EditIcon } from "components/icons";
+import { DeleteIcon, DragIcon, EditIcon } from "components/icons";
 
 // Components
 import {
-  Button,
   Input,
   Popconfirm,
-  Flex,
   Tag,
   ColorPicker,
   Color,
@@ -44,14 +23,10 @@ import {
 
 // Providers
 import {
-  RootState,
   AppDispatch,
-  addGroup,
   updateGroup,
   deleteGroup,
-  reorderTask,
   deleteTaskByGroupID,
-  reorderGroup,
 } from "store";
 
 // Models
@@ -59,35 +34,23 @@ import { Group, Task } from "models";
 
 //
 import { TaskList } from "../TaskList";
-import { TaskItem } from "../TaskItem";
 
-import {
-  defaultDropAnimationSideEffects,
-  DropAnimation,
-} from "components/ui/DragDrop";
 
 interface GroupItemProps {
-  group: Group;
-  activeTask: React.Key | null;
-  isActive: boolean;
+  group: Group | undefined;
+  taskList: Task[];
 }
 
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
-  const { group, activeTask, isActive } = props;
+  const { group, taskList } = props;
   let confirmDelete = false;
 
   // Drag&Drop
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: String(group?.id),
-    data: { containerId: "", type: "group" },
-  });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: String(group?.id),
+      data: { type: 'group' },
+});
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -126,14 +89,14 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickAction = (event: any, groupID: any, groupName: string) => {
-    if (event.key == 2) {
+    if (event.key === "2") {
       setState((prev) => ({
         ...prev,
         isRenaming: true,
         groupSelected: groupID,
         groupNewName: groupName,
       }));
-    } else if (event.key == 1 && confirmDelete) {
+    } else if (event.key === "1" && confirmDelete) {
       handleDeleteGroup(groupID);
     }
   };
@@ -182,10 +145,10 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     },
   ];
 
-  return (
+  return group ? (
     <div
       key={group.id}
-      className="flex-shrink-0 w-1/5 min-w-[300px]"
+      className="flex-shrink-0 w-[270px] h-[70vh]"
       style={{
         transition,
         transform: CSS.Transform.toString(transform),
@@ -202,13 +165,14 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         }}
         trigger={["contextMenu"]}
       >
-        <div key={group.id} className="flex">
+        <div key={group.id} className="flex justify-between">
           {state.isRenaming && group.id === state.groupSelected ? (
             <Input
               className="w-1/2"
               value={state.groupNewName || group.name}
               onChange={onChangeGroupNewName}
               onPressEnter={() => onEnterRenameGroup(group.id)}
+              onBlur={() => onEnterRenameGroup(group.id)}
             />
           ) : (
             <ColorPicker
@@ -216,17 +180,17 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
               onChange={(value) => onChangeSetColor(value, group.id)}
             >
               <Tag bordered={false} color={group.color}>
-                {group.name}{" "}
+                {group.name}
               </Tag>
             </ColorPicker>
           )}
-          <div {...listeners}>
+          <div className="mr-4 text-black" {...listeners}>
             <DragIcon />
           </div>
         </div>
       </Dropdown>
 
-      <TaskList groupInfo={group} activeTask={activeTask} />
+      <TaskList groupInfo={group} taskList={taskList} />
     </div>
-  );
+  ) : null;
 };
