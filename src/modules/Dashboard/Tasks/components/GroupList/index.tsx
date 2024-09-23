@@ -103,8 +103,10 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     isRenaming: false,
     groupSelected: "",
     groupNewName: "",
-    activeTask: null,
+    activeId: null,
+    activeType: null,
   });
+  const { activeId, activeType } = state;
 
   // Handlers
   const onChangeInputGroup = (event: any) => {
@@ -117,32 +119,79 @@ export const Groups: React.FC<GroupsProps> = (props) => {
   };
 
   const onDragEnd = (event: any) => {
+    console.log("🚀 ~ onDragEnd ~ event:", event);
     const { active, over } = event;
 
     if (!over) return;
 
-    if (active.data.current.containerId !== "" && over.data.current.containerId !== "") {
-      dispatch(reorderTask({ source: active, destination: over }));
-    } else {
-      dispatch(reorderGroup({ source: active, destination: over }));
-      console.log("group: ");
-    }
+    // if (
+    //   active.data.current.containerId !== "" &&
+    //   over.data.current.containerId !== ""
+    // ) {
+    //   dispatch(reorderTask({ source: active, destination: over }));
+    // } else {
+    //   dispatch(reorderGroup({ source: active, destination: over }));
+    //   console.log("group: ");
+    // }
+
+    /**
+     * NOTE: Handle reorder task, group
+     * - Check active type: task or group
+     * - Check destination type: task or group
+     * - Reorder task: same group
+     * - Reorder group: different group
+     *
+     * @example
+     * - Active: task, Destination: task -> Reorder task
+     * - Active: task, Destination: group -> Reorder task
+     * - Active: group, Destination: task -> Reorder group
+     * - Active: group, Destination: group -> Reorder group
+     *
+     *
+     */
 
     setState((prev) => ({ ...prev, activeTask: null }));
   };
 
   const onDragStart = (event: any) => {
+    const { active } = event;
+
     setState((prev) => ({
       ...prev,
-      activeTask: event.active.id,
+      activeId: active.id,
+      activeType: active.data.current?.type || null,
     }));
   };
 
   const onDragCancel = () => {
     setState((prev) => ({
       ...prev,
-      activeTask: null,
+      activeId: null,
+      activeType: null,
     }));
+  };
+
+  const renderDragOverlay = () => {
+    if (!activeId) return null;
+
+    if (activeType === "group") {
+      const activeGroup = groupList.find((group) => group.id === activeId);
+      return activeGroup ? (
+        <GroupItem group={activeGroup} activeTask={null} isActive={true} />
+      ) : null;
+    } else if (activeType === "task") {
+      const activeTask = taskList.find((task) => task.id === activeId);
+      return activeTask ? (
+        <TaskItem
+          groupID=""
+          task={activeTask}
+          onClickShowDetail={() => {}}
+          isActive={true}
+        />
+      ) : null;
+    }
+
+    return null;
   };
 
   return (
@@ -150,7 +199,7 @@ export const Groups: React.FC<GroupsProps> = (props) => {
       sensors={sensors}
       onDragEnd={onDragEnd}
       onDragStart={onDragStart}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       onDragCancel={onDragCancel}
     >
       <Flex
@@ -178,7 +227,7 @@ export const Groups: React.FC<GroupsProps> = (props) => {
             <GroupItem
               key={group.id}
               group={group}
-              activeTask={state.activeTask}
+              activeTask={activeId}
               isActive={false}
             />
           ))}
@@ -186,14 +235,16 @@ export const Groups: React.FC<GroupsProps> = (props) => {
         ;
       </Flex>
       <DragOverlay dropAnimation={dropAnimation}>
-        {state.activeTask ? (
+        {/* {state.activeTask ? (
           <TaskItem
             groupID={""}
             task={taskList.find((task) => task.id === state.activeTask)}
             onClickShowDetail={() => {}}
             isActive={false}
           />
-        ) : null}
+        ) : null} */}
+
+        {renderDragOverlay()}
       </DragOverlay>
     </DndContext>
   );

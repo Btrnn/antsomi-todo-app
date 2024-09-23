@@ -61,7 +61,6 @@ import {
 // Models
 import { Task } from "models";
 
-
 interface TaskItemProp {
   groupID: React.Key;
   task: Task | undefined;
@@ -70,14 +69,20 @@ interface TaskItemProp {
 }
 
 export const TaskItem: React.FC<TaskItemProp> = (props) => {
-  const { groupID, task, onClickShowDetail, isActive } = props;
+  const { groupID, task, onClickShowDetail } = props;
 
   // Drag&Drop
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id: String(task?.id),
-      data: { containerId: groupID },
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: String(task?.id),
+    data: { containerId: groupID, type: "task" },
+  });
 
   // Store
   const userList = useSelector((state: RootState) => state.user.userList);
@@ -135,7 +140,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
       style={{
         transition,
         transform: CSS.Transform.toString(transform),
-        opacity: isActive ? 0.5 : 1,
+        opacity: isDragging ? 0.5 : 1,
       }}
       ref={setNodeRef}
       {...attributes}

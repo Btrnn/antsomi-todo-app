@@ -68,21 +68,26 @@ import {
 
 interface GroupItemProps {
   group: Group;
-  activeTask: React.Key|null;
+  activeTask: React.Key | null;
   isActive: boolean;
 }
-
 
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
   const { group, activeTask, isActive } = props;
   let confirmDelete = false;
 
   // Drag&Drop
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id: String(group?.id),
-      data: { containerId: '' },
-});
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: String(group?.id),
+    data: { containerId: "", type: "group" },
+  });
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -180,11 +185,11 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   return (
     <div
       key={group.id}
-      className="flex-shrink-0 w-1/5"
+      className="flex-shrink-0 w-1/5 min-w-[300px]"
       style={{
         transition,
         transform: CSS.Transform.toString(transform),
-        opacity: isActive ? 0.5 : 1,
+        opacity: isDragging ? 0.5 : 1,
       }}
       ref={setNodeRef}
       {...attributes}
