@@ -4,11 +4,8 @@ import {
   DndContext,
 } from "@dnd-kit/core";
 import {
-  useSortable,
-  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
-  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
 const SortableItem = (id: any) => {
@@ -81,36 +78,38 @@ export const About: React.FC<AboutProps> = (props: any) => {
     }
   };
 
-  return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div style={{ display: "flex", gap: "20px" }}>
-        <SortableContext
-          id="container1"
-          items={container1Items}
-          strategy={verticalListSortingStrategy}
-        >
-          <div>
-            <h3>Container 1</h3>
-            {container1Items.map((item) => (
-              <SortableItem key={item} id={item} />
-            ))}
-          </div>
-        </SortableContext>
+  return <div>About</div>
 
-        <SortableContext
-          id="container2"
-          items={container2Items}
-          strategy={verticalListSortingStrategy}
-        >
-          <div>
-            <h3>Container 2</h3>
-            {container2Items.map((item) => (
-              <SortableItem key={item} id={item} />
-            ))}
-          </div>
-        </SortableContext>
-      </div>
-    </DndContext>
-  );
+  // return (
+  //   <DndContext onDragEnd={handleDragEnd}>
+  //     <div style={{ display: "flex", gap: "20px" }}>
+  //       <SortableContext
+  //         id="container1"
+  //         items={container1Items}
+  //         strategy={verticalListSortingStrategy}
+  //       >
+  //         <div>
+  //           <h3>Container 1</h3>
+  //           {container1Items.map((item) => (
+  //             <SortableItem key={item} id={item} />
+  //           ))}
+  //         </div>
+  //       </SortableContext>
+
+  //       <SortableContext
+  //         id="container2"
+  //         items={container2Items}
+  //         strategy={verticalListSortingStrategy}
+  //       >
+  //         <div>
+  //           <h3>Container 2</h3>
+  //           {container2Items.map((item) => (
+  //             <SortableItem key={item} id={item} />
+  //           ))}
+  //         </div>
+  //       </SortableContext>
+  //     </div>
+  //   </DndContext>
+  // );
 };
 

@@ -31,6 +31,7 @@ import {
   addGroup,
   reorderTask,
   reorderGroup,
+  setGroup
 } from "store";
 
 // Models
@@ -69,9 +70,8 @@ type TState = {
   groupNewName: string;
   activeID: string | null;
   activeType: string | null;
-  destinationIndex: number;
   destinationGroup: string;
-  tempGroupList: Group[];
+  // tempGroupList: Group[];
 };
 
 const dropAnimation: DropAnimation = {
@@ -99,15 +99,11 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     groupNewName: "",
     activeID: null,
     activeType: null,
-    destinationIndex: -1,
     destinationGroup: "",
-    tempGroupList: [],
   });
-  const [tempTaskList, setTempTaskList] = useState<Task[]>([]);
-  // const [tempGroupList, setTempGroupList] = useState<Group[]>([]);
 
-  // Varaiables
-  const { tempGroupList, activeID, activeType } = state;
+  // Variables
+  const {  activeID, activeType } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -129,24 +125,20 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     const { active, over } = event;
 
     if (!over) return;
+
     const sourceType = active.data.current?.type;
 
     if (sourceType === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
-      setTempTaskList([]);
     } else if (sourceType === "group") {
+      const destinationIndex = groupList.findIndex((group) => group.id === over.id);
+
       dispatch(
         reorderGroup({
           source: active,
-          destinationIndex: state.destinationIndex,
+          destinationIndex
         })
       );
-      // setTempGroupList([]);
-      setState((prev) => ({
-        ...prev,
-        tempGroupList: [],
-        destinationIndex: -1,
-      }));
     }
 
     setState((prev) => ({ ...prev, activeID: null, activeType: null }));
@@ -159,12 +151,12 @@ export const Groups: React.FC<GroupsProps> = (props) => {
       activeType: event.active.data.current.type,
     }));
 
-    if (event.active.data.current.type === "task") setTempTaskList(taskList);
-    else
+    if (event.active.data.current.type === "group")  {
       setState((prev) => ({
         ...prev,
         tempGroupList: groupList,
       }));
+    }
   };
 
   const onDragCancel = () => {
@@ -174,7 +166,6 @@ export const Groups: React.FC<GroupsProps> = (props) => {
       activeType: null,
       tempGroupList: [],
     }));
-    setTempTaskList([]);
   };
 
   const onDragOver = (event: any) => {
@@ -230,30 +221,24 @@ export const Groups: React.FC<GroupsProps> = (props) => {
       //     })}}
 
       dispatch(reorderTask({ source: active, destination: over }));
-    } else {
-      const sourceIndex = tempGroupList.findIndex(
-        (group) => group.id === active.id
-      );
-      let destinationIndex = -1;
-      if (over.data.current.type === "group")
-        destinationIndex = tempGroupList.findIndex(
-          (group) => group.id === over.id
-        );
-      else
-        destinationIndex = tempGroupList.findIndex(
-          (group) => group.id === over.data.current.groupID
-        );
-
-      setState((prev) => ({
-        ...prev,
-        destinationIndex: destinationIndex,
-        tempGroupList: reorderSingleArray(
-          tempGroupList,
-          sourceIndex,
-          destinationIndex
-        ),
-      }));
     }
+    
+    // else {
+    //   let destinationIndex = -1;
+    //   if (over.data.current.type === "group")
+    //     destinationIndex = groupList.findIndex(
+    //       (group) => group.id === over.id
+    //     );
+    //   else
+    //     destinationIndex = groupList.findIndex(
+    //       (group) => group.id === over.data.current.groupID
+    //     );
+
+    //   setState((prev) => ({
+    //     ...prev,
+    //     destinationIndex: destinationIndex,
+    //   }));
+    // }
   };
 
   return (
@@ -283,10 +268,10 @@ export const Groups: React.FC<GroupsProps> = (props) => {
           </Button>
         </div>
         <SortableContext
-          items={tempGroupList.map((group) => String(group.id))}
+          items={groupList.map((group) => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {(tempGroupList.length === 0 ? groupList : tempGroupList).map(
+          {groupList?.map(
             (group) => (
               <GroupItem key={group.id} group={group} taskList={taskList} />
             )

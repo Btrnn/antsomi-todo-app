@@ -27,6 +27,9 @@ const groupSlice = createSlice({
   name: 'group',
   initialState,
   reducers: {
+    setGroup(state, action: PayloadAction<Group[]>){
+      state.groupList = action.payload;
+    },
     addGroup(state, action: PayloadAction<Omit<Group, 'id' | 'position' | 'created_at' | 'color'>>) {
       const newGroup: Group = {
         id: nanoid(),
@@ -63,7 +66,7 @@ const groupSlice = createSlice({
   },
 });
 
-export const { addGroup, updateGroup, deleteGroup, reorderGroup } = groupSlice.actions;
+export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroup } = groupSlice.actions;
 export default groupSlice.reducer;
 
 

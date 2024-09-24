@@ -1,7 +1,6 @@
 // Libraries
 import React from "react";
 import { MenuProps } from "antd";
-import { useLocation } from "react-router-dom";
 import { NavLink, Outlet } from "react-router-dom";
 
 // Images
@@ -29,11 +28,6 @@ const MENU_ITEMS: MenuProps["items"] = [
 ];
 
 export const Dashboard: React.FC = () => {
-  //const { ...restProps } = props;
-  const location = useLocation();
-  console.log("🚀 ~ location:", location);
-
-  console.log("render dashboard :: ");
   const items = MENU_ITEMS?.map((item: any) => {
     return {
       ...item,
