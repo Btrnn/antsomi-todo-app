@@ -13,3 +13,4 @@ export * from './ColorPicker';
 export * from './DatePicker';
 export * from './Drawer';
 export * from './DropDown';
+export * from './Checkbox';

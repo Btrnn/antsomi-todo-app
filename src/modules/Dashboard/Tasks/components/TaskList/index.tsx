@@ -69,8 +69,8 @@ export const TaskList: React.FC<TaskListProps> = props => {
         name: inputTask,
         description: '',
         est_time: '',
-        start_date: dayjs().format('DD-MM-YYYY'),
-        end_date: dayjs().format('DD-MM-YYYY'),
+        start_date: dayjs(),
+        end_date: dayjs(),
         assignee_id: undefined,
         status_id: groupInfo.id,
       };

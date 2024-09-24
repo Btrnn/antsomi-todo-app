@@ -29,10 +29,9 @@ const taskSlice = createSlice({
       const newTask: Task = {
         id: nanoid(),
         position: state.taskList.length,
-        created_at: dayjs().format('DD-MM-YYYY'),
+        created_at: dayjs(),
         ...action.payload,
       };
-      console.log(newTask);
       state.taskList.push(newTask);
     },
 
@@ -62,7 +61,7 @@ const taskSlice = createSlice({
       const { source, destination } = action.payload;
 
       if (get(destination, 'data.current.type', '') === 'group') {
-        const task = state.taskList.find(task => String(task.id) === source.id);
+        const task = state.taskList.find(task => task.id === source.id);
 
         if (task) {
           Object.assign(task, { status_id: destination.id });
@@ -74,8 +73,7 @@ const taskSlice = createSlice({
         const destinationList = state.taskList.filter(task => task.status_id === destinationGroup);
         const sourceList = state.taskList.filter(task => task.status_id === sourceGroup);
         const remainingList = state.taskList.filter(
-          task =>
-            String(task.status_id) !== destinationGroup && String(task.status_id) !== sourceGroup,
+          task => task.status_id !== destinationGroup && task.status_id !== sourceGroup,
         );
 
         const sourceIndex = sourceList.findIndex(task => task.id === source.id);
@@ -91,7 +89,7 @@ const taskSlice = createSlice({
             ...remainingList,
             ...reorderDoubleArrays(sourceList, destinationList, sourceIndex, destinationIndex),
           ];
-          const task = state.taskList.find(task => String(task.id) === source.id);
+          const task = state.taskList.find(task => task.id === source.id);
           if (task) {
             Object.assign(task, {
               status_id: destination.data.current?.groupID,
@@ -105,4 +103,5 @@ const taskSlice = createSlice({
 
 export const { addTask, updateTask, deleteTaskByID, deleteTaskByGroupID, reorderTask } =
   taskSlice.actions;
+
 export default taskSlice.reducer;

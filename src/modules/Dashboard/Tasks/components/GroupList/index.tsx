@@ -98,14 +98,7 @@ export const Groups: React.FC<GroupsProps> = props => {
     if (sourceType === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
     } else if (sourceType === SORTABLE_TYPE.GROUP) {
-      const destinationIndex = groupList.findIndex(group => group.id === over.id);
-
-      dispatch(
-        reorderGroup({
-          source: active,
-          destinationIndex,
-        }),
-      );
+      dispatch(reorderGroup({ source: active, destination: over }));
     }
 
     setState(prev => ({ ...prev, activeID: null, activeType: null }));

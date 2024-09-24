@@ -8,8 +8,8 @@ export interface Task {
   status_id: React.Key;
   assignee_id: React.Key | undefined;
   est_time: string;
-  start_date: string;
-  end_date: string;
+  start_date: Dayjs;
+  end_date: Dayjs;
   position: number;
-  created_at: string;
+  created_at: Dayjs;
 }

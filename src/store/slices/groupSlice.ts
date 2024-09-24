@@ -2,7 +2,7 @@
 import { nanoid } from 'nanoid';
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Active } from '@dnd-kit/core/dist/store/index';
+import type { Active, Over } from '@dnd-kit/core/dist/store/index';
 
 // Models
 import { Group } from 'models/Group';
@@ -81,8 +81,9 @@ const groupSlice = createSlice({
       }
     },
 
-    reorderGroup(state, action: PayloadAction<{ source: Active; destinationIndex: number }>) {
-      const { source, destinationIndex } = action.payload;
+    reorderGroup(state, action: PayloadAction<{ source: Active; destination: Over }>) {
+      const { source, destination } = action.payload;
+      const destinationIndex = state.groupList.findIndex(group => group.id === destination.id);
       const sourceIndex = state.groupList.findIndex(group => group.id === source.id);
 
       state.groupList = reorderSingleArray(state.groupList, sourceIndex, destinationIndex);
