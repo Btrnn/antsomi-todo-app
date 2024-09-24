@@ -1,1 +1,1 @@
-export { Tag } from "antd";
+export { Tag } from 'antd';

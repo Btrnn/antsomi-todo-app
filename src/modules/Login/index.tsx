@@ -1,8 +1,7 @@
 // Libraries
 import React from 'react';
 
-interface LoginProps {
-}
+interface LoginProps {}
 
 export const Login: React.FC<LoginProps> = props => {
   const { ...restProps } = props;

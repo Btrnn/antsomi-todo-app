@@ -1,29 +1,28 @@
 // Libraries
-import React from "react";
-import { MenuProps } from "antd";
-import { NavLink, Outlet } from "react-router-dom";
+import React from 'react';
+import { MenuProps } from 'antd';
+import { NavLink, Outlet } from 'react-router-dom';
 
 // Images
-import logo from "../../assets/images/pexels-photo-430205.webp";
+import logo from '../../assets/images/pexels-photo-430205.webp';
 
 // Components
-import { Layout, Menu } from "components/ui";
+import { Layout, Menu } from 'components/ui';
 
 // Constants
-import { globalToken } from "../../constants";
-
+import { globalToken } from '../../constants';
 
 const { Sider, Header, Content, Footer } = Layout;
 const { colorBgContainer, borderRadiusLG } = globalToken;
 
-const MENU_ITEMS: MenuProps["items"] = [
+const MENU_ITEMS: MenuProps['items'] = [
   {
-    key: "home",
-    label: "Home",
+    key: 'home',
+    label: 'Home',
   },
   {
-    key: "tasks",
-    label: "Tasks",
+    key: 'tasks',
+    label: 'Tasks',
   },
 ];
 
@@ -40,7 +39,7 @@ export const Dashboard: React.FC = () => {
       <Sider
         breakpoint="lg"
         collapsedWidth="0"
-        onBreakpoint={(broken) => {
+        onBreakpoint={broken => {
           console.log(broken);
         }}
         onCollapse={(collapsed, type) => {
@@ -50,18 +49,16 @@ export const Dashboard: React.FC = () => {
         <div className="demo-logo-vertical">
           <img src={logo} alt="logo" />
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={["4"]}
-          items={items}
-        />
+        <Menu theme="dark" mode="inline" defaultSelectedKeys={['4']} items={items} />
       </Sider>
       <Layout className="h-screen">
-        <Header className="flex justify-center" style={{ padding: 5, background: colorBgContainer }}>
+        <Header
+          className="flex justify-center"
+          style={{ padding: 5, background: colorBgContainer }}
+        >
           TO DO APP
-        </Header> 
-        <Content style={{ margin: "24px 16px 0" }}>
+        </Header>
+        <Content style={{ margin: '24px 16px 0' }}>
           <div
             style={{
               padding: 24,
@@ -73,7 +70,7 @@ export const Dashboard: React.FC = () => {
             <Outlet />
           </div>
         </Content>
-        <Footer style={{ textAlign: "center" }}>
+        <Footer style={{ textAlign: 'center' }}>
           Ant Design ©{new Date().getFullYear()} Created by Ant UED
         </Footer>
       </Layout>

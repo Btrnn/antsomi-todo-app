@@ -1,2 +1,1 @@
-export { EditOutlined as EditIcon} from "@ant-design/icons";
-
+export { EditOutlined as EditIcon } from '@ant-design/icons';

@@ -1,6 +1,6 @@
 // Libraries
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { nanoid } from 'nanoid';
 
 // Models
@@ -12,12 +12,11 @@ interface UserState {
 
 const initialState: UserState = {
   userList: [
-    {id: nanoid(), name: 'User A', created_at: new Date(), email: 'a123@gmail.com'},
-    {id: nanoid(), name: 'User B', created_at: new Date(), email: 'b123@gmail.com'},
-    {id: nanoid(), name: 'User C', created_at: new Date(), email: 'c123@gmail.com'},
+    { id: nanoid(), name: 'User A', created_at: new Date(), email: 'a123@gmail.com' },
+    { id: nanoid(), name: 'User B', created_at: new Date(), email: 'b123@gmail.com' },
+    { id: nanoid(), name: 'User C', created_at: new Date(), email: 'c123@gmail.com' },
   ],
 };
-
 
 const userSlice = createSlice({
   name: 'user',
@@ -37,7 +36,7 @@ const userSlice = createSlice({
       const { id, updatedUser } = action.payload;
       const group = state.userList.find(user => user.id === id);
       if (group) {
-        Object.assign(group, updatedUser); 
+        Object.assign(group, updatedUser);
       }
     },
 
@@ -49,6 +48,3 @@ const userSlice = createSlice({
 
 export const { addUser, updatedUser, deleteUser } = userSlice.actions;
 export default userSlice.reducer;
-
-
-

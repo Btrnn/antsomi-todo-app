@@ -1,6 +1,6 @@
 // Libraries
-import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   DndContext,
   DragOverlay,
@@ -11,38 +11,26 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-} from "@dnd-kit/sortable";
+} from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 
 // Icons
-import { AddIcon } from "components/icons";
+import { AddIcon } from 'components/icons';
 
 // Components
-import { Button, Input, Flex } from "components/ui";
+import { Button, Input, Flex } from 'components/ui';
 
 // Providers
-import {
-  RootState,
-  AppDispatch,
-  addGroup,
-  reorderTask,
-  reorderGroup,
-} from "store";
+import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup } from 'store';
 
 //
-import { TaskItem } from "../TaskItem";
-import { GroupItem } from "../GroupItem";
+import { TaskItem } from '../TaskItem';
+import { GroupItem } from '../GroupItem';
 
-import {
-  defaultDropAnimationSideEffects,
-  DropAnimation,
-} from "components/ui/DragDrop";
+import { defaultDropAnimationSideEffects, DropAnimation } from 'components/ui/DragDrop';
 
 // Constants
-import { SORTABLE_TYPE } from "constants/tasks";
+import { SORTABLE_TYPE } from 'constants/tasks';
 
 interface GroupsProps {
   id: React.Key;
@@ -62,21 +50,21 @@ const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
       active: {
-        opacity: "0.5",
+        opacity: '0.5',
       },
     },
   }),
 };
 
-export const Groups: React.FC<GroupsProps> = (props) => {
+export const Groups: React.FC<GroupsProps> = props => {
   const { groupTitle, type } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
   // State
   const [state, setState] = useState<TState>({
     groupType: groupTitle,
-    error: "",
-    inputGroupName: "",
+    error: '',
+    inputGroupName: '',
     activeID: null,
     activeType: null,
   });
@@ -90,42 +78,41 @@ export const Groups: React.FC<GroupsProps> = (props) => {
 
   // Handlers
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputGroupName: event.target.value }));
+    setState(prev => ({ ...prev, inputGroupName: event.target.value }));
   };
 
   const onClickAddGroup = () => {
     const newGroup = { name: inputGroupName, type: type };
     dispatch(addGroup(newGroup));
-    setState((prev) => ({ ...prev, inputGroupName: "" }));
+    setState(prev => ({ ...prev, inputGroupName: '' }));
   };
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     const sourceType = active.data.current?.type;
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     if (sourceType === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
-    } 
-    else if (sourceType === SORTABLE_TYPE.GROUP) {
-      const destinationIndex = groupList.findIndex(
-        (group) => group.id === over.id
-      );
+    } else if (sourceType === SORTABLE_TYPE.GROUP) {
+      const destinationIndex = groupList.findIndex(group => group.id === over.id);
 
       dispatch(
         reorderGroup({
           source: active,
           destinationIndex,
-        })
+        }),
       );
     }
 
-    setState((prev) => ({ ...prev, activeID: null, activeType: null }));
+    setState(prev => ({ ...prev, activeID: null, activeType: null }));
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
@@ -133,7 +120,7 @@ export const Groups: React.FC<GroupsProps> = (props) => {
   };
 
   const onDragCancel = () => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       activeID: null,
       activeType: null,
@@ -144,11 +131,13 @@ export const Groups: React.FC<GroupsProps> = (props) => {
   const onDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const source = active.data.current;
 
-    if (source?.type === "task") {
+    if (source?.type === 'task') {
       dispatch(reorderTask({ source: active, destination: over }));
     }
   };
@@ -164,7 +153,7 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     >
       <Flex
         justify="space-between"
-        align={"flex-start"}
+        align={'flex-start'}
         className="gap-5 overflow-x-auto flex-shrink-0 w-full h-[75vh]"
       >
         <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
@@ -180,27 +169,22 @@ export const Groups: React.FC<GroupsProps> = (props) => {
           </Button>
         </div>
         <SortableContext
-          items={groupList.map((group) => String(group.id))}
+          items={groupList.map(group => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map((group) => (
-            <GroupItem key={group.id} group={group} taskList={taskList} />
-          ))}
+          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} />)}
         </SortableContext>
       </Flex>
       <DragOverlay dropAnimation={dropAnimation}>
         {activeID ? (
-          activeType === "task" ? (
+          activeType === 'task' ? (
             <TaskItem
-              groupID={""}
-              task={taskList.find((task) => task.id === activeID)}
+              groupID={''}
+              task={taskList.find(task => task.id === activeID)}
               onClickShowDetail={() => {}}
             />
           ) : (
-            <GroupItem
-              group={groupList.find((group) => group.id === activeID)}
-              taskList={taskList}
-            />
+            <GroupItem group={groupList.find(group => group.id === activeID)} taskList={taskList} />
           )
         ) : null}
       </DragOverlay>

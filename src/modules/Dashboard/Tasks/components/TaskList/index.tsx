@@ -1,28 +1,25 @@
 // Libraries
-import { useDispatch } from "react-redux";
-import React, { useState } from "react";
-import dayjs from "dayjs";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // Store
-import { AppDispatch, addTask } from "store";
+import { AppDispatch, addTask } from 'store';
 
 // Icons
-import { AddIcon } from "components/icons";
+import { AddIcon } from 'components/icons';
 
 // Components
-import { Button, Input } from "components/ui";
+import { Button, Input } from 'components/ui';
 
 // Models
-import { Task } from "models";
-import { Group } from "models/Group";
+import { Task } from 'models';
+import { Group } from 'models/Group';
 
 //
-import { TaskItem } from "../TaskItem";
-import { TaskDetail } from "../TaskDetailDrawer";
+import { TaskItem } from '../TaskItem';
+import { TaskDetail } from '../TaskDetailDrawer';
 
 interface TaskListProps {
   groupInfo: Group;
@@ -36,13 +33,13 @@ type TState = {
   selectedTask: Task | undefined;
 };
 
-export const TaskList: React.FC<TaskListProps> = (props) => {
+export const TaskList: React.FC<TaskListProps> = props => {
   const { groupInfo, taskList } = props;
 
   // State
   const [state, setState] = useState<TState>({
-    inputTask: "",
-    error: "",
+    inputTask: '',
+    error: '',
     isOpen: false,
     selectedTask: undefined,
   });
@@ -54,59 +51,57 @@ export const TaskList: React.FC<TaskListProps> = (props) => {
   // Handlers
   const onClickAddTask = () => {
     if (inputTask.length === 0) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        error: "This field is required",
-        inputTask: "",
+        error: 'This field is required',
+        inputTask: '',
       }));
     } else if (inputTask.length > 255) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        error: "Name is too long, max length is 255 characters",
-        inputTask: "",
+        error: 'Name is too long, max length is 255 characters',
+        inputTask: '',
       }));
-    } else if (taskList.some((task) => task.name === inputTask)) {
-      setState((prev) => ({ ...prev, error: "Task already exists!" }));
+    } else if (taskList.some(task => task.name === inputTask)) {
+      setState(prev => ({ ...prev, error: 'Task already exists!' }));
     } else {
       const newTask = {
         name: inputTask,
-        description: "",
-        est_time: "",
-        start_date: dayjs().format("DD-MM-YYYY"),
-        end_date: dayjs().format("DD-MM-YYYY"),
+        description: '',
+        est_time: '',
+        start_date: dayjs().format('DD-MM-YYYY'),
+        end_date: dayjs().format('DD-MM-YYYY'),
         assignee_id: undefined,
         status_id: groupInfo.id,
       };
 
       dispatch(addTask(newTask));
-      setState((prev) => ({ ...prev, inputTask: "", error: "" }));
+      setState(prev => ({ ...prev, inputTask: '', error: '' }));
     }
   };
 
   const onClickShowTaskDetail = (taskID: React.Key) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       isOpen: true,
-      selectedTask: taskList.find((task) => task.id === taskID),
+      selectedTask: taskList.find(task => task.id === taskID),
     }));
   };
 
   const onCloseTaskDetail = () => {
-    setState((prev) => ({ ...prev, isOpen: false, selectedTask: undefined }));
+    setState(prev => ({ ...prev, isOpen: false, selectedTask: undefined }));
   };
 
   const onChangeInputTask = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputTask: event.target.value }));
+    setState(prev => ({ ...prev, inputTask: event.target.value }));
   };
 
   const renderTasks = (tasks: Task[]) => {
-    const filteredTasks = tasks.filter(
-      (task) => task.status_id === groupInfo.id
-    );
+    const filteredTasks = tasks.filter(task => task.status_id === groupInfo.id);
 
     return (
       <>
-        {filteredTasks.map((task) => (
+        {filteredTasks.map(task => (
           <TaskItem
             key={task.id}
             groupID={groupInfo.id}
@@ -124,8 +119,8 @@ export const TaskList: React.FC<TaskListProps> = (props) => {
         key={groupInfo.id}
         id={String(groupInfo.id)}
         items={taskList
-          .filter((task) => task.status_id === groupInfo.id)
-          .map((task) => String(task.id))}
+          .filter(task => task.status_id === groupInfo.id)
+          .map(task => String(task.id))}
         strategy={verticalListSortingStrategy}
       >
         <div key={groupInfo.id} className="items-center overflow-hidden">
@@ -145,11 +140,7 @@ export const TaskList: React.FC<TaskListProps> = (props) => {
         </div>
         <div className="text-red-400">{error}</div>
         {selectedTask && (
-          <TaskDetail
-            task={selectedTask}
-            isOpened={isOpen}
-            isClosed={onCloseTaskDetail}
-          />
+          <TaskDetail task={selectedTask} isOpened={isOpen} isClosed={onCloseTaskDetail} />
         )}
       </SortableContext>
     </div>

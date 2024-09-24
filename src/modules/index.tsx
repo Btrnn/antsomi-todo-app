@@ -1,12 +1,12 @@
 // Libraries
-import React from "react";
-import { RouterProvider } from "react-router-dom";
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from '../store';
 
 // Routes
-import { router } from "../routes";
-import { AntdConfigProvider } from "providers";
+import { router } from '../routes';
+import { AntdConfigProvider } from 'providers';
 
 function App() {
   return (

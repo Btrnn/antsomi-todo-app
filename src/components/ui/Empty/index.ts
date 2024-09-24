@@ -1,1 +1,1 @@
-export { Empty } from "antd";
+export { Empty } from 'antd';

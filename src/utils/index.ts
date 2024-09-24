@@ -14,17 +14,19 @@ export const reorderSingleArray = (list: any[], startIndex: number, endIndex: nu
   return result;
 };
 
-export const reorderDoubleArrays = (listSource: any[], listDestination: any[], startIndex: number, endIndex: number) => {
+export const reorderDoubleArrays = (
+  listSource: any[],
+  listDestination: any[],
+  startIndex: number,
+  endIndex: number,
+) => {
   const sourceArray = Array.from(listSource);
   const destinationArray = Array.from(listDestination);
   const [removed] = sourceArray.splice(startIndex, 1);
-  if (endIndex >= destinationArray.length-1 && destinationArray.length-1 !== 0) {
+  if (endIndex >= destinationArray.length - 1 && destinationArray.length - 1 !== 0) {
     destinationArray.push(removed);
-  }
-  else {
+  } else {
     destinationArray.splice(endIndex, 0, removed);
   }
   return [...sourceArray, ...destinationArray];
-
 };
-

@@ -1,1 +1,1 @@
-export { FilterOutlined as FilterIcon} from "@ant-design/icons";
+export { FilterOutlined as FilterIcon } from '@ant-design/icons';

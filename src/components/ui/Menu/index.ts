@@ -1,1 +1,1 @@
-export { Menu } from "antd";
+export { Menu } from 'antd';

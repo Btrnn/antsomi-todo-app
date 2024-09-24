@@ -1,1 +1,1 @@
-export { Modal } from "antd";
+export { Modal } from 'antd';

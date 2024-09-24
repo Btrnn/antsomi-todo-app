@@ -1,1 +1,1 @@
-export * from "./AntdConfigProvider";
+export * from './AntdConfigProvider';

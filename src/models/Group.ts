@@ -1,5 +1,4 @@
-import React from "react";
-
+import React from 'react';
 
 export interface Group {
   id: React.Key;

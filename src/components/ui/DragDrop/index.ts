@@ -40,13 +40,9 @@ type CollisionDetection = (args: {
   pointerCoordinates: Coordinates | null;
 }) => Collision[];
 
-
-class DroppableContainersMap extends Map<
-  UniqueIdentifier,
-  DroppableContainer
-> {
+class DroppableContainersMap extends Map<UniqueIdentifier, DroppableContainer> {
   get(id: Identifier) {
-    return id != null ? super.get(id) ?? undefined : undefined;
+    return id != null ? (super.get(id) ?? undefined) : undefined;
   }
 
   toArray(): DroppableContainer[] {
@@ -54,7 +50,7 @@ class DroppableContainersMap extends Map<
   }
 
   getEnabled(): DroppableContainer[] {
-    return this.toArray().filter(({disabled}) => !disabled);
+    return this.toArray().filter(({ disabled }) => !disabled);
   }
 
   getNodeFor(id: Identifier) {
@@ -72,9 +68,8 @@ interface DroppableContainer {
 }
 
 interface MutableRefObject<T> {
-        current: T;
-    }
-
+  current: T;
+}
 
 interface Active {
   id: UniqueIdentifier;
@@ -108,7 +103,7 @@ interface DroppableMeasuring {
 }
 
 type DropAnimationSideEffects = (
-  parameters: DropAnimationSideEffectsParameters
+  parameters: DropAnimationSideEffectsParameters,
 ) => CleanupFunction | void;
 
 export interface DraggableMeasuring extends Measuring {}
@@ -120,7 +115,6 @@ export interface MeasuringConfiguration {
   droppable?: Partial<DroppableMeasuring>;
   dragOverlay?: Partial<DragOverlayMeasuring>;
 }
-
 
 interface ClientRect {
   width: number;
@@ -154,9 +148,7 @@ export interface KeyframeResolverParameters extends SharedParameters {
   };
 }
 
-export type KeyframeResolver = (
-  parameters: KeyframeResolverParameters
-) => Keyframe[];
+export type KeyframeResolver = (parameters: KeyframeResolverParameters) => Keyframe[];
 
 export type Transform = {
   x: number;
@@ -178,10 +170,7 @@ export interface DropAnimationFunctionArguments extends SharedParameters {
   transform: Transform;
 }
 
-export type DropAnimationFunction = (
-  args: DropAnimationFunctionArguments
-) => Promise<void> | void;
-
+export type DropAnimationFunction = (args: DropAnimationFunctionArguments) => Promise<void> | void;
 
 interface DefaultDropAnimationSideEffectsOptions {
   className?: {
@@ -194,48 +183,48 @@ interface DefaultDropAnimationSideEffectsOptions {
   };
 }
 
-export const defaultDropAnimationSideEffects = (
-  options: DefaultDropAnimationSideEffectsOptions
-): DropAnimationSideEffects => ({active, dragOverlay}) => {
-  const originalStyles: Record<string, string> = {};
-  const {styles, className} = options;
+export const defaultDropAnimationSideEffects =
+  (options: DefaultDropAnimationSideEffectsOptions): DropAnimationSideEffects =>
+  ({ active, dragOverlay }) => {
+    const originalStyles: Record<string, string> = {};
+    const { styles, className } = options;
 
-  if (styles?.active) {
-    for (const [key, value] of Object.entries(styles.active)) {
-      if (value === undefined) {
-        continue;
+    if (styles?.active) {
+      for (const [key, value] of Object.entries(styles.active)) {
+        if (value === undefined) {
+          continue;
+        }
+
+        originalStyles[key] = active.node.style.getPropertyValue(key);
+        active.node.style.setProperty(key, value);
       }
-
-      originalStyles[key] = active.node.style.getPropertyValue(key);
-      active.node.style.setProperty(key, value);
     }
-  }
 
-  if (styles?.dragOverlay) {
-    for (const [key, value] of Object.entries(styles.dragOverlay)) {
-      if (value === undefined) {
-        continue;
+    if (styles?.dragOverlay) {
+      for (const [key, value] of Object.entries(styles.dragOverlay)) {
+        if (value === undefined) {
+          continue;
+        }
+
+        dragOverlay.node.style.setProperty(key, value);
       }
-
-      dragOverlay.node.style.setProperty(key, value);
-    }
-  }
-
-  if (className?.active) {
-    active.node.classList.add(className.active);
-  }
-
-  if (className?.dragOverlay) {
-    dragOverlay.node.classList.add(className.dragOverlay);
-  }
-
-  return function cleanup() {
-    for (const [key, value] of Object.entries(originalStyles)) {
-      active.node.style.setProperty(key, value);
     }
 
     if (className?.active) {
-      active.node.classList.remove(className.active);
+      active.node.classList.add(className.active);
     }
+
+    if (className?.dragOverlay) {
+      dragOverlay.node.classList.add(className.dragOverlay);
+    }
+
+    return function cleanup() {
+      for (const [key, value] of Object.entries(originalStyles)) {
+        active.node.style.setProperty(key, value);
+      }
+
+      if (className?.active) {
+        active.node.classList.remove(className.active);
+      }
+    };
   };
-};

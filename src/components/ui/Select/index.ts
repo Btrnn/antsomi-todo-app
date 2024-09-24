@@ -1,1 +1,1 @@
-export { Select } from "antd";
+export { Select } from 'antd';

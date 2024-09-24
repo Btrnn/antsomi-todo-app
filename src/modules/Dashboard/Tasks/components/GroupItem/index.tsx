@@ -1,12 +1,12 @@
 // Libraries
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Icons
-import { DeleteIcon, DragIcon, EditIcon } from "components/icons";
+import { DeleteIcon, DragIcon, EditIcon } from 'components/icons';
 
 // Components
 import {
@@ -18,24 +18,19 @@ import {
   Dropdown,
   type MenuProps,
   type MenuInfo,
-} from "components/ui";
+} from 'components/ui';
 
 // Providers
-import {
-  AppDispatch,
-  updateGroup,
-  deleteGroup,
-  deleteTaskByGroupID,
-} from "store";
+import { AppDispatch, updateGroup, deleteGroup, deleteTaskByGroupID } from 'store';
 
 // Models
-import { Group, Task } from "models";
+import { Group, Task } from 'models';
 
 // Constants
-import { SORTABLE_TYPE, DROPDOWN_KEY } from "constants/tasks";
+import { SORTABLE_TYPE, DROPDOWN_KEY } from 'constants/tasks';
 
 //
-import { TaskList } from "../TaskList";
+import { TaskList } from '../TaskList';
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -48,18 +43,11 @@ type TState = {
   groupNewName: string | undefined;
 };
 
-export const GroupItem: React.FC<GroupItemProps> = (props) => {
+export const GroupItem: React.FC<GroupItemProps> = props => {
   const { group, taskList } = props;
 
   // Drag&Drop
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: String(group?.id),
     data: { type: SORTABLE_TYPE.GROUP },
   });
@@ -70,17 +58,15 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   // State
   const [state, setState] = useState<TState>({
     isRename: false,
-    groupSelected: "",
-    groupNewName: "",
+    groupSelected: '',
+    groupNewName: '',
   });
 
   const { isRename, groupSelected, groupNewName } = state;
 
   // Handlers
-  const onChangeGroupNewName = (
-    event: React.ChangeEvent<HTMLInputElement> | undefined
-  ) => {
-    setState((prev) => ({ ...prev, groupNewName: event?.target.value }));
+  const onChangeGroupNewName = (event: React.ChangeEvent<HTMLInputElement> | undefined) => {
+    setState(prev => ({ ...prev, groupNewName: event?.target.value }));
   };
 
   const onConfirmDelete = () => {
@@ -89,19 +75,13 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onEnterRenameGroup = (groupID: React.Key) => {
-    dispatch(
-      updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
-    );
-    setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
+    dispatch(updateGroup({ id: groupID, updatedGroup: { name: groupNewName } }));
+    setState(prev => ({ ...prev, isRename: false, groupNewName: '' }));
   };
 
-  const onClickAction = (
-    event: MenuInfo,
-    groupID: React.Key,
-    groupName: string
-  ) => {
+  const onClickAction = (event: MenuInfo, groupID: React.Key, groupName: string) => {
     if (event.key === DROPDOWN_KEY.KEY2) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         isRename: true,
         groupSelected: String(groupID),
@@ -111,25 +91,27 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onChangeSetColor = (value: Color, groupID: React.Key) => {
-    if (typeof value === "string")
+    if (typeof value === 'string') {
       dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
-    else if (value && "toHexString" in value) {
+    } else if (value && 'toHexString' in value) {
       dispatch(
         updateGroup({
           id: groupID,
           updatedGroup: { color: value.toHexString() },
-        })
+        }),
       );
-    } else return;
+    } else {
+      return;
+    }
   };
 
-  const items: MenuProps["items"] = [
+  const items: MenuProps['items'] = [
     {
       label: (
         <Popconfirm
           placement="topLeft"
-          title={"Are you sure to delete this group?"}
-          description={"Delete the group"}
+          title={'Are you sure to delete this group?'}
+          description={'Delete the group'}
           okText="Yes"
           cancelText="No"
           onConfirm={onConfirmDelete}
@@ -169,9 +151,9 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         key={group.id}
         menu={{
           items,
-          onClick: (event) => onClickAction(event, group.id, group.name),
+          onClick: event => onClickAction(event, group.id, group.name),
         }}
-        trigger={["contextMenu"]}
+        trigger={['contextMenu']}
       >
         <div key={group.id} className="flex justify-between">
           {isRename && group.id === groupSelected ? (
@@ -183,10 +165,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
               onBlur={() => onEnterRenameGroup(group.id)}
             />
           ) : (
-            <ColorPicker
-              trigger="click"
-              onChange={(value) => onChangeSetColor(value, group.id)}
-            >
+            <ColorPicker trigger="click" onChange={value => onChangeSetColor(value, group.id)}>
               <Tag bordered={false} color={group.color}>
                 {group.name}
               </Tag>

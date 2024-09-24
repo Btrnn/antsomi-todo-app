@@ -1,13 +1,13 @@
 // Libraries
-import { useSelector, useDispatch } from "react-redux";
-import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
 
 //Providers
-import { RootState, AppDispatch, updateTask } from "store";
+import { RootState, AppDispatch, updateTask } from 'store';
 
 // Icons
-import {} from "components/icons";
+import {} from 'components/icons';
 
 // Components
 import {
@@ -20,10 +20,10 @@ import {
   Flex,
   Drawer,
   InputNumber,
-} from "components/ui";
+} from 'components/ui';
 
 // Models
-import { Task } from "models";
+import { Task } from 'models';
 
 interface TaskDetailProp {
   task: Task;
@@ -33,7 +33,7 @@ interface TaskDetailProp {
 
 type FormType = Task;
 
-export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
+export const TaskDetail: React.FC<TaskDetailProp> = props => {
   const { task, isOpened, isClosed } = props;
 
   // State
@@ -56,19 +56,19 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
       ...task,
       start_date: dayjs(task.start_date),
       end_date: dayjs(task.end_date),
-      created_at: dayjs(task.created_at)
+      created_at: dayjs(task.created_at),
     });
   }, [task, isOpen, form]);
 
   // Handlers
   const onFinishForm = (values: FormType) => {
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
-    setState((prev) => ({ ...prev, isOpen: false }));
+    setState(prev => ({ ...prev, isOpen: false }));
     isClosed();
   };
 
   const onClose = () => {
-    setState((prev) => ({ ...prev, isOpen: false }));
+    setState(prev => ({ ...prev, isOpen: false }));
     form.resetFields();
     isClosed();
   };
@@ -78,7 +78,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
       <Drawer
         title={<div className="p-3">{task.name}</div>}
         placement="right"
-        size={"large"}
+        size={'large'}
         onClose={onClose}
         open={state.isOpen}
         footer={
@@ -98,9 +98,9 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
         <Form<FormType>
           style={{
             maxWidth: 700,
-            width: "full",
-            height: "full",
-            padding: "12px",
+            width: 'full',
+            height: 'full',
+            padding: '12px',
           }}
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 19 }}
@@ -112,7 +112,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
           <Form.Item<FormType>
             label="Task Title:"
             name="name"
-            rules={[{ required: true, message: "This field is required!" }]}
+            rules={[{ required: true, message: 'This field is required!' }]}
           >
             <Input placeholder="Enter a brief, clear title for the task" />
           </Form.Item>
@@ -122,7 +122,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
           <Form.Item<FormType> label="Assignee:" name="assignee_id">
             <Select
               placeholder="Select the person responsible for this task"
-              options={userList.map((user) => ({
+              options={userList.map(user => ({
                 value: user.id,
                 label: user.name,
               }))}
@@ -130,14 +130,10 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
           </Form.Item>
           <Form.Item<FormType> label="Status:" name="status_id">
             <Select
-              options={groupList.map((group) => ({
+              options={groupList.map(group => ({
                 value: group.id,
                 label: (
-                  <Tag
-                    bordered={false}
-                    color={group.color}
-                    className="justify-center"
-                  >
+                  <Tag bordered={false} color={group.color} className="justify-center">
                     {group.name}
                   </Tag>
                 ),
@@ -148,7 +144,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
             <InputNumber
               placeholder="Enter the estimated time to complete the task"
               className="w-11/12"
-              addonAfter = "hours"
+              addonAfter="hours"
             />
           </Form.Item>
           <Form.Item<FormType> label="Start Date:" name="start_date">

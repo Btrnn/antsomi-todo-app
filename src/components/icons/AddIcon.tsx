@@ -1,1 +1,1 @@
-export { PlusOutlined as AddIcon} from "@ant-design/icons";
+export { PlusOutlined as AddIcon } from '@ant-design/icons';

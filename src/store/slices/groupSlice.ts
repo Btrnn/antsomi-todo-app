@@ -1,13 +1,12 @@
 // Libraries
-import { nanoid } from "nanoid";
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
-import type { Active } from "@dnd-kit/core/dist/store/index";
-
+import { nanoid } from 'nanoid';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { Active } from '@dnd-kit/core/dist/store/index';
 
 // Models
-import { Group } from "models/Group";
-import { reorderSingleArray } from "utils";
+import { Group } from 'models/Group';
+import { reorderSingleArray } from 'utils';
 
 interface GroupState {
   groupList: Group[];
@@ -18,34 +17,34 @@ const initialState: GroupState = {
   groupList: [
     {
       id: nanoid(),
-      name: "To Do",
+      name: 'To Do',
       position: 0,
       created_at: new Date(),
-      type: "Status",
-      color: "#ffbb96",
+      type: 'Status',
+      color: '#ffbb96',
     },
     {
       id: nanoid(),
-      name: "Doing",
+      name: 'Doing',
       position: 1,
       created_at: new Date(),
-      type: "Status",
-      color: "#ffc53d",
+      type: 'Status',
+      color: '#ffc53d',
     },
     {
       id: nanoid(),
-      name: "Done",
+      name: 'Done',
       position: 2,
       created_at: new Date(),
-      type: "Status",
-      color: "#95de64",
+      type: 'Status',
+      color: '#95de64',
     },
   ],
   groupActived: 0,
 };
 
 const groupSlice = createSlice({
-  name: "group",
+  name: 'group',
   initialState,
   reducers: {
     setGroup(state, action: PayloadAction<Group[]>) {
@@ -53,27 +52,22 @@ const groupSlice = createSlice({
     },
     addGroup(
       state,
-      action: PayloadAction<
-        Omit<Group, "id" | "position" | "created_at" | "color">
-      >
+      action: PayloadAction<Omit<Group, 'id' | 'position' | 'created_at' | 'color'>>,
     ) {
       const newGroup: Group = {
         id: nanoid(),
         position: state.groupList.length,
         created_at: new Date(),
-        color: "#597ef7",
+        color: '#597ef7',
         ...action.payload,
       };
 
       state.groupList.push(newGroup);
     },
 
-    updateGroup(
-      state,
-      action: PayloadAction<{ id: React.Key; updatedGroup: Partial<Group> }>
-    ) {
+    updateGroup(state, action: PayloadAction<{ id: React.Key; updatedGroup: Partial<Group> }>) {
       const { id, updatedGroup } = action.payload;
-      const group = state.groupList.find((group) => group.id === id);
+      const group = state.groupList.find(group => group.id === id);
 
       if (group) {
         Object.assign(group, updatedGroup);
@@ -82,28 +76,19 @@ const groupSlice = createSlice({
 
     deleteGroup(state, action: PayloadAction<{ id: React.Key | undefined }>) {
       const { id } = action.payload;
-      if (id)
-        state.groupList = state.groupList.filter((group) => group.id !== id);
+      if (id) {
+        state.groupList = state.groupList.filter(group => group.id !== id);
+      }
     },
 
-    reorderGroup(
-      state,
-      action: PayloadAction<{ source: Active; destinationIndex: number }>
-    ) {
+    reorderGroup(state, action: PayloadAction<{ source: Active; destinationIndex: number }>) {
       const { source, destinationIndex } = action.payload;
-      const sourceIndex = state.groupList.findIndex(
-        (group) => group.id === source.id
-      );
+      const sourceIndex = state.groupList.findIndex(group => group.id === source.id);
 
-      state.groupList = reorderSingleArray(
-        state.groupList,
-        sourceIndex,
-        destinationIndex
-      );
+      state.groupList = reorderSingleArray(state.groupList, sourceIndex, destinationIndex);
     },
   },
 });
 
-export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroup } =
-  groupSlice.actions;
+export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroup } = groupSlice.actions;
 export default groupSlice.reducer;
