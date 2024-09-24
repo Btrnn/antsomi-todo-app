@@ -1,26 +1,20 @@
 // Libraries
 import { useDispatch } from "react-redux";
 import React, { useState } from "react";
-
+import dayjs from "dayjs";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-
 // Store
 import { AppDispatch, addTask } from "store";
 
 // Icons
-import {
-  AddIcon,
-} from "components/icons";
+import { AddIcon } from "components/icons";
 
 // Components
-import {
-  Button,
-  Input,
-} from "components/ui";
+import { Button, Input } from "components/ui";
 
 // Models
 import { Task } from "models";
@@ -30,34 +24,42 @@ import { Group } from "models/Group";
 import { TaskItem } from "../TaskItem";
 import { TaskDetail } from "../TaskDetailDrawer";
 
-interface TaskList {
+interface TaskListProps {
   groupInfo: Group;
   taskList: Task[];
 }
 
-export const TaskList: React.FC<TaskList> = (props) => {
-  // State
+type TState = {
+  inputTask: string;
+  error: string;
+  isOpen: boolean;
+  selectedTask: Task | undefined;
+};
+
+export const TaskList: React.FC<TaskListProps> = (props) => {
   const { groupInfo, taskList } = props;
-  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-  const [state, setState] = useState({
+
+  // State
+  const [state, setState] = useState<TState>({
     inputTask: "",
     error: "",
     isOpen: false,
+    selectedTask: undefined,
   });
-  const { inputTask } = state || {};
+  const { inputTask, error, isOpen, selectedTask } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
 
   // Handlers
   const onClickAddTask = () => {
-    if (inputTask.length === 0)
+    if (inputTask.length === 0) {
       setState((prev) => ({
         ...prev,
         error: "This field is required",
         inputTask: "",
       }));
-    else if (inputTask.length > 255) {
+    } else if (inputTask.length > 255) {
       setState((prev) => ({
         ...prev,
         error: "Name is too long, max length is 255 characters",
@@ -70,31 +72,33 @@ export const TaskList: React.FC<TaskList> = (props) => {
         name: inputTask,
         description: "",
         est_time: "",
-        start_date: new Date(),
-        end_date: new Date(),
+        start_date: dayjs().format("DD-MM-YYYY"),
+        end_date: dayjs().format("DD-MM-YYYY"),
         assignee_id: undefined,
         status_id: groupInfo.id,
       };
-      dispatch(addTask(newTask));
 
+      dispatch(addTask(newTask));
       setState((prev) => ({ ...prev, inputTask: "", error: "" }));
     }
   };
 
   const onClickShowTaskDetail = (taskID: React.Key) => {
-    setState((prev) => ({ ...prev, isOpen: true }));
-    setSelectedTask(taskList.find((task) => task.id === taskID));
+    setState((prev) => ({
+      ...prev,
+      isOpen: true,
+      selectedTask: taskList.find((task) => task.id === taskID),
+    }));
   };
 
   const onCloseTaskDetail = () => {
-    setState((prev) => ({ ...prev, isOpen: false }));
-    setSelectedTask(undefined);
+    setState((prev) => ({ ...prev, isOpen: false, selectedTask: undefined }));
   };
 
-  const onChangeInputTask = (event: any) => {
+  const onChangeInputTask = (event: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, inputTask: event.target.value }));
   };
-  
+
   const renderTasks = (tasks: Task[]) => {
     const filteredTasks = tasks.filter(
       (task) => task.status_id === groupInfo.id
@@ -102,13 +106,13 @@ export const TaskList: React.FC<TaskList> = (props) => {
 
     return (
       <>
-        {filteredTasks.map((task, index) => (
-            <TaskItem
-              key={task.id}
-              groupID={groupInfo.id}
-              task={task}
-              onClickShowDetail={() => onClickShowTaskDetail(task.id)}
-            />
+        {filteredTasks.map((task) => (
+          <TaskItem
+            key={task.id}
+            groupID={groupInfo.id}
+            task={task}
+            onClickShowDetail={() => onClickShowTaskDetail(task.id)}
+          />
         ))}
       </>
     );
@@ -139,11 +143,11 @@ export const TaskList: React.FC<TaskList> = (props) => {
             <AddIcon />
           </Button>
         </div>
-        <div className="text-red-400">{state.error}</div>
+        <div className="text-red-400">{error}</div>
         {selectedTask && (
           <TaskDetail
             task={selectedTask}
-            isOpened={state.isOpen}
+            isOpened={isOpen}
             isClosed={onCloseTaskDetail}
           />
         )}

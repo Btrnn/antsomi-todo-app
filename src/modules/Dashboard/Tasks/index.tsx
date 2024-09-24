@@ -1,15 +1,9 @@
 // Libraries
 import React, { useState } from "react";
 
-
 // Icons
 import {
-  AddIcon,
-  DeleteIcon,
-  DoneIcon,
   FilterIcon,
-  DragIcon,
-  EditIcon,
 } from "components/icons";
 
 // Components
@@ -41,11 +35,10 @@ export const Tasks:React.FC<TasksProp> = (props) => {
 
   const onChangeGroupType = (value: any) => {
     setState(prev => ({...prev, groupType: value}))
-    console.log(value)
   }
 
   return (
-    <div>
+    <div className="bg-inherit">
       <Select
         defaultValue="Status"
         className="w-28 h-9 mb-2"

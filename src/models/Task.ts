@@ -1,3 +1,4 @@
+import { Dayjs } from "dayjs";
 import React from "react";
 
 export interface Task {
@@ -5,10 +6,10 @@ export interface Task {
   name: string;
   description: string;
   status_id: React.Key;
-  assignee_id: React.Key|undefined;
+  assignee_id: React.Key | undefined;
   est_time: string;
-  start_date: Date;
-  end_date: Date;
+  start_date: string;
+  end_date: string;
   position: number;
-  created_at: Date;
+  created_at: string;
 }

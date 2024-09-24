@@ -3,6 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { nanoid } from "nanoid";
 import React from "react";
+import dayjs from "dayjs";
+import type { Active, Over } from "@dnd-kit/core/dist/store/index";
 
 // Models
 import { Task } from "models/Task";
@@ -30,11 +32,12 @@ const taskSlice = createSlice({
       const newTask: Task = {
         id: nanoid(),
         position: state.taskList.length,
-        created_at: new Date(),
+        created_at: dayjs().format("DD-MM-YYYY"),
         ...action.payload,
       };
-
+      console.log(newTask)
       state.taskList.push(newTask);
+
     },
 
     updateTask(
@@ -48,25 +51,32 @@ const taskSlice = createSlice({
       }
     },
 
-    deleteTaskByID(state, action: PayloadAction<{ id: React.Key }>) {
+    deleteTaskByID(
+      state,
+      action: PayloadAction<{ id: React.Key | undefined }>
+    ) {
       const { id } = action.payload;
-      state.taskList = state.taskList.filter((task) => task.id !== id);
+      if (id) state.taskList = state.taskList.filter((task) => task.id !== id);
     },
 
-    deleteTaskByGroupID(state, action: PayloadAction<{ groupID: React.Key }>) {
+    deleteTaskByGroupID(
+      state,
+      action: PayloadAction<{ groupID: React.Key | undefined }>
+    ) {
       const { groupID } = action.payload;
-      state.taskList = state.taskList.filter(
-        (task) => task.status_id !== groupID
-      );
+      if (groupID)
+        state.taskList = state.taskList.filter(
+          (task) => task.status_id !== groupID
+        );
     },
 
     reorderTask(
       state,
-      action: PayloadAction<{ source: any; destination: any }>
+      action: PayloadAction<{ source: Active; destination: Over }>
     ) {
       const { source, destination } = action.payload;
 
-      if (get(destination, 'data.current.type', '') === "group") {
+      if (get(destination, "data.current.type", "") === "group") {
         const task = state.taskList.find(
           (task) => String(task.id) === source.id
         );
@@ -75,8 +85,8 @@ const taskSlice = createSlice({
           Object.assign(task, { status_id: destination.id });
         }
       } else {
-        const sourceGroup = source.data.current.groupID;
-        const destinationGroup = destination.data.current.groupID;
+        const sourceGroup = source.data.current?.groupID;
+        const destinationGroup = destination.data.current?.groupID;
 
         const destinationList = state.taskList.filter(
           (task) => task.status_id === destinationGroup
@@ -121,7 +131,7 @@ const taskSlice = createSlice({
           );
           if (task) {
             Object.assign(task, {
-              status_id: destination.data.current.groupID,
+              status_id: destination.data.current?.groupID,
             });
           }
         }

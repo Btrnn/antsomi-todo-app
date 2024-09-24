@@ -7,11 +7,10 @@ import {
   useSensor,
   useSensors,
   MouseSensor,
-  closestCenter,
-  closestCorners,
   rectIntersection,
-  pointerWithin,
   DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -31,12 +30,7 @@ import {
   addGroup,
   reorderTask,
   reorderGroup,
-  setGroup
 } from "store";
-
-// Models
-import { Task } from "models";
-import { Group } from "models";
 
 //
 import { TaskItem } from "../TaskItem";
@@ -47,15 +41,11 @@ import {
   DropAnimation,
 } from "components/ui/DragDrop";
 
-// Utils
-import { reorderSingleArray } from "utils";
-import { reorderDoubleArrays } from "utils";
-
 // Constants
 import { SORTABLE_TYPE } from "constants/tasks";
 
 interface GroupsProps {
-  id: any;
+  id: React.Key;
   groupTitle: string;
   type: string;
 }
@@ -64,14 +54,8 @@ type TState = {
   groupType: string;
   error: string;
   inputGroupName: string;
-  confirmDelete: boolean;
-  isRenaming: boolean;
-  groupSelected: string;
-  groupNewName: string;
-  activeID: string | null;
-  activeType: string | null;
-  destinationGroup: string;
-  // tempGroupList: Group[];
+  activeID: React.Key | null | undefined;
+  activeType: string | null | undefined;
 };
 
 const dropAnimation: DropAnimation = {
@@ -93,17 +77,11 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     groupType: groupTitle,
     error: "",
     inputGroupName: "",
-    confirmDelete: false,
-    isRenaming: false,
-    groupSelected: "",
-    groupNewName: "",
     activeID: null,
     activeType: null,
-    destinationGroup: "",
   });
 
-  // Variables
-  const {  activeID, activeType } = state;
+  const { activeID, activeType, inputGroupName } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -116,27 +94,29 @@ export const Groups: React.FC<GroupsProps> = (props) => {
   };
 
   const onClickAddGroup = () => {
-    const newGroup = { name: state.inputGroupName, type: type };
+    const newGroup = { name: inputGroupName, type: type };
     dispatch(addGroup(newGroup));
     setState((prev) => ({ ...prev, inputGroupName: "" }));
   };
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    const sourceType = active.data.current?.type;
 
     if (!over) return;
 
-    const sourceType = active.data.current?.type;
-
     if (sourceType === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
-    } else if (sourceType === "group") {
-      const destinationIndex = groupList.findIndex((group) => group.id === over.id);
+    } 
+    else if (sourceType === SORTABLE_TYPE.GROUP) {
+      const destinationIndex = groupList.findIndex(
+        (group) => group.id === over.id
+      );
 
       dispatch(
         reorderGroup({
           source: active,
-          destinationIndex
+          destinationIndex,
         })
       );
     }
@@ -144,19 +124,12 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     setState((prev) => ({ ...prev, activeID: null, activeType: null }));
   };
 
-  const onDragStart = (event: any) => {
+  const onDragStart = (event: DragStartEvent) => {
     setState((prev) => ({
       ...prev,
-      activeID: event.active.id,
-      activeType: event.active.data.current.type,
+      activeID: event.active?.id,
+      activeType: event.active.data.current?.type,
     }));
-
-    if (event.active.data.current.type === "group")  {
-      setState((prev) => ({
-        ...prev,
-        tempGroupList: groupList,
-      }));
-    }
   };
 
   const onDragCancel = () => {
@@ -168,77 +141,16 @@ export const Groups: React.FC<GroupsProps> = (props) => {
     }));
   };
 
-  const onDragOver = (event: any) => {
+  const onDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
 
     if (!over) return;
 
     const source = active.data.current;
-    //const destination = over.data.current;
 
-    if (source.type === "task") {
-      // if(destination.type === "group"){
-      //   setTempTaskList((prevTaskList) =>
-      //     prevTaskList.map((task) =>
-      //       task.id === active.id ? { ...task, status_id: over.id } : task
-      //     )
-      //   );
-      //   setState((prev) => ({
-      //     ...prev,
-      //     destinationIndex: 0,
-      //     destinationGroup: destination.groupID,
-      //   }));
-      // }
-      // else{
-      //   if(source.groupID === destination.groupID){
-      //     setState((prev) => ({
-      //       ...prev,
-      //       destinationIndex: tempTaskList.findIndex(task => task.id === over.id),
-      //       destinationGroup: destination.groupID,
-      //     }));
-      //   }
-      //   else{
-      //     setState((prev) => ({
-      //       ...prev,
-      //       destinationIndex: tempTaskList.findIndex(task => task.id === over.id),
-      //       destinationGroup: destination.groupID,
-      //     }));
-
-      //     setTempTaskList((prevTaskList) => {
-      //       const activeTask = prevTaskList.find((task) => String(task.id) === active.id);
-      //       if (!activeTask) return prevTaskList;
-      //       activeTask.status_id = destination.groupID;
-      //       const sourceList = prevTaskList.filter((task) => task.status_id === source.groupID && task.id !== active.id);
-      //       const sourceIndex = sourceList.findIndex((task) => task.id === active.id);
-
-      //       const destinationList = prevTaskList.filter((task) => task.status_id === destination.groupID);
-      //       const destinationIndex = destinationList.findIndex((task) => task.id === over.id);
-
-      //       return [
-      //         ...sourceList,
-      //         ...reorderDoubleArrays(sourceList, destinationList, sourceIndex, destinationIndex),
-      //       ];
-      //     })}}
-
+    if (source?.type === "task") {
       dispatch(reorderTask({ source: active, destination: over }));
     }
-    
-    // else {
-    //   let destinationIndex = -1;
-    //   if (over.data.current.type === "group")
-    //     destinationIndex = groupList.findIndex(
-    //       (group) => group.id === over.id
-    //     );
-    //   else
-    //     destinationIndex = groupList.findIndex(
-    //       (group) => group.id === over.data.current.groupID
-    //     );
-
-    //   setState((prev) => ({
-    //     ...prev,
-    //     destinationIndex: destinationIndex,
-    //   }));
-    // }
   };
 
   return (
@@ -259,7 +171,7 @@ export const Groups: React.FC<GroupsProps> = (props) => {
           <Input
             className="p-2"
             placeholder="Add new group"
-            value={state.inputGroupName}
+            value={inputGroupName}
             onChange={onChangeInputGroup}
             onPressEnter={onClickAddGroup}
           />
@@ -271,11 +183,9 @@ export const Groups: React.FC<GroupsProps> = (props) => {
           items={groupList.map((group) => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map(
-            (group) => (
-              <GroupItem key={group.id} group={group} taskList={taskList} />
-            )
-          )}
+          {groupList?.map((group) => (
+            <GroupItem key={group.id} group={group} taskList={taskList} />
+          ))}
         </SortableContext>
       </Flex>
       <DragOverlay dropAnimation={dropAnimation}>

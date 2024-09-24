@@ -1,7 +1,6 @@
 // Libraries
 import { useSelector, useDispatch } from "react-redux";
-import React, { useEffect, useState } from "react";
-
+import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -12,11 +11,22 @@ import { RootState, AppDispatch, deleteTaskByID } from "store";
 import { DeleteIcon, DragIcon, EditIcon } from "components/icons";
 
 // Components
-import { Popconfirm, Tag, Dropdown, type MenuProps } from "components/ui";
+import {
+  Popconfirm,
+  Tag,
+  Dropdown,
+  type MenuProps,
+  type MenuInfo,
+} from "components/ui";
 
 // Models
 import { Task } from "models";
-import { SORTABLE_TYPE } from "constants/tasks";
+
+// Constants
+import { SORTABLE_TYPE, DROPDOWN_KEY } from "constants/tasks";
+import { globalToken } from "constants/theme";
+
+const { colorBgContainer } = globalToken;
 
 interface TaskItemProp {
   groupID: React.Key;
@@ -45,20 +55,12 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
   const groupList = useSelector((state: RootState) => state.group.groupList);
   const dispatch: AppDispatch = useDispatch();
 
-  // Variables
-  let confirmDelete = false;
-
-  const onClickAction = (event: any, taskID: any) => {
-    if (event.key === "2") onClickShowDetail(taskID);
-    else if (event.key === "1" && confirmDelete) handleDeleteTask(taskID);
-  };
-
-  const handleDeleteTask = (id: React.Key) => {
-    dispatch(deleteTaskByID({ id }));
+  const onClickAction = (event: MenuInfo, taskID: React.Key) => {
+    if (event.key === DROPDOWN_KEY.KEY2) onClickShowDetail(taskID);
   };
 
   const onConfirmDelete = () => {
-    confirmDelete = true;
+    dispatch(deleteTaskByID({ id: task?.id }));
   };
 
   const items: MenuProps["items"] = [
@@ -78,7 +80,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
           </div>
         </Popconfirm>
       ),
-      key: "1",
+      key: DROPDOWN_KEY.KEY1,
     },
     {
       label: (
@@ -87,7 +89,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
           <div>Edit task</div>
         </div>
       ),
-      key: "2",
+      key: DROPDOWN_KEY.KEY2,
     },
   ];
 
@@ -97,6 +99,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
         transition,
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
+        backgroundColor: colorBgContainer,
       }}
       ref={setNodeRef}
       {...attributes}
@@ -114,7 +117,7 @@ export const TaskItem: React.FC<TaskItemProp> = (props) => {
             style={{
               border: "1px solid #d9d9d9",
             }}
-            className="flex justify-between p-4 rounded w-full overflow-hidden mb-3 mt-5"
+            className="flex justify-between p-4 rounded overflow-hidden mb-3 mt-5"
             onClick={() => onClickShowDetail(task.id)}
             id={String(task.id)}
           >

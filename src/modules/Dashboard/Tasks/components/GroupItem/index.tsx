@@ -2,9 +2,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 
-import {
-  useSortable,
-} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 // Icons
@@ -19,6 +17,7 @@ import {
   Color,
   Dropdown,
   type MenuProps,
+  type MenuInfo,
 } from "components/ui";
 
 // Providers
@@ -32,87 +31,96 @@ import {
 // Models
 import { Group, Task } from "models";
 
+// Constants
+import { SORTABLE_TYPE, DROPDOWN_KEY } from "constants/tasks";
+
 //
 import { TaskList } from "../TaskList";
-
 
 interface GroupItemProps {
   group: Group | undefined;
   taskList: Task[];
 }
 
+type TState = {
+  isRename: boolean;
+  groupSelected: string;
+  groupNewName: string | undefined;
+};
+
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
   const { group, taskList } = props;
-  let confirmDelete = false;
 
   // Drag&Drop
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: String(group?.id),
-      data: { type: 'group' },
-});
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: String(group?.id),
+    data: { type: SORTABLE_TYPE.GROUP },
+  });
 
   // Store
   const dispatch: AppDispatch = useDispatch();
 
   // State
-  const [state, setState] = useState({
-    tasks: [],
-    error: "",
-    inputGroupName: "",
-    confirmDelete: false,
-    isRenaming: false,
+  const [state, setState] = useState<TState>({
+    isRename: false,
     groupSelected: "",
     groupNewName: "",
   });
 
+  const { isRename, groupSelected, groupNewName } = state;
+
   // Handlers
-  const onChangeGroupNewName = (event: any) => {
-    setState((prev) => ({ ...prev, groupNewName: event.target.value }));
+  const onChangeGroupNewName = (
+    event: React.ChangeEvent<HTMLInputElement> | undefined
+  ) => {
+    setState((prev) => ({ ...prev, groupNewName: event?.target.value }));
   };
 
   const onConfirmDelete = () => {
-    confirmDelete = true;
-  };
-
-  const handleDeleteGroup = (groupID: React.Key) => {
-    dispatch(deleteTaskByGroupID({ groupID }));
-    dispatch(deleteGroup({ id: groupID }));
-    confirmDelete = false;
+    dispatch(deleteTaskByGroupID({ groupID: group?.id }));
+    dispatch(deleteGroup({ id: group?.id }));
   };
 
   const onEnterRenameGroup = (groupID: React.Key) => {
     dispatch(
-      updateGroup({ id: groupID, updatedGroup: { name: state.groupNewName } })
+      updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
     );
-    setState((prev) => ({ ...prev, isRenaming: false, groupNewName: "" }));
+    setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
   };
 
-  const onClickAction = (event: any, groupID: any, groupName: string) => {
-    if (event.key === "2") {
+  const onClickAction = (
+    event: MenuInfo,
+    groupID: React.Key,
+    groupName: string
+  ) => {
+    if (event.key === DROPDOWN_KEY.KEY2) {
       setState((prev) => ({
         ...prev,
-        isRenaming: true,
-        groupSelected: groupID,
+        isRename: true,
+        groupSelected: String(groupID),
         groupNewName: groupName,
       }));
-    } else if (event.key === "1" && confirmDelete) {
-      handleDeleteGroup(groupID);
     }
   };
 
   const onChangeSetColor = (value: Color, groupID: React.Key) => {
     if (typeof value === "string")
       dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
-    else if (value && "toHexString" in value)
+    else if (value && "toHexString" in value) {
       dispatch(
         updateGroup({
           id: groupID,
           updatedGroup: { color: value.toHexString() },
         })
       );
-    else
-      dispatch(updateGroup({ id: groupID, updatedGroup: { color: "#ffff" } }));
+    } else return;
   };
 
   const items: MenuProps["items"] = [
@@ -132,7 +140,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
           </div>
         </Popconfirm>
       ),
-      key: "1",
+      key: DROPDOWN_KEY.KEY1,
     },
     {
       label: (
@@ -141,7 +149,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
           <div>Rename</div>
         </div>
       ),
-      key: "2",
+      key: DROPDOWN_KEY.KEY2,
     },
   ];
 
@@ -166,10 +174,10 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         trigger={["contextMenu"]}
       >
         <div key={group.id} className="flex justify-between">
-          {state.isRenaming && group.id === state.groupSelected ? (
+          {isRename && group.id === groupSelected ? (
             <Input
               className="w-1/2"
-              value={state.groupNewName || group.name}
+              value={groupNewName || group.name}
               onChange={onChangeGroupNewName}
               onPressEnter={() => onEnterRenameGroup(group.id)}
               onBlur={() => onEnterRenameGroup(group.id)}

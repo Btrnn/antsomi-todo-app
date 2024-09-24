@@ -7,14 +7,7 @@ import React, { useEffect, useState } from "react";
 import { RootState, AppDispatch, updateTask } from "store";
 
 // Icons
-import {
-  AddIcon,
-  DeleteIcon,
-  DoneIcon,
-  FilterIcon,
-  DragIcon,
-  EditIcon,
-} from "components/icons";
+import {} from "components/icons";
 
 // Components
 import {
@@ -47,7 +40,6 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
   const [state, setState] = useState({
     isOpen: isOpened,
   });
-
   const { isOpen } = state;
 
   // Hooks
@@ -60,14 +52,13 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
 
   // Effects
   useEffect(() => {
-    console.log({ task });
     form.setFieldsValue({
       ...task,
       start_date: dayjs(task.start_date),
       end_date: dayjs(task.end_date),
+      created_at: dayjs(task.created_at)
     });
-  }, [task, isOpen]);
-
+  }, [task, isOpen, form]);
 
   // Handlers
   const onFinishForm = (values: FormType) => {
