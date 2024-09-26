@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Active, Over } from '@dnd-kit/core/dist/store/index';
+import dayjs from 'dayjs';
 
 // Models
 import { Group } from 'models/Group';
@@ -19,15 +20,15 @@ const initialState: GroupState = {
       id: nanoid(),
       name: 'To Do',
       position: 0,
-      created_at: new Date(),
+      created_at: dayjs().format(),
       type: 'Status',
-      color: '#ffbb96',
+      color: '#a91010',
     },
     {
       id: nanoid(),
       name: 'Doing',
       position: 1,
-      created_at: new Date(),
+      created_at: dayjs().format(),
       type: 'Status',
       color: '#ffc53d',
     },
@@ -35,7 +36,7 @@ const initialState: GroupState = {
       id: nanoid(),
       name: 'Done',
       position: 2,
-      created_at: new Date(),
+      created_at: dayjs().format(),
       type: 'Status',
       color: '#95de64',
     },
@@ -57,7 +58,7 @@ const groupSlice = createSlice({
       const newGroup: Group = {
         id: nanoid(),
         position: state.groupList.length,
-        created_at: new Date(),
+        created_at: dayjs().format(),
         color: '#597ef7',
         ...action.payload,
       };

@@ -11,6 +11,8 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
+  DropAnimation,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -19,27 +21,21 @@ import { AddIcon } from 'components/icons';
 
 // Components
 import { Button, Input, Flex } from 'components/ui';
-
-// Providers
-import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup } from 'store';
-
-//
 import { TaskItem } from '../TaskItem';
 import { GroupItem } from '../GroupItem';
 
-import { defaultDropAnimationSideEffects, DropAnimation } from 'components/ui/DragDrop';
+// Providers
+import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup } from 'store';
 
 // Constants
 import { SORTABLE_TYPE } from 'constants/tasks';
 
 interface GroupsProps {
   id: React.Key;
-  groupTitle: string;
   type: string;
 }
 
 type TState = {
-  groupType: string;
   error: string;
   inputGroupName: string;
   activeID: React.Key | null | undefined;
@@ -56,13 +52,12 @@ const dropAnimation: DropAnimation = {
   }),
 };
 
-export const Groups: React.FC<GroupsProps> = props => {
-  const { groupTitle, type } = props;
+export const GroupList: React.FC<GroupsProps> = props => {
+  const { type } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
   // State
   const [state, setState] = useState<TState>({
-    groupType: groupTitle,
     error: '',
     inputGroupName: '',
     activeID: null,
@@ -82,7 +77,7 @@ export const Groups: React.FC<GroupsProps> = props => {
   };
 
   const onClickAddGroup = () => {
-    const newGroup = { name: inputGroupName, type: type };
+    const newGroup = { name: inputGroupName, type };
     dispatch(addGroup(newGroup));
     setState(prev => ({ ...prev, inputGroupName: '' }));
   };
@@ -117,7 +112,6 @@ export const Groups: React.FC<GroupsProps> = props => {
       ...prev,
       activeID: null,
       activeType: null,
-      tempGroupList: [],
     }));
   };
 
@@ -130,7 +124,7 @@ export const Groups: React.FC<GroupsProps> = props => {
 
     const source = active.data.current;
 
-    if (source?.type === 'task') {
+    if (source?.type === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
     }
   };
@@ -144,14 +138,51 @@ export const Groups: React.FC<GroupsProps> = props => {
       onDragCancel={onDragCancel}
       onDragOver={onDragOver}
     >
+      <style>
+        {`
+        .custom-scroll {
+          overflow-x: hidden;
+          position: relative; 
+        }
+        
+        .custom-scroll:hover {
+          overflow-x: auto; 
+        }
+        
+        .custom-scroll::-webkit-scrollbar {
+          height: 5px; 
+          position: absolute;
+          right: 0;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background-color: #bfbfbf; 
+          border-radius: 4px; 
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent; 
+        }
+      `}
+      </style>
       <Flex
-        justify="space-between"
+        justify="space-evenly"
         align={'flex-start'}
-        className="gap-5 overflow-x-auto flex-shrink-0 w-full h-[75vh]"
+        className="gap-5 flex-shrink-0 w-full h-[710px] overflow-hidden custom-scroll"
       >
-        <div className="flex gap-1 mt-11 flex-shrink-0 w-1/5">
+        <SortableContext
+          items={groupList.map(group => String(group.id))}
+          strategy={horizontalListSortingStrategy}
+        >
+          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} />)}
+        </SortableContext>
+        <div className="flex gap-1 flex-shrink-0 w-[280px]">
           <Input
             className="p-2"
+            style={{
+              outline: 'none',
+              boxShadow: 'none',
+            }}
             placeholder="Add new group"
             value={inputGroupName}
             onChange={onChangeInputGroup}
@@ -161,16 +192,10 @@ export const Groups: React.FC<GroupsProps> = props => {
             <AddIcon />
           </Button>
         </div>
-        <SortableContext
-          items={groupList.map(group => String(group.id))}
-          strategy={horizontalListSortingStrategy}
-        >
-          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} />)}
-        </SortableContext>
       </Flex>
       <DragOverlay dropAnimation={dropAnimation}>
         {activeID ? (
-          activeType === 'task' ? (
+          activeType === SORTABLE_TYPE.TASK ? (
             <TaskItem
               groupID={''}
               task={taskList.find(task => task.id === activeID)}

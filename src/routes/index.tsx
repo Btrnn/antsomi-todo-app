@@ -9,6 +9,9 @@ import { Tasks } from 'modules/Dashboard/Tasks';
 import { Home } from 'modules/Dashboard/Home';
 import { About } from 'modules/About';
 import { NotFound } from 'modules/NotFound';
+import { Setting } from 'modules/Dashboard/Setting';
+import { Profile } from 'modules/Dashboard/Profile';
+import { Signup } from 'modules/Signup';
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +21,22 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <About />,
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/setting',
+    element: <Setting />,
+  },
+  {
+    path: '/profile',
+    element: <Profile />,
+  },
+  {
+    path: '/signup',
+    element: <Signup />,
   },
   {
     path: '/dashboard',

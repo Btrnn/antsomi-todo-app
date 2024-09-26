@@ -4,7 +4,7 @@ export interface Group {
   id: React.Key;
   name: string;
   position: number;
-  created_at: Date;
+  created_at: string;
   type: string;
   color: string;
 }

@@ -1,6 +1,6 @@
 // Libraries
 import { useSelector, useDispatch } from 'react-redux';
-import React from 'react';
+import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -8,19 +8,16 @@ import { CSS } from '@dnd-kit/utilities';
 import { RootState, AppDispatch, deleteTaskByID } from 'store';
 
 // Icons
-import { DeleteIcon, DragIcon, EditIcon } from 'components/icons';
+import { DeleteIcon, EditIcon } from 'components/icons';
 
 // Components
-import { Popconfirm, Tag, Dropdown, type MenuProps, type MenuInfo } from 'components/ui';
+import { Popconfirm, Tag, Dropdown, type MenuProps, type MenuInfo, Card } from 'components/ui';
 
 // Models
 import { Task } from 'models';
 
 // Constants
-import { SORTABLE_TYPE, DROPDOWN_KEY } from 'constants/tasks';
-import { globalToken } from 'constants/theme';
-
-const { colorBgContainer } = globalToken;
+import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 
 interface TaskItemProp {
   groupID: React.Key;
@@ -28,10 +25,14 @@ interface TaskItemProp {
   onClickShowDetail: (taskIndex: React.Key) => void;
 }
 
+type TState = {
+  timeoutId: string | number | NodeJS.Timeout | undefined | null;
+};
+
 export const TaskItem: React.FC<TaskItemProp> = props => {
   const { groupID, task, onClickShowDetail } = props;
 
-  // Drag&Drop
+  // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: String(task?.id),
     data: { groupID: groupID, type: SORTABLE_TYPE.TASK },
@@ -42,14 +43,38 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
   const groupList = useSelector((state: RootState) => state.group.groupList);
   const dispatch: AppDispatch = useDispatch();
 
+  // States
+  const [state, setState] = useState<TState>({
+    timeoutId: '',
+  });
+
+  const { timeoutId } = state;
+
   const onClickAction = (event: MenuInfo, taskID: React.Key) => {
-    if (event.key === DROPDOWN_KEY.KEY2) {
+    if (event.key === MENU_KEY.KEY2) {
       onClickShowDetail(taskID);
     }
   };
 
   const onConfirmDelete = () => {
     dispatch(deleteTaskByID({ id: task?.id }));
+  };
+
+  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = event => {
+    const id = setTimeout(() => {
+      if (listeners) {
+        listeners.onMouseDown(event);
+      }
+    }, 500);
+    setState(prev => ({ ...prev, timeoutId: id }));
+  };
+
+  const onMouseUp = () => {
+    if (timeoutId && task) {
+      clearTimeout(timeoutId);
+      setState(prev => ({ ...prev, timeoutId: null }));
+      onClickShowDetail(task.id);
+    }
   };
 
   const items: MenuProps['items'] = [
@@ -69,7 +94,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           </div>
         </Popconfirm>
       ),
-      key: DROPDOWN_KEY.KEY1,
+      key: MENU_KEY.KEY1,
     },
     {
       label: (
@@ -78,7 +103,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           <div>Edit task</div>
         </div>
       ),
-      key: DROPDOWN_KEY.KEY2,
+      key: MENU_KEY.KEY2,
     },
   ];
 
@@ -88,7 +113,6 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
         transition,
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
-        backgroundColor: colorBgContainer,
       }}
       ref={setNodeRef}
       {...attributes}
@@ -102,20 +126,19 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           }}
           trigger={['contextMenu']}
         >
-          <div
-            style={{
-              border: '1px solid #d9d9d9',
-            }}
-            className="flex justify-between p-4 rounded overflow-hidden mb-3 mt-5"
+          <Card
+            className="flex justify-between overflow-hidden mb-3"
             onClick={() => onClickShowDetail(task.id)}
             id={String(task.id)}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
           >
             <div key={task.id}>
-              <div key={task.id} className="overflow-hidden max-w-3/4">
+              <div key={task.id} className="overflow-hidden w-52">
                 <div className="font-bold mb-2 whitespace-normal">{task.name}</div>
                 <div className="font-light whitespace-nowrap mb-2">{task.description}</div>
               </div>
-              <div className="flex flex-col gap-y-2">
+              <div className="flex flex-col items-start gap-y-3">
                 <Tag
                   bordered={false}
                   color={groupList.find(group => group.id === task.status_id)?.color}
@@ -130,14 +153,12 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
                 )}
               </div>
             </div>
-            <div {...listeners}>
+            {/* <div >
               <DragIcon />
-            </div>
-          </div>
+            </div> */}
+          </Card>
         </Dropdown>
-      ) : (
-        <div ref={setNodeRef} className="w-full, h-full"></div>
-      )}
+      ) : null}
     </div>
   );
 };

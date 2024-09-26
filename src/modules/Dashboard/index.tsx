@@ -1,78 +1,138 @@
 // Libraries
-import React from 'react';
-import { MenuProps } from 'antd';
+import React, { useState } from 'react';
+import { MenuItemType } from 'antd/es/menu/interface';
 import { NavLink, Outlet } from 'react-router-dom';
 
 // Images
-import logo from '../../assets/images/pexels-photo-430205.webp';
+import logo from '../../assets/images/logo.png';
+
+// Icons
+import { UserIcon, SettingIcon, HomeIcon, DataIcon } from 'components/icons';
 
 // Components
-import { Layout, Menu } from 'components/ui';
+import { Layout, Menu, Avatar, type MenuInfo, Divider, Breadcrumb } from 'components/ui';
+import { UserDrawer } from './UserDrawer';
 
 // Constants
 import { globalToken } from '../../constants';
 
-const { Sider, Header, Content, Footer } = Layout;
-const { colorBgContainer, borderRadiusLG } = globalToken;
+const { Sider, Header, Content } = Layout;
+const { colorBgContainer } = globalToken;
 
-const MENU_ITEMS: MenuProps['items'] = [
+const MENU_ITEMS: MenuItemType[] = [
   {
     key: 'home',
+    icon: <HomeIcon />,
     label: 'Home',
   },
   {
     key: 'tasks',
+    icon: <DataIcon />,
     label: 'Tasks',
   },
 ];
 
 export const Dashboard: React.FC = () => {
-  const items = MENU_ITEMS?.map((item: any) => {
+  // State
+  const [state, setState] = useState({
+    isOpenSetting: false,
+    title: 'Home',
+  });
+  const { isOpenSetting, title } = state;
+
+  const items = MENU_ITEMS?.map(item => {
     return {
       ...item,
-      label: <NavLink to={item?.key}>{item?.label}</NavLink>,
+      label: <NavLink to={`${item?.key || ''}`}>{item?.label}</NavLink>,
     };
   });
 
+  const onClickShowUserSetting = () => {
+    setState(prev => ({
+      ...prev,
+      isOpenSetting: true,
+    }));
+  };
+
+  const onCloseUserSetting = () => {
+    setState(prev => ({
+      ...prev,
+      isOpenSetting: false,
+    }));
+  };
+
+  const onClickSelectMenu = (event: MenuInfo) => {
+    switch (event.key) {
+      case 'home':
+        setState(prev => ({
+          ...prev,
+          title: 'Home',
+        }));
+        break;
+      case 'tasks':
+        setState(prev => ({
+          ...prev,
+          title: 'Task List',
+        }));
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <Layout>
+    <Layout className="overflow-hidden">
       <Sider
+        theme="light"
         breakpoint="lg"
         collapsedWidth="0"
-        onBreakpoint={broken => {
-          console.log(broken);
-        }}
-        onCollapse={(collapsed, type) => {
-          console.log(collapsed, type);
-        }}
+        width={240}
+        style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)', height: '100vh' }}
       >
-        <div className="demo-logo-vertical">
-          <img src={logo} alt="logo" />
+        <div className="flex items-center align-middle ml-9 h-24">
+          <img className="h-[60px]" src={logo} alt="logo" />
+          <div> TO DO APP </div>
         </div>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={['4']} items={items} />
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['home']}
+          items={items}
+          onClick={onClickSelectMenu}
+        />
       </Sider>
-      <Layout className="h-screen">
+      <Layout className="h-full">
         <Header
-          className="flex justify-center"
-          style={{ padding: 5, background: colorBgContainer }}
+          className="flex justify-end items-center h-14"
+          style={{ padding: 20, background: colorBgContainer }}
         >
-          TO DO APP
+          <div className="flex items-center mr-1">
+            <SettingIcon className="mr-4" style={{ fontSize: '22px', cursor: 'pointer' }} />
+            <Avatar
+              size={30}
+              icon={<UserIcon />}
+              onClick={onClickShowUserSetting}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
         </Header>
-        <Content style={{ margin: '24px 16px 0' }}>
+        <Divider className="m-1" />
+        <Content>
           <div
             style={{
-              padding: 24,
-              minHeight: 360,
+              padding: 20,
+              height: '800px',
+              width: '100%',
               background: colorBgContainer,
-              borderRadius: borderRadiusLG,
             }}
           >
+            <div className="ml-9 mb-5">
+              <div className=" font-black text-3xl align-bottom">{title}</div>
+              <Breadcrumb items={[{ title: 'Home' }, { title: 'Task List' }]} className="mt-5" />
+            </div>
             <Outlet />
           </div>
         </Content>
-        <Footer style={{ textAlign: 'center' }}>
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
-        </Footer>
+        <UserDrawer isOpen={isOpenSetting} isClose={onCloseUserSetting} />
       </Layout>
     </Layout>
   );

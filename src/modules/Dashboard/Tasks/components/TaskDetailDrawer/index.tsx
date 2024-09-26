@@ -1,7 +1,7 @@
 // Libraries
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 //Providers
 import { RootState, AppDispatch, updateTask } from 'store';
@@ -27,20 +27,14 @@ import { Task } from 'models';
 
 interface TaskDetailProp {
   task: Task;
-  isOpened: boolean;
-  isClosed: () => void;
+  isOpen: boolean;
+  isClose: () => void;
 }
 
 type FormType = Task;
 
 export const TaskDetail: React.FC<TaskDetailProp> = props => {
-  const { task, isOpened, isClosed } = props;
-
-  // State
-  const [state, setState] = useState({
-    isOpen: isOpened,
-  });
-  const { isOpen } = state;
+  const { task, isOpen, isClose } = props;
 
   // Hooks
   const [form] = Form.useForm();
@@ -63,14 +57,12 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
   // Handlers
   const onFinishForm = (values: FormType) => {
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
-    setState(prev => ({ ...prev, isOpen: false }));
-    isClosed();
+    isClose();
   };
 
   const onClose = () => {
-    setState(prev => ({ ...prev, isOpen: false }));
     form.resetFields();
-    isClosed();
+    isClose();
   };
 
   return (
@@ -80,7 +72,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         placement="right"
         size={'large'}
         onClose={onClose}
-        open={state.isOpen}
+        open={isOpen}
         footer={
           <Flex gap={10} justify="right">
             <Form.Item>

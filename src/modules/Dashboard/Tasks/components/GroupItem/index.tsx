@@ -1,12 +1,12 @@
 // Libraries
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-
 import { useSortable } from '@dnd-kit/sortable';
+import dayjs from 'dayjs';
 import { CSS } from '@dnd-kit/utilities';
 
 // Icons
-import { DeleteIcon, DragIcon, EditIcon } from 'components/icons';
+import { AddIcon, DeleteIcon, DragIcon, EditIcon } from 'components/icons';
 
 // Components
 import {
@@ -18,19 +18,19 @@ import {
   Dropdown,
   type MenuProps,
   type MenuInfo,
+  Card,
+  Button,
 } from 'components/ui';
+import { TaskList } from '../TaskList';
 
 // Providers
-import { AppDispatch, updateGroup, deleteGroup, deleteTaskByGroupID } from 'store';
+import { AppDispatch, updateGroup, deleteGroup, deleteTaskByGroupID, addTask } from 'store';
 
 // Models
 import { Group, Task } from 'models';
 
 // Constants
-import { SORTABLE_TYPE, DROPDOWN_KEY } from 'constants/tasks';
-
-//
-import { TaskList } from '../TaskList';
+import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -38,15 +38,18 @@ interface GroupItemProps {
 }
 
 type TState = {
+  isAdding: boolean;
+  inputTask: string;
   isRename: boolean;
   groupSelected: string;
   groupNewName: string | undefined;
+  error: string;
 };
 
 export const GroupItem: React.FC<GroupItemProps> = props => {
   const { group, taskList } = props;
 
-  // Drag&Drop
+  // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: String(group?.id),
     data: { type: SORTABLE_TYPE.GROUP },
@@ -57,12 +60,15 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
 
   // State
   const [state, setState] = useState<TState>({
+    isAdding: false,
+    inputTask: '',
     isRename: false,
     groupSelected: '',
     groupNewName: '',
+    error: '',
   });
 
-  const { isRename, groupSelected, groupNewName } = state;
+  const { isAdding, inputTask, isRename, groupSelected, groupNewName, error } = state;
 
   // Handlers
   const onChangeGroupNewName = (event: React.ChangeEvent<HTMLInputElement> | undefined) => {
@@ -80,7 +86,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
   };
 
   const onClickAction = (event: MenuInfo, groupID: React.Key, groupName: string) => {
-    if (event.key === DROPDOWN_KEY.KEY2) {
+    if (event.key === MENU_KEY.KEY2) {
       setState(prev => ({
         ...prev,
         isRename: true,
@@ -105,6 +111,47 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
     }
   };
 
+  const onChangeInputTask = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setState(prev => ({ ...prev, inputTask: event.target.value }));
+  };
+
+  const onClickAddTask = () => {
+    let errorMesage = '';
+    let isAdd = true;
+
+    if (inputTask.length === 0) {
+      errorMesage = 'This field is required';
+    } else if (inputTask.length > 255) {
+      errorMesage = 'Name is too long, max length is 255 characters';
+    } else if (taskList.some(task => task.name === inputTask)) {
+      errorMesage = 'Task already exists!';
+    }
+
+    if (!errorMesage && group) {
+      const newTask = {
+        name: inputTask,
+        description: '',
+        est_time: '',
+        start_date: dayjs().format(),
+        end_date: dayjs().format(),
+        assignee_id: undefined,
+        status_id: group.id,
+      };
+      isAdd = false;
+      dispatch(addTask(newTask));
+    }
+
+    setState(prev => ({ ...prev, inputTask: '', error: errorMesage, isAdding: isAdd }));
+  };
+
+  const onClickBeginAdding = () => {
+    if (isAdding === true) {
+      setState(prev => ({ ...prev, isAdding: false }));
+    } else {
+      setState(prev => ({ ...prev, isAdding: true, error: '' }));
+    }
+  };
+
   const items: MenuProps['items'] = [
     {
       label: (
@@ -122,7 +169,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
           </div>
         </Popconfirm>
       ),
-      key: DROPDOWN_KEY.KEY1,
+      key: MENU_KEY.KEY1,
     },
     {
       label: (
@@ -131,53 +178,93 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
           <div>Rename</div>
         </div>
       ),
-      key: DROPDOWN_KEY.KEY2,
+      key: MENU_KEY.KEY2,
     },
   ];
 
   return group ? (
-    <div
+    <Card
+      title={
+        <Dropdown
+          key={group.id}
+          menu={{
+            items,
+            onClick: event => onClickAction(event, group.id, group.name),
+          }}
+          trigger={['contextMenu']}
+        >
+          <div
+            key={group.id}
+            className="flex justify-between items-center mt-5 pb-5 border-b-[0.5px] border-b-yellow-900"
+          >
+            {isRename && group.id === groupSelected ? (
+              <Input
+                className="w-1/2"
+                style={{
+                  boxShadow: 'none',
+                  borderColor: 'transparent',
+                }}
+                value={groupNewName || group.name}
+                onChange={onChangeGroupNewName}
+                onPressEnter={() => onEnterRenameGroup(group.id)}
+                onBlur={() => onEnterRenameGroup(group.id)}
+              />
+            ) : (
+              <ColorPicker trigger="click" onChange={value => onChangeSetColor(value, group.id)}>
+                <Tag
+                  bordered={false}
+                  color={group.color}
+                  style={{ fontSize: '12px', padding: '5px 10px' }}
+                >
+                  {group.name}
+                </Tag>
+              </ColorPicker>
+            )}
+            <div className="flex items-center">
+              <div className="mr-2 text-black" onClick={onClickBeginAdding}>
+                <AddIcon />
+              </div>
+              <div className="text-black" {...listeners}>
+                <DragIcon />
+              </div>
+            </div>
+          </div>
+        </Dropdown>
+      }
+      bordered={false}
       key={group.id}
-      className="flex-shrink-0 w-[270px] h-[70vh]"
       style={{
         transition,
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
+        backgroundColor: '#f5f5f5',
       }}
       ref={setNodeRef}
       {...attributes}
     >
-      <Dropdown
-        key={group.id}
-        menu={{
-          items,
-          onClick: event => onClickAction(event, group.id, group.name),
-        }}
-        trigger={['contextMenu']}
-      >
-        <div key={group.id} className="flex justify-between">
-          {isRename && group.id === groupSelected ? (
+      {isAdding && (
+        <div className="mb-5 w-[270px]">
+          <div className="flex gap-1">
             <Input
-              className="w-1/2"
-              value={groupNewName || group.name}
-              onChange={onChangeGroupNewName}
-              onPressEnter={() => onEnterRenameGroup(group.id)}
-              onBlur={() => onEnterRenameGroup(group.id)}
+              className="p-2"
+              placeholder="Add new task"
+              style={{
+                outline: 'none',
+                boxShadow: 'none',
+                borderColor: 'transparent',
+              }}
+              value={inputTask}
+              onChange={onChangeInputTask}
+              onPressEnter={onClickAddTask}
             />
-          ) : (
-            <ColorPicker trigger="click" onChange={value => onChangeSetColor(value, group.id)}>
-              <Tag bordered={false} color={group.color}>
-                {group.name}
-              </Tag>
-            </ColorPicker>
-          )}
-          <div className="mr-4 text-black" {...listeners}>
-            <DragIcon />
+            <Button className="w-9 h-9 border-none" onClick={onClickAddTask}>
+              <AddIcon />
+            </Button>
           </div>
+          <div className="text-red-500">{error}</div>
         </div>
-      </Dropdown>
-
+      )}
       <TaskList groupInfo={group} taskList={taskList} />
-    </div>
+    </Card>
   ) : null;
 };

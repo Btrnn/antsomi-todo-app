@@ -1,38 +1,13 @@
 // Libraries
-import React, { useState } from 'react';
-
-// Icons
-import { FilterIcon } from 'components/icons';
-
-// Components
-import { Select } from 'components/ui';
+import React /* , { useState } */ from 'react';
 
 // Models
-import { Groups } from './components/GroupList';
+import { GroupList } from './components/GroupList';
 
-interface TasksProp {}
-
-export const Tasks: React.FC<TasksProp> = props => {
-  // State
-  const [state, setState] = useState({
-    groupType: 0,
-    groupTitle: '',
-    tasks: [],
-    error: '',
-    groupList: [
-      { id: 0, title: 'Status' },
-      { id: 1, title: 'Assignee' },
-      { id: 2, title: 'Priority' },
-    ],
-  });
-
-  const onChangeGroupType = (value: any) => {
-    setState(prev => ({ ...prev, groupType: value }));
-  };
-
+export const Tasks: React.FC = () => {
   return (
     <div className="bg-inherit">
-      <Select
+      {/* <Select
         defaultValue="Status"
         className="w-28 h-9 mb-2"
         onChange={onChangeGroupType}
@@ -41,8 +16,8 @@ export const Tasks: React.FC<TasksProp> = props => {
           value: group.id,
           label: group.title,
         }))}
-      />
-      <Groups id={state.groupType} groupTitle={''} type={''} />
+      /> */}
+      <GroupList id={0} type={''} />
     </div>
   );
 };

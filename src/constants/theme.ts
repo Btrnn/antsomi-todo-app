@@ -12,7 +12,7 @@ export const THEME: ThemeConfig = {
       borderRadiusSM: 13,
     },
   },
-  //"algorithm": theme.darkAlgorithm,
+  //algorithm: theme.darkAlgorithm,
 };
 
 export const globalToken = theme.getDesignToken(THEME);

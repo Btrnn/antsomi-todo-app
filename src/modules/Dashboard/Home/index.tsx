@@ -1,15 +1,10 @@
 // Libraries
-import React, { useState } from 'react';
+import React from 'react';
 
 // Components
 import { Button } from 'components/ui';
 
-// Hooks
-import { useCounter } from 'hooks';
-
-interface HomeProps {}
-
-export const Home: React.FC<HomeProps> = props => {
+export const Home: React.FC = () => {
   return (
     <main className="p-6">
       <h2 className="text-xl font-bold mb-4">Overview</h2>
@@ -32,8 +27,6 @@ export const Home: React.FC<HomeProps> = props => {
           <p className="mt-2 text-gray-600">Some information about this card.</p>
         </div>
       </div>
-
-      <Button>Hello world</Button>
     </main>
   );
 };

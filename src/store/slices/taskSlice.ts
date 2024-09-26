@@ -29,7 +29,7 @@ const taskSlice = createSlice({
       const newTask: Task = {
         id: nanoid(),
         position: state.taskList.length,
-        created_at: dayjs(),
+        created_at: dayjs().format(),
         ...action.payload,
       };
       state.taskList.push(newTask);

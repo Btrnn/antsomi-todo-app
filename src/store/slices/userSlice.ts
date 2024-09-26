@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 
 // Models
 import { User } from 'models/User';
+import dayjs from 'dayjs';
 
 interface UserState {
   userList: User[];
@@ -12,9 +13,9 @@ interface UserState {
 
 const initialState: UserState = {
   userList: [
-    { id: nanoid(), name: 'User A', created_at: new Date(), email: 'a123@gmail.com' },
-    { id: nanoid(), name: 'User B', created_at: new Date(), email: 'b123@gmail.com' },
-    { id: nanoid(), name: 'User C', created_at: new Date(), email: 'c123@gmail.com' },
+    { id: nanoid(), name: 'User A', created_at: dayjs().format(), email: 'a123@gmail.com' },
+    { id: nanoid(), name: 'User B', created_at: dayjs().format(), email: 'b123@gmail.com' },
+    { id: nanoid(), name: 'User C', created_at: dayjs().format(), email: 'c123@gmail.com' },
   ],
 };
 
@@ -25,7 +26,7 @@ const userSlice = createSlice({
     addUser(state, action: PayloadAction<Omit<User, 'id' | 'created_at'>>) {
       const newUser: User = {
         id: nanoid(),
-        created_at: new Date(),
+        created_at: dayjs().format(),
         ...action.payload,
       };
 
