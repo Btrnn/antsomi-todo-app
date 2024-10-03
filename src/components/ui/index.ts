@@ -20,3 +20,4 @@ export * from './Card';
 export * from './Grid';
 export * from './Divider';
 export * from './Breadcrumb';
+export * from './Upload';

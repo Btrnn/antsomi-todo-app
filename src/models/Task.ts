@@ -11,4 +11,5 @@ export interface Task {
   start_date: string;
   end_date: string;
   created_at: string;
+  owner_id: React.Key;
 }

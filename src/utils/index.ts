@@ -28,5 +28,5 @@ export const reorderDoubleArrays = (
   } else {
     destinationArray.splice(endIndex, 0, removed);
   }
-  return [...sourceArray, ...destinationArray];
+  return [sourceArray, destinationArray];
 };

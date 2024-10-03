@@ -1,6 +1,8 @@
 // Libraries
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Cookies } from 'react-cookie';
+import { useDispatch } from 'react-redux';
 
 // Components
 import { Button, Input, Checkbox, Form, type FormProps, Col, Row } from 'components/ui';
@@ -8,21 +10,70 @@ import { Button, Input, Checkbox, Form, type FormProps, Col, Row } from 'compone
 // Images
 import image from 'assets/images/background.jpg';
 
+// Services
+import { checkAuthentication } from 'services/authentication';
+import { getUserInfo } from 'services/user';
+
+// Cookies
+import { useAuth } from 'hooks';
+
+// Stores
+import { AppDispatch, setUser } from 'store';
+
 type FieldType = {
   username?: string;
   password?: string;
   remember?: string;
 };
 
-const onFinish: FormProps<FieldType>['onFinish'] = values => {
-  console.log('Success:', values);
-};
-
-const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = errorInfo => {
-  console.log('Failed:', errorInfo);
+type TState = {
+  error: string;
 };
 
 export const Login: React.FC = () => {
+  // Routes
+  const navigate = useNavigate();
+
+  const { isAuthenticated, loading } = useAuth();
+
+  // States
+  const [state, setState] = useState<TState>({
+    error: '',
+  });
+  const { error } = state;
+
+  // Stores
+  const dispatch: AppDispatch = useDispatch();
+
+  // Cookies
+  const cookies = new Cookies();
+
+  const onFinish: FormProps<FieldType>['onFinish'] = async values => {
+    if (values.username && values.password) {
+      const result = await checkAuthentication(values.username, values.password);
+      if (result.statusCode === 200) {
+        cookies.set('authToken', result.data, { path: '/', maxAge: 3600 });
+
+        const currentUser = await getUserInfo();
+        dispatch(setUser(currentUser.data));
+
+        setState(prev => ({ ...prev, error: '' }));
+
+        navigate('/dashboard/home');
+      } else {
+        setState(prev => ({ ...prev, error: result.data }));
+      }
+    }
+  };
+
+  const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = errorInfo => {
+    console.log('Failed:', errorInfo);
+  };
+
+  if (isAuthenticated && !loading) {
+    navigate('/dashboard');
+  }
+
   return (
     <Row style={{ height: '100vh' }}>
       <Col
@@ -59,7 +110,7 @@ export const Login: React.FC = () => {
               name="username"
               rules={[{ required: true, message: 'Please input your username!' }]}
             >
-              <Input className="p-2" />
+              <Input className="p-2" placeholder="Input your email or phone number" />
             </Form.Item>
 
             <Form.Item<FieldType>
@@ -67,13 +118,13 @@ export const Login: React.FC = () => {
               name="password"
               rules={[{ required: true, message: 'Please input your password!' }]}
             >
-              <Input.Password className="p-2" />
+              <Input.Password className="p-2" placeholder="Input your password" />
             </Form.Item>
+            <div className="text-red-500 mb-5">{error}</div>
 
             <Form.Item<FieldType> name="remember" valuePropName="checked">
               <Checkbox>Remember me</Checkbox>
             </Form.Item>
-
             <Form.Item>
               <Button type="primary" htmlType="submit">
                 Submit

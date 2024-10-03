@@ -25,6 +25,9 @@ const taskSlice = createSlice({
   name: 'task',
   initialState,
   reducers: {
+    setTaskList(state, action: PayloadAction<Task[]>) {
+      state.taskList = action.payload;
+    },
     addTask(state, action: PayloadAction<Omit<Task, 'id' | 'position' | 'created_at'>>) {
       const newTask: Task = {
         id: nanoid(),
@@ -59,10 +62,9 @@ const taskSlice = createSlice({
 
     reorderTask(state, action: PayloadAction<{ source: Active; destination: Over }>) {
       const { source, destination } = action.payload;
+      const task = state.taskList.find(task => task.id === source.id);
 
       if (get(destination, 'data.current.type', '') === 'group') {
-        const task = state.taskList.find(task => task.id === source.id);
-
         if (task) {
           Object.assign(task, { status_id: destination.id });
         }
@@ -80,16 +82,29 @@ const taskSlice = createSlice({
         const destinationIndex = destinationList.findIndex(task => task.id === destination.id);
 
         if (sourceGroup === destinationGroup) {
-          state.taskList = [
-            ...remainingList,
-            ...reorderSingleArray(destinationList, sourceIndex, destinationIndex),
-          ];
+          const reorderedList = reorderSingleArray(destinationList, sourceIndex, destinationIndex);
+          for (
+            let i = Math.min(sourceIndex, destinationIndex);
+            i < Math.max(sourceIndex, destinationIndex);
+            i++
+          ) {
+            reorderedList[i].position = i;
+          }
+          state.taskList = [...remainingList, ...reorderedList];
         } else {
-          state.taskList = [
-            ...remainingList,
-            ...reorderDoubleArrays(sourceList, destinationList, sourceIndex, destinationIndex),
-          ];
-          const task = state.taskList.find(task => task.id === source.id);
+          const [reorderedSourceList, reorderedDestinationList] = reorderDoubleArrays(
+            sourceList,
+            destinationList,
+            sourceIndex,
+            destinationIndex,
+          );
+          for (let i = sourceIndex; i < reorderedSourceList.length; i++) {
+            reorderedSourceList[i].position = i;
+          }
+          for (let i = destinationIndex; i < reorderedDestinationList.length; i++) {
+            reorderedDestinationList[i].position = i;
+          }
+          state.taskList = [...remainingList, ...reorderedSourceList, ...reorderedDestinationList];
           if (task) {
             Object.assign(task, {
               status_id: destination.data.current?.groupID,
@@ -98,10 +113,34 @@ const taskSlice = createSlice({
         }
       }
     },
+    moveTask(state, action: PayloadAction<{ source: Active; destination: Over }>) {
+      const { source, destination } = action.payload;
+      const task = state.taskList.find(task => task.id === source.id);
+      if (get(destination, 'data.current.type', '') === 'group') {
+        if (task) {
+          Object.assign(task, { status_id: destination.id });
+        }
+      } else {
+        const sourceGroup = source.data.current?.groupID;
+        const destinationGroup = destination.data.current?.groupID;
+        if (sourceGroup !== destinationGroup) {
+          if (task) {
+            Object.assign(task, { status_id: destination.data.current?.groupID });
+          }
+        }
+      }
+    },
   },
 });
 
-export const { addTask, updateTask, deleteTaskByID, deleteTaskByGroupID, reorderTask } =
-  taskSlice.actions;
+export const {
+  addTask,
+  updateTask,
+  deleteTaskByID,
+  deleteTaskByGroupID,
+  reorderTask,
+  setTaskList,
+  moveTask,
+} = taskSlice.actions;
 
 export default taskSlice.reducer;

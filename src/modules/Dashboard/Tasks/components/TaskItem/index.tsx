@@ -18,6 +18,7 @@ import { Task } from 'models';
 
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
+import { deleteTask } from 'services/task';
 
 interface TaskItemProp {
   groupID: React.Key;
@@ -58,14 +59,18 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
 
   const onConfirmDelete = () => {
     dispatch(deleteTaskByID({ id: task?.id }));
+    deleteTask(task?.id ?? '');
   };
 
   const onMouseDown: React.MouseEventHandler<HTMLDivElement> = event => {
+    if (event.button === 2) {
+      return;
+    }
     const id = setTimeout(() => {
-      if (listeners) {
+      if (listeners && typeof listeners.onMouseDown === 'function') {
         listeners.onMouseDown(event);
       }
-    }, 500);
+    }, 200);
     setState(prev => ({ ...prev, timeoutId: id }));
   };
 
@@ -146,16 +151,13 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
                 >
                   {groupList.find(group => group.id === task.status_id)?.name}
                 </Tag>
-                {task.assignee_id !== undefined && (
+                {task.assignee_id !== '' && (
                   <Tag bordered={false} className="justify-center">
                     {userList.find(user => user.id === task.assignee_id)?.name}
                   </Tag>
                 )}
               </div>
             </div>
-            {/* <div >
-              <DragIcon />
-            </div> */}
           </Card>
         </Dropdown>
       ) : null}

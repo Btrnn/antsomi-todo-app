@@ -1,24 +1,14 @@
 // Libraries
-import { useDispatch } from 'react-redux';
 import React, { useState } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-// Store
-import { AppDispatch } from 'store';
-
-// Icons
-import { AddIcon } from 'components/icons';
-
 // Components
-import { Button, Input } from 'components/ui';
+import { TaskItem } from '../TaskItem';
+import { TaskDetail } from '../TaskDetailDrawer';
 
 // Models
 import { Task } from 'models';
 import { Group } from 'models/Group';
-
-//
-import { TaskItem } from '../TaskItem';
-import { TaskDetail } from '../TaskDetailDrawer';
 
 interface TaskListProps {
   groupInfo: Group;
@@ -100,7 +90,7 @@ export const TaskList: React.FC<TaskListProps> = props => {
       `}
       </style>
 
-      <div className="flex-shrink-0 w-[280px] h-[548px] custom-scroll">
+      <div className="flex-shrink-0 w-[20vw] h-[63vh] custom-scroll">
         <SortableContext
           key={groupInfo.id}
           id={String(groupInfo.id)}

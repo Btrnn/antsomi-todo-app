@@ -11,7 +11,8 @@ import { About } from 'modules/About';
 import { NotFound } from 'modules/NotFound';
 import { Setting } from 'modules/Dashboard/Setting';
 import { Profile } from 'modules/Dashboard/Profile';
-import { Signup } from 'modules/Signup';
+import { ProtectedRoute } from 'modules/ProtectedRoute';
+import { Signup } from 'modules/SignUp';
 
 export const router = createBrowserRouter([
   {
@@ -32,7 +33,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/profile',
-    element: <Profile />,
+    element: (
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/signup',
@@ -40,7 +45,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: '*',
@@ -50,11 +59,19 @@ export const router = createBrowserRouter([
       {
         path: 'home',
         index: true,
-        element: <Home />,
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'tasks',
-        element: <Tasks />,
+        element: (
+          <ProtectedRoute>
+            <Tasks />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

@@ -1,8 +1,7 @@
 // Libraries
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSortable } from '@dnd-kit/sortable';
-import dayjs from 'dayjs';
 import { CSS } from '@dnd-kit/utilities';
 
 // Icons
@@ -24,7 +23,7 @@ import {
 import { TaskList } from '../TaskList';
 
 // Providers
-import { AppDispatch, updateGroup, deleteGroup, deleteTaskByGroupID, addTask } from 'store';
+import { AppDispatch, updateGroup, deleteTaskByGroupID, setTaskList } from 'store';
 
 // Models
 import { Group, Task } from 'models';
@@ -32,9 +31,14 @@ import { Group, Task } from 'models';
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 
+// Services
+import { updateGroup as updateGroupAPI } from 'services/group';
+import { createTask, getAllTasks } from 'services/task';
+
 interface GroupItemProps {
   group: Group | undefined;
   taskList: Task[];
+  onDelete: (id: React.Key) => Promise<void>;
 }
 
 type TState = {
@@ -47,7 +51,7 @@ type TState = {
 };
 
 export const GroupItem: React.FC<GroupItemProps> = props => {
-  const { group, taskList } = props;
+  const { group, taskList, onDelete } = props;
 
   // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -76,12 +80,15 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
   };
 
   const onConfirmDelete = () => {
-    dispatch(deleteTaskByGroupID({ groupID: group?.id }));
-    dispatch(deleteGroup({ id: group?.id }));
+    if (group) {
+      dispatch(deleteTaskByGroupID({ groupID: group?.id }));
+      onDelete(group.id);
+    }
   };
 
   const onEnterRenameGroup = (groupID: React.Key) => {
     dispatch(updateGroup({ id: groupID, updatedGroup: { name: groupNewName } }));
+    updateGroupAPI(groupID, { name: groupNewName });
     setState(prev => ({ ...prev, isRename: false, groupNewName: '' }));
   };
 
@@ -99,6 +106,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
   const onChangeSetColor = (value: Color, groupID: React.Key) => {
     if (typeof value === 'string') {
       dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
+      updateGroupAPI(groupID, { color: value });
     } else if (value && 'toHexString' in value) {
       dispatch(
         updateGroup({
@@ -106,6 +114,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
           updatedGroup: { color: value.toHexString() },
         }),
       );
+      updateGroupAPI(groupID, { color: value.toHexString() });
     } else {
       return;
     }
@@ -115,7 +124,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
     setState(prev => ({ ...prev, inputTask: event.target.value }));
   };
 
-  const onClickAddTask = () => {
+  const onClickAddTask = async () => {
     let errorMesage = '';
     let isAdd = true;
 
@@ -128,17 +137,18 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
     }
 
     if (!errorMesage && group) {
-      const newTask = {
+      const newTask: Omit<Task, "id"|"created_at" |"start_date"|"end_date"| "owner_id"> = { 
         name: inputTask,
         description: '',
         est_time: '',
-        start_date: dayjs().format(),
-        end_date: dayjs().format(),
-        assignee_id: undefined,
-        status_id: group.id,
+        assignee_id: '',
+        status_id: group.id, 
+        position : (taskList.filter(task => task.status_id === group.id)).length,
       };
+      const createdTask = await createTask(newTask);
+      getTaskList();
       isAdd = false;
-      dispatch(addTask(newTask));
+      //dispatch(addTask(newTask));
     }
 
     setState(prev => ({ ...prev, inputTask: '', error: errorMesage, isAdding: isAdd }));
@@ -182,6 +192,20 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
     },
   ];
 
+  const getTaskList = async () => {
+    try {
+      const fetchedTasks = await getAllTasks();
+      dispatch(setTaskList(fetchedTasks.data));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Use Effect
+  useEffect(() => {
+    getTaskList();
+  }, []);
+
   return group ? (
     <Card
       title={
@@ -221,9 +245,7 @@ export const GroupItem: React.FC<GroupItemProps> = props => {
               </ColorPicker>
             )}
             <div className="flex items-center">
-              <div className="mr-2 text-black" onClick={onClickBeginAdding}>
-                <AddIcon />
-              </div>
+              <AddIcon className="mr-2 text-black" onClick={onClickBeginAdding} />
               <div className="text-black" {...listeners}>
                 <DragIcon />
               </div>

@@ -1,5 +1,5 @@
 // Libraries
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   DndContext,
@@ -25,10 +25,18 @@ import { TaskItem } from '../TaskItem';
 import { GroupItem } from '../GroupItem';
 
 // Providers
-import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup } from 'store';
+import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup, setGroupList, deleteGroup, moveTask } from 'store';
 
 // Constants
 import { SORTABLE_TYPE } from 'constants/tasks';
+
+// Services
+import { getAllGroups, createGroup, deleteGroup as deleteGroupAPI, reorderGroup as reorderGroupAPI} from 'services/group';
+import { reorderTask as reorderTaskAPI, updateTask as updatedTaskAPI } from 'services/task';
+
+// Models
+import { Group } from 'models';
+import { Task } from 'models';
 
 interface GroupsProps {
   id: React.Key;
@@ -40,6 +48,7 @@ type TState = {
   inputGroupName: string;
   activeID: React.Key | null | undefined;
   activeType: string | null | undefined;
+  tempTaskList: Task[];
 };
 
 const dropAnimation: DropAnimation = {
@@ -62,9 +71,10 @@ export const GroupList: React.FC<GroupsProps> = props => {
     inputGroupName: '',
     activeID: null,
     activeType: null,
+    tempTaskList: [],
   });
 
-  const { activeID, activeType, inputGroupName } = state;
+  const { activeID, activeType, inputGroupName, tempTaskList } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -72,31 +82,24 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const taskList = useSelector((state: RootState) => state.task.taskList);
 
   // Handlers
+  const getGroupList = async () => {
+    try {
+      const fetchedGroups = await getAllGroups(); 
+      dispatch(setGroupList(fetchedGroups?.data));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
     setState(prev => ({ ...prev, inputGroupName: event.target.value }));
   };
 
-  const onClickAddGroup = () => {
-    const newGroup = { name: inputGroupName, type };
-    dispatch(addGroup(newGroup));
+  const onClickAddGroup = async () => {
+    const newGroup: Partial<Group> = { name: inputGroupName, position: groupList.length , type: type, color: '#597ef7' };
+    const createdGroup = await createGroup(newGroup);
+    getGroupList();
     setState(prev => ({ ...prev, inputGroupName: '' }));
-  };
-
-  const onDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    const sourceType = active.data.current?.type;
-
-    if (!over) {
-      return;
-    }
-
-    if (sourceType === SORTABLE_TYPE.TASK) {
-      dispatch(reorderTask({ source: active, destination: over }));
-    } else if (sourceType === SORTABLE_TYPE.GROUP) {
-      dispatch(reorderGroup({ source: active, destination: over }));
-    }
-
-    setState(prev => ({ ...prev, activeID: null, activeType: null }));
   };
 
   const onDragStart = (event: DragStartEvent) => {
@@ -104,6 +107,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
+      tempTaskList: taskList,
     }));
   };
 
@@ -112,6 +116,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
       ...prev,
       activeID: null,
       activeType: null,
+      tempTaskList: []
     }));
   };
 
@@ -125,9 +130,77 @@ export const GroupList: React.FC<GroupsProps> = props => {
     const source = active.data.current;
 
     if (source?.type === SORTABLE_TYPE.TASK) {
-      dispatch(reorderTask({ source: active, destination: over }));
+      dispatch(moveTask({ source: active, destination: over }));
     }
   };
+
+  const onDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    const sourceType = active.data.current?.type;
+
+    if (!over) {
+      return;
+    }
+
+    if (sourceType === SORTABLE_TYPE.TASK) {
+      dispatch(reorderTask({ source: active, destination: over }));
+      if(over.data.current?.type ===  SORTABLE_TYPE.GROUP){
+        updatedTaskAPI(active.id, {status_id: over.id});
+      }
+      else{
+        updatedTaskAPI(active.id, {status_id: over.data.current?.groupID});
+      }
+    } else if (sourceType === SORTABLE_TYPE.GROUP) {
+      dispatch(reorderGroup({ source: active, destination: over }));
+    }
+    setState(prev => ({ ...prev, activeID: null, activeType: null, tempTaskList: [] }));
+  };
+
+  
+
+  const onDeleteGroup = async (id: React.Key) =>{
+    //dispatch(deleteGroup(id))
+    const deletedGroup = await deleteGroupAPI(id);
+    getGroupList();
+  }
+
+  // Use Effect
+  useEffect(() => {
+    getGroupList();
+  }, []);
+
+  useEffect(() => {
+    const groupPositions = groupList.map(group => ({
+      id: group.id,
+      position: group.position,
+    }));
+    const reorder = async () => {
+      try {
+        await reorderGroupAPI(groupPositions);
+      } catch (error) {
+        console.error("Error reordering groups:", error);
+      }
+    };
+    reorder();
+  }, [groupList]);
+
+  useEffect(() => {
+    if (activeID === null){
+      const taskPositions = taskList.map(task => ({
+      id: task.id,
+      position: task.position,
+    }));
+
+    const reorder = async () => {
+      try {
+        await reorderTaskAPI(taskPositions);
+      } catch (error) {
+        console.error("Error reordering groups:", error);
+      }
+    };
+    reorder();
+    }
+  }, [taskList]);
 
   return (
     <DndContext
@@ -168,13 +241,13 @@ export const GroupList: React.FC<GroupsProps> = props => {
       <Flex
         justify="space-evenly"
         align={'flex-start'}
-        className="gap-5 flex-shrink-0 w-full h-[710px] overflow-hidden custom-scroll"
+        className="gap-5 flex-shrink-0 w-full h-full overflow-auto custom-scroll"
       >
         <SortableContext
           items={groupList.map(group => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} />)}
+          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} onDelete={onDeleteGroup} />)}
         </SortableContext>
         <div className="flex gap-1 flex-shrink-0 w-[280px]">
           <Input
@@ -202,7 +275,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
               onClickShowDetail={() => {}}
             />
           ) : (
-            <GroupItem group={groupList.find(group => group.id === activeID)} taskList={taskList} />
+            <GroupItem group={groupList.find(group => group.id === activeID)} taskList={taskList} onDelete={onDeleteGroup}/>
           )
         ) : null}
       </DragOverlay>

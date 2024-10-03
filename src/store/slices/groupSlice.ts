@@ -7,7 +7,11 @@ import dayjs from 'dayjs';
 
 // Models
 import { Group } from 'models/Group';
+
+// Utils
 import { reorderSingleArray } from 'utils';
+
+// Services
 
 interface GroupState {
   groupList: Group[];
@@ -15,32 +19,7 @@ interface GroupState {
 }
 
 const initialState: GroupState = {
-  groupList: [
-    {
-      id: nanoid(),
-      name: 'To Do',
-      position: 0,
-      created_at: dayjs().format(),
-      type: 'Status',
-      color: '#a91010',
-    },
-    {
-      id: nanoid(),
-      name: 'Doing',
-      position: 1,
-      created_at: dayjs().format(),
-      type: 'Status',
-      color: '#ffc53d',
-    },
-    {
-      id: nanoid(),
-      name: 'Done',
-      position: 2,
-      created_at: dayjs().format(),
-      type: 'Status',
-      color: '#95de64',
-    },
-  ],
+  groupList: [],
   groupActived: 0,
 };
 
@@ -48,7 +27,7 @@ const groupSlice = createSlice({
   name: 'group',
   initialState,
   reducers: {
-    setGroup(state, action: PayloadAction<Group[]>) {
+    setGroupList(state, action: PayloadAction<Group[]>) {
       state.groupList = action.payload;
     },
     addGroup(
@@ -69,13 +48,12 @@ const groupSlice = createSlice({
     updateGroup(state, action: PayloadAction<{ id: React.Key; updatedGroup: Partial<Group> }>) {
       const { id, updatedGroup } = action.payload;
       const group = state.groupList.find(group => group.id === id);
-
       if (group) {
         Object.assign(group, updatedGroup);
       }
     },
 
-    deleteGroup(state, action: PayloadAction<{ id: React.Key | undefined }>) {
+    deleteGroup(state, action: PayloadAction<{ id: React.Key }>) {
       const { id } = action.payload;
       if (id) {
         state.groupList = state.groupList.filter(group => group.id !== id);
@@ -86,11 +64,14 @@ const groupSlice = createSlice({
       const { source, destination } = action.payload;
       const destinationIndex = state.groupList.findIndex(group => group.id === destination.id);
       const sourceIndex = state.groupList.findIndex(group => group.id === source.id);
-
       state.groupList = reorderSingleArray(state.groupList, sourceIndex, destinationIndex);
+      for (let i = 0; i < state.groupList.length; i++) {
+        state.groupList[i].position = i;
+      }
     },
   },
 });
 
-export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroup } = groupSlice.actions;
+export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroupList } =
+  groupSlice.actions;
 export default groupSlice.reducer;

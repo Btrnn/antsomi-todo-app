@@ -1,6 +1,8 @@
 // Libraries
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Cookies } from 'react-cookie';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Icons
 import { UserIcon, HomeIcon, LogoutIcon, ProfileIcon } from 'components/icons';
@@ -10,6 +12,9 @@ import { Drawer, Avatar, Menu, type MenuProps, type MenuInfo } from 'components/
 
 // Constants
 import { MENU_KEY } from 'constants/tasks';
+
+// Stores
+import { RootState, AppDispatch, setGroupList, setTaskList } from 'store';
 
 interface UserDrawerProp {
   isOpen: boolean;
@@ -45,7 +50,15 @@ const items: MenuItem[] = [
 export const UserDrawer: React.FC<UserDrawerProp> = props => {
   const { isOpen, isClose } = props;
 
+  // Routes
   const navigate = useNavigate();
+  const dispatch: AppDispatch = useDispatch();
+
+  // Cookies
+  const cookies = new Cookies();
+
+  // Stores
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
   const onClose = () => {
     isClose();
@@ -63,7 +76,10 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
         navigate('/setting');
         break;
       case MENU_KEY.KEY4:
-        window.location.replace('/login');
+        dispatch(setGroupList([]));
+        dispatch(setTaskList([]));
+        cookies.remove('authToken', { path: '/' });
+        navigate('/login');
         break;
       default:
         break;
@@ -76,7 +92,7 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
       title={
         <div className="flex flex-col items-center space-y-4 mt-10">
           <Avatar size={100} icon={<UserIcon />} />
-          <div className="text-lg font-bold">User A</div>
+          <div className="text-lg font-bold">{currentUser.name}</div>
         </div>
       }
       placement="right"

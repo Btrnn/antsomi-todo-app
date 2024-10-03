@@ -25,6 +25,9 @@ import {
 // Models
 import { Task } from 'models';
 
+// Services
+import { updateTask as updatedTaskAPI } from 'services/task';
+
 interface TaskDetailProp {
   task: Task;
   isOpen: boolean;
@@ -57,6 +60,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
   // Handlers
   const onFinishForm = (values: FormType) => {
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
+    updatedTaskAPI(task.id, values);
     isClose();
   };
 

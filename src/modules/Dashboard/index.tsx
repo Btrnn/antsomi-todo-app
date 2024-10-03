@@ -81,16 +81,16 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <Layout className="overflow-hidden">
+    <Layout>
       <Sider
         theme="light"
         breakpoint="lg"
         collapsedWidth="0"
-        width={240}
+        width={'15vw'}
         style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)', height: '100vh' }}
       >
         <div className="flex items-center align-middle ml-9 h-24">
-          <img className="h-[60px]" src={logo} alt="logo" />
+          <img className="h-[50%]" src={logo} alt="logo" />
           <div> TO DO APP </div>
         </div>
         <Menu
@@ -102,7 +102,7 @@ export const Dashboard: React.FC = () => {
       </Sider>
       <Layout className="h-full">
         <Header
-          className="flex justify-end items-center h-14"
+          className="flex justify-end items-center h-[7vh]"
           style={{ padding: 20, background: colorBgContainer }}
         >
           <div className="flex items-center mr-1">
@@ -115,12 +115,12 @@ export const Dashboard: React.FC = () => {
             />
           </div>
         </Header>
-        <Divider className="m-1" />
+        {/* <Divider /> */}
         <Content>
           <div
             style={{
               padding: 20,
-              height: '800px',
+              height: '93vh',
               width: '100%',
               background: colorBgContainer,
             }}

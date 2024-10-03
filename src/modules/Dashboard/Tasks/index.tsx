@@ -17,7 +17,7 @@ export const Tasks: React.FC = () => {
           label: group.title,
         }))}
       /> */}
-      <GroupList id={0} type={''} />
+      <GroupList id={0} type={'status'} />
     </div>
   );
 };

@@ -7,4 +7,5 @@ export interface Group {
   created_at: string;
   type: string;
   color: string;
+  owner_id: React.Key;
 }
