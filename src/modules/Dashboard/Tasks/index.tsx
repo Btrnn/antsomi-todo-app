@@ -6,7 +6,7 @@ import { GroupList } from './components/GroupList';
 
 export const Tasks: React.FC = () => {
   return (
-    <div className="bg-inherit">
+    <div className="h-full w-full overflow-auto">
       {/* <Select
         defaultValue="Status"
         className="w-28 h-9 mb-2"

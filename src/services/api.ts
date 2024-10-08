@@ -13,3 +13,14 @@ axiosInstance.interceptors.request.use(config => {
 
   return config;
 });
+
+axiosInstance.interceptors.response.use(
+  response => {
+    return response;
+  },
+  error => {
+    if (error.response) {
+      return Promise.reject(error.response?.data?.statusMessage);
+    }
+  },
+);

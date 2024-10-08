@@ -21,3 +21,5 @@ export * from './Grid';
 export * from './Divider';
 export * from './Breadcrumb';
 export * from './Upload';
+export * from './Message';
+export * from './Tabs';

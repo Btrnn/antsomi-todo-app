@@ -1,8 +1,10 @@
 // Libraries
 import React, { useState } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDispatch } from 'react-redux';
 
 // Components
+import { message } from 'components/ui';
 import { TaskItem } from '../TaskItem';
 import { TaskDetail } from '../TaskDetailDrawer';
 
@@ -10,8 +12,17 @@ import { TaskDetail } from '../TaskDetailDrawer';
 import { Task } from 'models';
 import { Group } from 'models/Group';
 
+// Utils
+import { getContrastTextColor } from 'utils';
+
+// Services
+import { deleteTask } from 'services';
+
+// Stores
+import { AppDispatch, reorderTaskAsync } from 'store';
+
 interface TaskListProps {
-  groupInfo: Group;
+  group: Group;
   taskList: Task[];
 }
 
@@ -22,7 +33,8 @@ type TState = {
 };
 
 export const TaskList: React.FC<TaskListProps> = props => {
-  const { groupInfo, taskList } = props;
+  const { group, taskList } = props;
+  const [messageCreate, contextHolder] = message.useMessage();
 
   // State
   const [state, setState] = useState<TState>({
@@ -31,6 +43,9 @@ export const TaskList: React.FC<TaskListProps> = props => {
     selectedTask: undefined,
   });
   const { error, isOpen, selectedTask } = state;
+
+  // Store
+  const dispatch: AppDispatch = useDispatch();
 
   // Handlers
   const onClickShowTaskDetail = (taskID: React.Key) => {
@@ -45,17 +60,38 @@ export const TaskList: React.FC<TaskListProps> = props => {
     setState(prev => ({ ...prev, isOpen: false, selectedTask: undefined }));
   };
 
-  const renderTasks = (tasks: Task[]) => {
-    const filteredTasks = tasks.filter(task => task.status_id === groupInfo.id);
+  const onDeleteTask = async (id: React.Key) => {
+    try {
+      deleteTask(id);
+      dispatch(reorderTaskAsync());
+      messageCreate.open({
+        type: 'success',
+        content: <div className="text-red-500">Task deleted!</div>,
+      });
+    } catch (error) {
+      messageCreate.open({
+        type: 'error',
+        content: error as string,
+      });
+    }
+  };
 
+  const renderTasks = (tasks: Task[]) => {
     return (
       <>
-        {filteredTasks.map(task => (
+        {tasks.map(task => (
           <TaskItem
             key={task.id}
-            groupID={groupInfo.id}
             task={task}
             onClickShowDetail={() => onClickShowTaskDetail(task.id)}
+            groupInfo={{
+              groupID: group.id,
+              groupName: group.name,
+              groupColor: group.color,
+              textColor: getContrastTextColor(group.color),
+            }}
+            isOverlay={false}
+            onDelete={onDeleteTask}
           />
         ))}
       </>
@@ -63,51 +99,22 @@ export const TaskList: React.FC<TaskListProps> = props => {
   };
 
   return (
-    <>
-      <style>
-        {`
-        .custom-scroll {
-          overflow-y: hidden; 
-          padding-right: 10px;
-        }
-        
-        .custom-scroll:hover {
-          overflow-y: auto; 
-        }
-        
-        .custom-scroll::-webkit-scrollbar {
-          width: 2px; 
-        }
-
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background-color: #bfbfbf; 
-          border-radius: 4px; 
-        }
-
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent; 
-        }
-      `}
-      </style>
-
-      <div className="flex-shrink-0 w-[20vw] h-[63vh] custom-scroll">
-        <SortableContext
-          key={groupInfo.id}
-          id={String(groupInfo.id)}
-          items={taskList
-            .filter(task => task.status_id === groupInfo.id)
-            .map(task => String(task.id))}
-          strategy={verticalListSortingStrategy}
-        >
-          <div key={groupInfo.id} className="items-center overflow-hidden">
-            {renderTasks(taskList)}
-          </div>
-          <div className="text-red-400">{error}</div>
-          {selectedTask && (
-            <TaskDetail task={selectedTask} isOpen={isOpen} isClose={onCloseTaskDetail} />
-          )}
-        </SortableContext>
-      </div>
-    </>
+    <div className="w-[20vw]">
+      {contextHolder}
+      <SortableContext
+        key={group.id}
+        id={String(group.id)}
+        items={taskList.filter(task => task.status_id === group.id).map(task => String(task.id))}
+        strategy={verticalListSortingStrategy}
+      >
+        <div key={group.id} className="items-center">
+          {renderTasks(taskList)}
+        </div>
+        <div className="text-red-400">{error}</div>
+        {selectedTask && (
+          <TaskDetail task={selectedTask} isOpen={isOpen} isClose={onCloseTaskDetail} />
+        )}
+      </SortableContext>
+    </div>
   );
 };

@@ -1,6 +1,6 @@
 // Libraries
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   DndContext,
   DragOverlay,
@@ -13,30 +13,52 @@ import {
   DragStartEvent,
   DropAnimation,
   defaultDropAnimationSideEffects,
-} from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useOutletContext } from "react-router-dom";
 
 // Icons
-import { AddIcon } from 'components/icons';
+import { AddIcon } from "components/icons";
 
 // Components
-import { Button, Input, Flex } from 'components/ui';
-import { TaskItem } from '../TaskItem';
-import { GroupItem } from '../GroupItem';
+import { Button, Input, Flex, message } from "components/ui";
+import { TaskItem } from "../TaskItem";
+import { GroupItem } from "../GroupItem";
 
 // Providers
-import { RootState, AppDispatch, addGroup, reorderTask, reorderGroup, setGroupList, deleteGroup, moveTask } from 'store';
+import {
+  RootState,
+  AppDispatch,
+  addGroup,
+  reorderTask,
+  reorderGroup,
+  setGroupList,
+  deleteGroup,
+  setTaskList,
+  reorderTaskAsync,
+  reorderGroupAsync,
+} from "store";
 
 // Constants
-import { SORTABLE_TYPE } from 'constants/tasks';
+import { SORTABLE_TYPE } from "constants/tasks";
 
 // Services
-import { getAllGroups, createGroup, deleteGroup as deleteGroupAPI, reorderGroup as reorderGroupAPI} from 'services/group';
-import { reorderTask as reorderTaskAPI, updateTask as updatedTaskAPI } from 'services/task';
+import {
+  getAllGroups,
+  createGroup,
+  deleteGroup as deleteGroupAPI,
+  reorderGroup as reorderGroupAPI,
+} from "services/group";
+import { getAllTasks, updateTask as updatedTaskAPI } from "services/task";
 
 // Models
-import { Group } from 'models';
-import { Task } from 'models';
+import { Group } from "models";
+import { Task } from "models";
+import { group } from "console";
+import { getContrastTextColor } from "utils";
 
 interface GroupsProps {
   id: React.Key;
@@ -49,42 +71,57 @@ type TState = {
   activeID: React.Key | null | undefined;
   activeType: string | null | undefined;
   tempTaskList: Task[];
+  activeInfo: Group | undefined;
+};
+
+type OutletContextType = {
+  height: number;
 };
 
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
       active: {
-        opacity: '0.5',
+        opacity: "0.5",
       },
     },
   }),
 };
 
-export const GroupList: React.FC<GroupsProps> = props => {
+export const GroupList: React.FC<GroupsProps> = (props) => {
   const { type } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
+  const [messageCreate, contextHolder] = message.useMessage();
+
   // State
   const [state, setState] = useState<TState>({
-    error: '',
-    inputGroupName: '',
+    error: "",
+    inputGroupName: "",
     activeID: null,
     activeType: null,
     tempTaskList: [],
+    activeInfo: undefined,
   });
 
-  const { activeID, activeType, inputGroupName, tempTaskList } = state;
+  const { activeID, activeType, inputGroupName, tempTaskList, activeInfo } =
+    state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
   const groupList = useSelector((state: RootState) => state.group.groupList);
   const taskList = useSelector((state: RootState) => state.task.taskList);
 
+  // Use Effect
+  useEffect(() => {
+    getGroupList();
+    getTaskList();
+  }, []);
+
   // Handlers
   const getGroupList = async () => {
     try {
-      const fetchedGroups = await getAllGroups(); 
+      const fetchedGroups = await getAllGroups();
       dispatch(setGroupList(fetchedGroups?.data));
     } catch (error) {
       console.log(error);
@@ -92,31 +129,54 @@ export const GroupList: React.FC<GroupsProps> = props => {
   };
 
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState(prev => ({ ...prev, inputGroupName: event.target.value }));
+    setState((prev) => ({ ...prev, inputGroupName: event.target.value }));
   };
 
   const onClickAddGroup = async () => {
-    const newGroup: Partial<Group> = { name: inputGroupName, position: groupList.length , type: type, color: '#597ef7' };
-    const createdGroup = await createGroup(newGroup);
-    getGroupList();
-    setState(prev => ({ ...prev, inputGroupName: '' }));
+    try {
+      const newGroup: Partial<Group> = {
+        name: inputGroupName,
+        position: groupList.length,
+        type: type,
+        color: "#597ef7",
+      };
+      const createdGroup = await createGroup(newGroup);
+      messageCreate.open({
+        type: "success",
+        content: <div className="z-10">New group added!</div>,
+      });
+      getGroupList();
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
+    }
+    setState((prev) => ({ ...prev, inputGroupName: "" }));
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    setState(prev => ({
+    let currentInfo;
+    if (event.active.data.current?.type === SORTABLE_TYPE.TASK) {
+      currentInfo = groupList.find(
+        (group) => group.id === event.active.data.current?.groupID
+      );
+    }
+    setState((prev) => ({
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
       tempTaskList: taskList,
+      activeInfo: currentInfo,
     }));
   };
 
   const onDragCancel = () => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       activeID: null,
       activeType: null,
-      tempTaskList: []
+      tempTaskList: [],
     }));
   };
 
@@ -130,7 +190,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
     const source = active.data.current;
 
     if (source?.type === SORTABLE_TYPE.TASK) {
-      dispatch(moveTask({ source: active, destination: over }));
+      dispatch(reorderTask({ source: active, destination: over }));
     }
   };
 
@@ -144,63 +204,65 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
     if (sourceType === SORTABLE_TYPE.TASK) {
       dispatch(reorderTask({ source: active, destination: over }));
-      if(over.data.current?.type ===  SORTABLE_TYPE.GROUP){
-        updatedTaskAPI(active.id, {status_id: over.id});
-      }
-      else{
-        updatedTaskAPI(active.id, {status_id: over.data.current?.groupID});
+      try {
+        if (over.data.current?.type === SORTABLE_TYPE.GROUP) {
+          updatedTaskAPI(active.id, { status_id: over.id });
+        } else {
+          updatedTaskAPI(active.id, { status_id: over.data.current?.groupID });
+        }
+        dispatch(reorderTaskAsync());
+      } catch (error) {
+        messageCreate.open({
+          type: "error",
+          content: error as string,
+        });
       }
     } else if (sourceType === SORTABLE_TYPE.GROUP) {
       dispatch(reorderGroup({ source: active, destination: over }));
+      try {
+        dispatch(reorderGroupAsync());
+      } catch (error) {
+        messageCreate.open({
+          type: "error",
+          content: error as string,
+        });
+      }
     }
-    setState(prev => ({ ...prev, activeID: null, activeType: null, tempTaskList: [] }));
+    setState((prev) => ({
+      ...prev,
+      activeID: null,
+      activeType: null,
+      tempTaskList: [],
+      activeInfo: undefined,
+    }));
   };
 
-  
-
-  const onDeleteGroup = async (id: React.Key) =>{
-    //dispatch(deleteGroup(id))
-    const deletedGroup = await deleteGroupAPI(id);
-    getGroupList();
-  }
-
-  // Use Effect
-  useEffect(() => {
-    getGroupList();
-  }, []);
-
-  useEffect(() => {
-    const groupPositions = groupList.map(group => ({
-      id: group.id,
-      position: group.position,
-    }));
-    const reorder = async () => {
-      try {
-        await reorderGroupAPI(groupPositions);
-      } catch (error) {
-        console.error("Error reordering groups:", error);
-      }
-    };
-    reorder();
-  }, [groupList]);
-
-  useEffect(() => {
-    if (activeID === null){
-      const taskPositions = taskList.map(task => ({
-      id: task.id,
-      position: task.position,
-    }));
-
-    const reorder = async () => {
-      try {
-        await reorderTaskAPI(taskPositions);
-      } catch (error) {
-        console.error("Error reordering groups:", error);
-      }
-    };
-    reorder();
+  const onDeleteGroup = async (id: React.Key) => {
+    try {
+      const deletedGroup = await deleteGroupAPI(id);
+      getGroupList();
+      dispatch(deleteGroup({id}));
+      dispatch(reorderGroupAsync());
+      messageCreate.open({
+        type: "success",
+        content: <div className="z-10 text-red-500">Group deleted!</div>,
+      });
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
-  }, [taskList]);
+  };
+
+  const getTaskList = async () => {
+    try {
+      const fetchedTasks = await getAllTasks();
+      dispatch(setTaskList(fetchedTasks.data));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <DndContext
@@ -211,50 +273,32 @@ export const GroupList: React.FC<GroupsProps> = props => {
       onDragCancel={onDragCancel}
       onDragOver={onDragOver}
     >
-      <style>
-        {`
-        .custom-scroll {
-          overflow-x: hidden;
-          position: relative; 
-        }
-        
-        .custom-scroll:hover {
-          overflow-x: auto; 
-        }
-        
-        .custom-scroll::-webkit-scrollbar {
-          height: 5px; 
-          position: absolute;
-          right: 0;
-        }
-
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background-color: #bfbfbf; 
-          border-radius: 4px; 
-        }
-
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent; 
-        }
-      `}
-      </style>
+      {contextHolder}
       <Flex
-        justify="space-evenly"
-        align={'flex-start'}
-        className="gap-5 flex-shrink-0 w-full h-full overflow-auto custom-scroll"
+        justify="flex-start"
+        align={"flex-start"}
+        className="gap-5 w-full h-full"
       >
         <SortableContext
-          items={groupList.map(group => String(group.id))}
+          items={groupList.map((group) => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map(group => <GroupItem key={group.id} group={group} taskList={taskList} onDelete={onDeleteGroup} />)}
+          {groupList?.map((group) => (
+            <GroupItem
+              key={group.id}
+              group={group}
+              allTasks={taskList}
+              onDelete={onDeleteGroup}
+              isOverlay={false}
+            />
+          ))}
         </SortableContext>
         <div className="flex gap-1 flex-shrink-0 w-[280px]">
           <Input
             className="p-2"
             style={{
-              outline: 'none',
-              boxShadow: 'none',
+              outline: "none",
+              boxShadow: "none",
             }}
             placeholder="Add new group"
             value={inputGroupName}
@@ -269,13 +313,27 @@ export const GroupList: React.FC<GroupsProps> = props => {
       <DragOverlay dropAnimation={dropAnimation}>
         {activeID ? (
           activeType === SORTABLE_TYPE.TASK ? (
-            <TaskItem
-              groupID={''}
-              task={taskList.find(task => task.id === activeID)}
-              onClickShowDetail={() => {}}
-            />
+            activeInfo && (
+              <TaskItem
+                task={taskList.find((task) => task.id === activeID)}
+                onClickShowDetail={() => {}}
+                groupInfo={{
+                  groupColor: activeInfo.color,
+                  groupID: activeInfo.id,
+                  groupName: activeInfo.name,
+                  textColor: getContrastTextColor(activeInfo.color),
+                }}
+                isOverlay={true}
+                onDelete={async () => {}}
+              />
+            )
           ) : (
-            <GroupItem group={groupList.find(group => group.id === activeID)} taskList={taskList} onDelete={onDeleteGroup}/>
+            <GroupItem
+              group={groupList.find((group) => group.id === activeID)}
+              allTasks={taskList}
+              onDelete={async () => {}}
+              isOverlay={true}
+            />
           )
         ) : null}
       </DragOverlay>

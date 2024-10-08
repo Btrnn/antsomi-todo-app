@@ -1,6 +1,6 @@
 // Libraries
 import { nanoid } from 'nanoid';
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Active, Over } from '@dnd-kit/core/dist/store/index';
 import dayjs from 'dayjs';
@@ -12,16 +12,33 @@ import { Group } from 'models/Group';
 import { reorderSingleArray } from 'utils';
 
 // Services
+import { reorderGroup as reorderGroupAPI } from 'services';
 
 interface GroupState {
   groupList: Group[];
   groupActived: number;
+  loading: boolean;
+  error: string;
+  updateList: Group[];
 }
 
 const initialState: GroupState = {
   groupList: [],
   groupActived: 0,
+  loading: false,
+  error: '',
+  updateList: [],
 };
+
+export const reorderGroupAsync = createAsyncThunk('group/reorder', async (_, { getState }) => {
+  const state = getState() as { group: GroupState };
+  const groupPositions = state.group.updateList.map(group => ({
+    id: group.id,
+    position: group.position,
+  }));
+  const response = await reorderGroupAPI(groupPositions);
+  return response.data;
+});
 
 const groupSlice = createSlice({
   name: 'group',
@@ -56,7 +73,14 @@ const groupSlice = createSlice({
     deleteGroup(state, action: PayloadAction<{ id: React.Key }>) {
       const { id } = action.payload;
       if (id) {
+        const updatePosition = state.groupList.find(group => group.id === id)?.position;
         state.groupList = state.groupList.filter(group => group.id !== id);
+        if (updatePosition) {
+          for (let i = updatePosition; i < state.groupList.length; i++) {
+            state.groupList[i].position = i;
+            state.updateList.push(state.groupList[i]);
+          }
+        }
       }
     },
 
@@ -65,10 +89,30 @@ const groupSlice = createSlice({
       const destinationIndex = state.groupList.findIndex(group => group.id === destination.id);
       const sourceIndex = state.groupList.findIndex(group => group.id === source.id);
       state.groupList = reorderSingleArray(state.groupList, sourceIndex, destinationIndex);
-      for (let i = 0; i < state.groupList.length; i++) {
+      for (
+        let i = Math.min(sourceIndex, destinationIndex);
+        i <= Math.max(sourceIndex, destinationIndex);
+        i++
+      ) {
         state.groupList[i].position = i;
+        state.updateList.push(state.groupList[i]);
       }
     },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(reorderGroupAsync.pending, state => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(reorderGroupAsync.fulfilled, state => {
+        state.loading = false;
+        state.updateList = [];
+      })
+      .addCase(reorderGroupAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error as string;
+      });
   },
 });
 

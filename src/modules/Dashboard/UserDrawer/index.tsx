@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { UserIcon, HomeIcon, LogoutIcon, ProfileIcon } from 'components/icons';
 
 // Components
-import { Drawer, Avatar, Menu, type MenuProps, type MenuInfo } from 'components/ui';
+import { Drawer, Avatar, Menu, type MenuProps, type MenuInfo, message } from 'components/ui';
 
 // Constants
 import { MENU_KEY } from 'constants/tasks';
@@ -50,6 +50,8 @@ const items: MenuItem[] = [
 export const UserDrawer: React.FC<UserDrawerProp> = props => {
   const { isOpen, isClose } = props;
 
+  const [messageCreate, contextHolder] = message.useMessage();
+
   // Routes
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
@@ -76,10 +78,16 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
         navigate('/setting');
         break;
       case MENU_KEY.KEY4:
-        dispatch(setGroupList([]));
-        dispatch(setTaskList([]));
         cookies.remove('authToken', { path: '/' });
-        navigate('/login');
+        messageCreate.open({
+          type: 'warning',
+          content: 'You have been logged out.',
+        });
+        setTimeout(() => {
+          dispatch(setGroupList([]));
+          dispatch(setTaskList([]));
+          navigate('/login');
+        }, 1000);
         break;
       default:
         break;
@@ -102,10 +110,10 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
       footer={false}
       closeIcon={null}
     >
+      {contextHolder}
       <Menu
         onClick={onClickSelectMenu}
         className="w-full h-full m-0 space-y-5"
-        defaultSelectedKeys={['1']}
         mode="inline"
         items={items}
       />

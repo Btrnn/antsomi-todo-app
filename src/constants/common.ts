@@ -21,3 +21,9 @@ export const TASK_STATUS = {
     color: '#b7eb8f',
   },
 };
+
+export const DASHBOARD_KEY = {
+  HOME: 'home',
+  TASKS: 'tasks',
+  USER: 'user',
+} as const;

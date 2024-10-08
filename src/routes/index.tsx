@@ -59,19 +59,11 @@ export const router = createBrowserRouter([
       {
         path: 'home',
         index: true,
-        element: (
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        ),
+        element: <Home />,
       },
       {
         path: 'tasks',
-        element: (
-          <ProtectedRoute>
-            <Tasks />
-          </ProtectedRoute>
-        ),
+        element: <Tasks />,
       },
     ],
   },

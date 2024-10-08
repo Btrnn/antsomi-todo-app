@@ -17,6 +17,7 @@ import {
   Breadcrumb,
   UploadProps,
   GetProp,
+  message,
 } from 'components/ui';
 import {
   SettingIcon,
@@ -82,6 +83,7 @@ const getBase64 = (file: FileType): Promise<string> =>
 
 export const Signup: React.FC<SignupProps> = props => {
   const { ...restProps } = props;
+  const [messageCreate, contextHolder] = message.useMessage();
 
   // Routes
   const navigate = useNavigate();
@@ -96,14 +98,26 @@ export const Signup: React.FC<SignupProps> = props => {
   const [form] = Form.useForm();
 
   const onFinish = async (values: any) => {
-    const result = await createUser({
-      email: values.email,
-      name: values.name,
-      password: values.password,
-      phone_number: values.phone,
-    });
-    console.log(result);
-    navigate('/login');
+    try {
+      const result = await createUser({
+        email: values.email,
+        name: values.name,
+        password: values.password,
+        phone_number: values.phone,
+      });
+      messageCreate.open({
+        type: 'success',
+        content: 'Account created successfully!',
+      });
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch (error) {
+      messageCreate.open({
+        type: 'error',
+        content: error as string,
+      });
+    }
   };
 
   const onClickBack = () => {
@@ -129,6 +143,7 @@ export const Signup: React.FC<SignupProps> = props => {
 
   return (
     <Layout className="overflow-hidden">
+      {contextHolder}
       <Header
         className="flex items-center"
         style={{ padding: 20, background: colorBgContainer, height: '7vh' }}
@@ -240,7 +255,21 @@ export const Signup: React.FC<SignupProps> = props => {
                   </Form.Item>
                   <Form.Item
                     name="phone"
-                    rules={[{ required: true, message: 'Please input your phone number!' }]}
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value) {
+                            return Promise.reject(new Error('Please input your phone number!'));
+                          }
+                          if (!/^\d+$/.test(value)) {
+                            return Promise.reject(
+                              new Error('The input must contain only numbers.'),
+                            );
+                          }
+                          return Promise.resolve();
+                        },
+                      },
+                    ]}
                   >
                     <Input
                       prefix={<PhoneIcon className="mr-2" />}

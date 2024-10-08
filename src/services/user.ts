@@ -31,7 +31,7 @@ export const createUser = async (
     const response = await axiosInstance.post('user/create', user);
     return response.data;
   } catch (error) {
-    return error;
+    return Promise.reject(error);
   }
 };
 

@@ -5,7 +5,7 @@ import { Cookies } from 'react-cookie';
 import { useDispatch } from 'react-redux';
 
 // Components
-import { Button, Input, Checkbox, Form, type FormProps, Col, Row } from 'components/ui';
+import { Button, Input, Checkbox, Form, type FormProps, Col, Row, message } from 'components/ui';
 
 // Images
 import image from 'assets/images/background.jpg';
@@ -34,6 +34,7 @@ export const Login: React.FC = () => {
   // Routes
   const navigate = useNavigate();
 
+  // Hooks
   const { isAuthenticated, loading } = useAuth();
 
   // States
@@ -48,10 +49,16 @@ export const Login: React.FC = () => {
   // Cookies
   const cookies = new Cookies();
 
+  const [messageCreate, contextHolder] = message.useMessage();
+
   const onFinish: FormProps<FieldType>['onFinish'] = async values => {
     if (values.username && values.password) {
-      const result = await checkAuthentication(values.username, values.password);
-      if (result.statusCode === 200) {
+      try {
+        const result = await checkAuthentication(values.username, values.password);
+        messageCreate.open({
+          type: 'success',
+          content: <div className="z-10">Login successfully!</div>,
+        });
         cookies.set('authToken', result.data, { path: '/', maxAge: 3600 });
 
         const currentUser = await getUserInfo();
@@ -59,9 +66,11 @@ export const Login: React.FC = () => {
 
         setState(prev => ({ ...prev, error: '' }));
 
-        navigate('/dashboard/home');
-      } else {
-        setState(prev => ({ ...prev, error: result.data }));
+        setTimeout(() => {
+          navigate('/dashboard/home');
+        }, 1000);
+      } catch (error) {
+        setState(prev => ({ ...prev, error: error as string }));
       }
     }
   };
@@ -71,11 +80,12 @@ export const Login: React.FC = () => {
   };
 
   if (isAuthenticated && !loading) {
-    navigate('/dashboard');
+    navigate('/dashboard/home');
   }
 
   return (
     <Row style={{ height: '100vh' }}>
+      {contextHolder}
       <Col
         flex="550px"
         style={{

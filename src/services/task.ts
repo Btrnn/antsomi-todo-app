@@ -44,6 +44,15 @@ export const deleteTask = async (id: IdentifyId) => {
   }
 };
 
+export const deleteTaskByGroupID = async (groupID: IdentifyId) => {
+  try {
+    const response = await axiosInstance.delete(`task/clear/${groupID}`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
 export const reorderTask = async (taskPositions: { id: IdentifyId; position: number }[]) => {
   try {
     const response = await axiosInstance.patch('task', taskPositions);

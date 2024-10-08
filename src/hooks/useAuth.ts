@@ -7,7 +7,6 @@ import { checkAuthority } from 'services/authentication';
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  // Handlers function check authenticated in here
 
   const checkAuthentication = async () => {
     try {

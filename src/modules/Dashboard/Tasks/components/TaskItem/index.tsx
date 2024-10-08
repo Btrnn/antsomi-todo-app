@@ -5,25 +5,31 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 //Providers
-import { RootState, AppDispatch, deleteTaskByID } from 'store';
+import { RootState, AppDispatch, deleteTask } from 'store';
 
 // Icons
 import { DeleteIcon, EditIcon } from 'components/icons';
 
 // Components
-import { Popconfirm, Tag, Dropdown, type MenuProps, type MenuInfo, Card } from 'components/ui';
+import { Tag, Dropdown, type MenuProps, type MenuInfo, Card, Modal } from 'components/ui';
 
 // Models
 import { Task } from 'models';
 
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
-import { deleteTask } from 'services/task';
 
 interface TaskItemProp {
-  groupID: React.Key;
+  groupInfo: {
+    groupID: React.Key;
+    groupName: string;
+    groupColor: string;
+    textColor: string;
+  };
   task: Task | undefined;
   onClickShowDetail: (taskIndex: React.Key) => void;
+  isOverlay: boolean;
+  onDelete: (id: React.Key) => Promise<void>;
 }
 
 type TState = {
@@ -31,17 +37,16 @@ type TState = {
 };
 
 export const TaskItem: React.FC<TaskItemProp> = props => {
-  const { groupID, task, onClickShowDetail } = props;
+  const { groupInfo, task, onClickShowDetail, isOverlay, onDelete } = props;
 
   // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: String(task?.id),
-    data: { groupID: groupID, type: SORTABLE_TYPE.TASK },
+    data: { groupID: groupInfo.groupID, type: SORTABLE_TYPE.TASK },
   });
 
   // Store
   const userList = useSelector((state: RootState) => state.user.userList);
-  const groupList = useSelector((state: RootState) => state.group.groupList);
   const dispatch: AppDispatch = useDispatch();
 
   // States
@@ -58,8 +63,10 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
   };
 
   const onConfirmDelete = () => {
-    dispatch(deleteTaskByID({ id: task?.id }));
-    deleteTask(task?.id ?? '');
+    if (task) {
+      dispatch(deleteTask({ id: task?.id }));
+      onDelete(task.id);
+    }
   };
 
   const onMouseDown: React.MouseEventHandler<HTMLDivElement> = event => {
@@ -85,30 +92,36 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
   const items: MenuProps['items'] = [
     {
       label: (
-        <Popconfirm
-          placement="topLeft"
-          title={'Are you sure to delete this task?'}
-          description={'Delete the task'}
-          okText="Yes"
-          cancelText="No"
-          onConfirm={onConfirmDelete}
-        >
-          <div className="flex p-2">
-            <DeleteIcon className="mr-3" />
-            <div>Delete task</div>
-          </div>
-        </Popconfirm>
-      ),
-      key: MENU_KEY.KEY1,
-    },
-    {
-      label: (
         <div className="flex p-2">
           <EditIcon className="mr-3" />
           <div>Edit task</div>
         </div>
       ),
       key: MENU_KEY.KEY2,
+    },
+    {
+      label: (
+        <div
+          className="flex p-2 text-red-500"
+          onClick={() => {
+            Modal.confirm({
+              title: 'Are you sure you want to delete this task?',
+              content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
+              footer: (_, { OkBtn, CancelBtn }) => (
+                <>
+                  <CancelBtn />
+                  <OkBtn />
+                </>
+              ),
+              onOk: onConfirmDelete,
+            });
+          }}
+        >
+          <DeleteIcon className="mr-3" />
+          <div>Delete task</div>
+        </div>
+      ),
+      key: MENU_KEY.KEY1,
     },
   ];
 
@@ -132,11 +145,16 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           trigger={['contextMenu']}
         >
           <Card
-            className="flex justify-between overflow-hidden mb-3"
+            className="flex justify-between overflow-hidden mb-3 p-[10px]"
             onClick={() => onClickShowDetail(task.id)}
             id={String(task.id)}
             onMouseDown={onMouseDown}
             onMouseUp={onMouseUp}
+            style={{
+              backgroundColor: isOverlay ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 1)',
+              backdropFilter: isOverlay ? 'blur(10px)' : 'none',
+              boxShadow: '0 2px 2px rgba(0, 0, 0, 0.1)',
+            }}
           >
             <div key={task.id}>
               <div key={task.id} className="overflow-hidden w-52">
@@ -146,10 +164,11 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
               <div className="flex flex-col items-start gap-y-3">
                 <Tag
                   bordered={false}
-                  color={groupList.find(group => group.id === task.status_id)?.color}
+                  color={groupInfo.groupColor}
                   className="justify-center items-center"
+                  style={{ color: groupInfo.textColor }}
                 >
-                  {groupList.find(group => group.id === task.status_id)?.name}
+                  {groupInfo.groupName}
                 </Tag>
                 {task.assignee_id !== '' && (
                   <Tag bordered={false} className="justify-center">

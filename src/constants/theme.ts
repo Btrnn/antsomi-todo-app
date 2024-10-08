@@ -11,6 +11,10 @@ export const THEME: ThemeConfig = {
     Tag: {
       borderRadiusSM: 13,
     },
+    Input: {
+      // addonBg: 'red',
+      // colorBgContainer: 'blue',
+    },
   },
   //algorithm: theme.darkAlgorithm,
 };

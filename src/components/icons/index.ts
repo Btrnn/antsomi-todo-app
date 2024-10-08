@@ -17,3 +17,7 @@ export * from './PhoneIcon';
 export * from './LockIcon';
 export * from './GenderIcon';
 export * from './BackIcon';
+export * from './MoreIcon';
+export * from './AddFilledIcon';
+export * from './ClearIcon';
+export * from './ColorIcon';
