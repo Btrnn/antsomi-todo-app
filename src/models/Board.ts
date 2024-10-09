@@ -1,12 +1,9 @@
 import React from 'react';
 
-export interface Group {
+export interface Board {
   id: React.Key;
   name: string;
   position: number;
   created_at: string;
-  type: string;
-  color: string;
   owner_id: React.Key;
-  board_id: React.Key;
 }

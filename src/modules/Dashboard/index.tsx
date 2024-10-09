@@ -7,10 +7,10 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 
 // Icons
-import { UserIcon, SettingIcon, HomeIcon, DataIcon } from 'components/icons';
+import { UserIcon, SettingIcon, HomeIcon, DataIcon, DownIcon } from 'components/icons';
 
 // Components
-import { Layout, Menu, Avatar, type MenuInfo, Divider, Breadcrumb } from 'components/ui';
+import { Layout, Menu, Avatar, type MenuInfo, Breadcrumb, Tree, TreeDataNode } from 'components/ui';
 import { UserDrawer } from './UserDrawer';
 
 // Constants
@@ -18,19 +18,6 @@ import { DASHBOARD_KEY, globalToken } from '../../constants';
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
-
-const MENU_ITEMS: MenuItemType[] = [
-  {
-    key: 'home',
-    icon: <HomeIcon />,
-    label: 'Home',
-  },
-  {
-    key: 'tasks',
-    icon: <DataIcon />,
-    label: 'Tasks',
-  },
-];
 
 export const Dashboard: React.FC = () => {
   // State
@@ -42,6 +29,82 @@ export const Dashboard: React.FC = () => {
   const { isOpenSetting, title, selectedKey } = state;
 
   const location = useLocation();
+
+  const onSelect = (selectedKeys: any, info: any) => {
+    console.log('selected');
+  };
+
+  const treeData: TreeDataNode[] = [
+    {
+      title: 'parent 1',
+      key: '1',
+      children: [
+        {
+          title: 'parent 1-0',
+          key: '1-1',
+          children: [
+            {
+              title: 'leaf',
+              key: '0-0-0-0',
+            },
+            {
+              title: 'leaf',
+              key: '0-0-0-1',
+            },
+            {
+              title: 'leaf',
+              key: '0-0-0-2',
+            },
+          ],
+        },
+        {
+          title: 'parent 1-1',
+          key: '0-0-1',
+          children: [
+            {
+              title: 'leaf',
+              key: '0-0-1-0',
+            },
+          ],
+        },
+        {
+          title: 'parent 1-2',
+          key: '0-0-2',
+          children: [
+            {
+              title: 'leaf',
+              key: '0-0-2-0',
+            },
+            {
+              title: 'leaf',
+              key: '0-0-2-1',
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const MENU_ITEMS: MenuItemType[] = [
+    {
+      key: 'home',
+      icon: <HomeIcon />,
+      label: 'Home',
+    },
+    {
+      key: 'tasks',
+      icon: <DataIcon />,
+      label: (
+        <Tree
+          showLine
+          switcherIcon={<DownIcon />}
+          defaultExpandedKeys={['0-0-0']}
+          onSelect={onSelect}
+          treeData={treeData}
+        />
+      ),
+    },
+  ];
 
   const items = MENU_ITEMS?.map(item => {
     return {
@@ -112,11 +175,11 @@ export const Dashboard: React.FC = () => {
         width={'15vw'}
         style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)', height: '100vh', display: 'flex' }}
       >
-        <div className="flex flex-row items-center align-middle ml-9 h-24">
+        <div className="flex flex-row items-center align-middle ml-9 h-24 w-full">
           <img className="h-10" src={logo} alt="logo" />
           <div> TO DO APP </div>
         </div>
-        <div style={{ width: '15vw' }}>
+        <div className="w-full">
           <Menu
             mode="inline"
             selectedKeys={[selectedKey]}

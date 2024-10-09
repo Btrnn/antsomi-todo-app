@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 // Components
 import { message } from 'components/ui';
 import { TaskItem } from '../TaskItem';
-import { TaskDetail } from '../TaskDetailDrawer';
+import { TaskDrawer } from '../TaskDetailDrawer';
 
 // Models
 import { Task } from 'models';
@@ -112,7 +112,7 @@ export const TaskList: React.FC<TaskListProps> = props => {
         </div>
         <div className="text-red-400">{error}</div>
         {selectedTask && (
-          <TaskDetail task={selectedTask} isOpen={isOpen} isClose={onCloseTaskDetail} />
+          <TaskDrawer task={selectedTask} isOpen={isOpen} isClose={onCloseTaskDetail} />
         )}
       </SortableContext>
     </div>

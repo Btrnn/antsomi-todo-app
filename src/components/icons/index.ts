@@ -21,3 +21,4 @@ export * from './MoreIcon';
 export * from './AddFilledIcon';
 export * from './ClearIcon';
 export * from './ColorIcon';
+export * from './DownIcon';

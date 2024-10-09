@@ -23,3 +23,4 @@ export * from './Breadcrumb';
 export * from './Upload';
 export * from './Message';
 export * from './Tabs';
+export * from './Tree';
