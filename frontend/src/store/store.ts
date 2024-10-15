@@ -5,12 +5,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import groupReducer from './slices/groupSlice';
 import userReducer from './slices/userSlice';
 import taskReducer from './slices/taskSlice';
+import boardReducer from './slices/boardSlice';
 
 export const store = configureStore({
   reducer: {
     group: groupReducer,
     user: userReducer,
     task: taskReducer,
+    board: boardReducer,
   },
   devTools: true,
 });

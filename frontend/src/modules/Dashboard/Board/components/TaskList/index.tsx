@@ -24,6 +24,7 @@ import { AppDispatch, reorderTaskAsync } from 'store';
 interface TaskListProps {
   group: Group;
   taskList: Task[];
+  permission: string;
 }
 
 type TState = {
@@ -33,7 +34,7 @@ type TState = {
 };
 
 export const TaskList: React.FC<TaskListProps> = props => {
-  const { group, taskList } = props;
+  const { group, taskList, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
   // State
@@ -62,7 +63,7 @@ export const TaskList: React.FC<TaskListProps> = props => {
 
   const onDeleteTask = async (id: React.Key) => {
     try {
-      deleteTask(id);
+      deleteTask(group.board_id, id);
       dispatch(reorderTaskAsync());
       messageCreate.open({
         type: 'success',
@@ -92,6 +93,7 @@ export const TaskList: React.FC<TaskListProps> = props => {
             }}
             isOverlay={false}
             onDelete={onDeleteTask}
+            permission={permission}
           />
         ))}
       </>
@@ -112,7 +114,12 @@ export const TaskList: React.FC<TaskListProps> = props => {
         </div>
         <div className="text-red-400">{error}</div>
         {selectedTask && (
-          <TaskDrawer task={selectedTask} isOpen={isOpen} isClose={onCloseTaskDetail} />
+          <TaskDrawer
+            task={selectedTask}
+            isOpen={isOpen}
+            isClose={onCloseTaskDetail}
+            permission={permission}
+          />
         )}
       </SortableContext>
     </div>

@@ -18,6 +18,8 @@ import { Task } from 'models';
 
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
+import { checkAuthority } from 'utils';
+import { PERMISSION } from 'constants/common';
 
 interface TaskItemProp {
   groupInfo: {
@@ -30,6 +32,7 @@ interface TaskItemProp {
   onClickShowDetail: (taskIndex: React.Key) => void;
   isOverlay: boolean;
   onDelete: (id: React.Key) => Promise<void>;
+  permission: string;
 }
 
 type TState = {
@@ -37,7 +40,7 @@ type TState = {
 };
 
 export const TaskItem: React.FC<TaskItemProp> = props => {
-  const { groupInfo, task, onClickShowDetail, isOverlay, onDelete } = props;
+  const { groupInfo, task, onClickShowDetail, isOverlay, onDelete, permission } = props;
 
   // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -74,8 +77,10 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
       return;
     }
     const id = setTimeout(() => {
-      if (listeners && typeof listeners.onMouseDown === 'function') {
-        listeners.onMouseDown(event);
+      if (checkAuthority(permission, PERMISSION.EDIT)) {
+        if (listeners && typeof listeners.onMouseDown === 'function') {
+          listeners.onMouseDown(event);
+        }
       }
     }, 200);
     setState(prev => ({ ...prev, timeoutId: id }));
@@ -102,19 +107,25 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     {
       label: (
         <div
+          style={{
+            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
+            cursor: checkAuthority(permission, PERMISSION.MANAGE) ? 'pointer' : 'not-allowed',
+          }}
           className="flex p-2 text-red-500"
           onClick={() => {
-            Modal.confirm({
-              title: 'Are you sure you want to delete this task?',
-              content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
-              footer: (_, { OkBtn, CancelBtn }) => (
-                <>
-                  <CancelBtn />
-                  <OkBtn />
-                </>
-              ),
-              onOk: onConfirmDelete,
-            });
+            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+              Modal.confirm({
+                title: 'Are you sure you want to delete this task?',
+                content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
+                footer: (_, { OkBtn, CancelBtn }) => (
+                  <>
+                    <CancelBtn />
+                    <OkBtn />
+                  </>
+                ),
+                onOk: onConfirmDelete,
+              });
+            }
           }}
         >
           <DeleteIcon className="mr-3" />
@@ -143,6 +154,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
             onClick: event => onClickAction(event, task.id),
           }}
           trigger={['contextMenu']}
+          disabled={!checkAuthority(permission, PERMISSION.EDIT)}
         >
           <Card
             className="flex justify-between overflow-hidden mb-3 p-[10px]"

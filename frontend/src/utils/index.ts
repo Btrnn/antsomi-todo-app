@@ -40,3 +40,10 @@ export const getContrastTextColor = (bgColor: string) => {
 
   return brightness > 200 ? '#000000' : '#FFFFFF';
 };
+
+export const checkAuthority = (userPermission: string, rolesAccepted: string[]) => {
+  if (rolesAccepted.includes(userPermission)) {
+    return true;
+  }
+  return false;
+};

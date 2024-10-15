@@ -17,6 +17,7 @@ import { reorderTask as reorderTaskAPI } from 'services';
 
 //Types
 import { IdentifyId } from 'types';
+import { useParams } from 'react-router-dom';
 
 interface TaskState {
   taskList: Task[];
@@ -34,12 +35,12 @@ const initialState: TaskState = {
 
 export const reorderTaskAsync = createAsyncThunk('task/reorder', async (_, { getState }) => {
   const state = getState() as { task: TaskState };
-
+  const params = useParams();
   const taskPositions = state.task.taskList.map(task => ({
     id: task.id,
     position: task.position,
   }));
-  const response = await reorderTaskAPI(taskPositions);
+  const response = await reorderTaskAPI(params?.boardId ?? '', taskPositions);
   state.task.updateList = [];
 
   return response.data;

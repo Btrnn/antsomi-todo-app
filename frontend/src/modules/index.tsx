@@ -1,4 +1,5 @@
 // Libraries
+import { Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -6,11 +7,10 @@ import { store } from '../store';
 
 // Routes
 import { router } from '../routes';
-import { AntdConfigProvider } from 'providers';
+import { AntdConfigProvider, ReactQueryClientProvider } from 'providers';
 
 // Hooks
 import { useAuth } from 'hooks';
-import { Spin } from 'antd';
 
 function App() {
   const { loading: authLoading } = useAuth();
@@ -31,11 +31,14 @@ function App() {
           <Spin spinning />
         </div>
       )}
+      <ReactQueryClientProvider>
+
       <AntdConfigProvider>
         <div className="App">
           <RouterProvider router={router} />
         </div>
       </AntdConfigProvider>
+        </ReactQueryClientProvider>
     </Provider>
   );
 }

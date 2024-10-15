@@ -24,6 +24,15 @@ export const getUserInfo = async (): Promise<ServiceResponse<Omit<User, 'id' | '
   }
 };
 
+export const getInfo = async (email: string): Promise<ServiceResponse<Partial<User>>> => {
+  try {
+    const response = await axiosInstance.get(`user/${email}`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
 export const createUser = async (
   user: Omit<User, 'id' | 'created_at'>,
 ): Promise<ServiceResponse<User> | unknown> => {

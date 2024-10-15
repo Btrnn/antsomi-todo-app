@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 interface UserState {
   userList: User[];
   currentUser: Omit<User, 'id' | 'password'>;
+  currentPermission: string;
 }
 
 const initialState: UserState = {
@@ -19,6 +20,7 @@ const initialState: UserState = {
     // { id: nanoid(), name: 'User C', created_at: dayjs().format(), email: 'c123@gmail.com' },
   ],
   currentUser: { name: '', email: '', phone_number: '', created_at: '' },
+  currentPermission: '',
 };
 
 const userSlice = createSlice({
@@ -35,12 +37,14 @@ const userSlice = createSlice({
         Object.assign(group, updatedUser);
       }
     },
-
+    setPermission(state, action: PayloadAction<string>) {
+      state.currentPermission = action.payload;
+    },
     deleteUser(state, action: PayloadAction<number>) {
       state.userList = state.userList.filter(user => user.id !== action.payload);
     },
   },
 });
 
-export const { updatedUser, deleteUser, setUser } = userSlice.actions;
+export const { updatedUser, deleteUser, setUser, setPermission } = userSlice.actions;
 export default userSlice.reducer;

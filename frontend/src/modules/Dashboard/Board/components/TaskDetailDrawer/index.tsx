@@ -27,16 +27,17 @@ interface TaskDrawerProp {
   task: Task;
   isOpen: boolean;
   isClose: () => void;
+  permission: string;
 }
 
 export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
-  const { task, isOpen, isClose } = props;
+  const { task, isOpen, isClose, permission } = props;
 
   const items: TabsProps['items'] = [
     {
       key: MENU_KEY.KEY1,
       label: 'Overview',
-      children: <TaskDetail task={task} onClose={isClose} />,
+      children: <TaskDetail task={task} onClose={isClose} permission={permission} />,
     },
     {
       key: MENU_KEY.KEY2,

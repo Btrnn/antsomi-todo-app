@@ -13,6 +13,7 @@ import { reorderSingleArray } from 'utils';
 
 // Services
 import { reorderGroup as reorderGroupAPI } from 'services';
+import { useParams } from 'react-router-dom';
 
 interface GroupState {
   groupList: Group[];
@@ -20,6 +21,7 @@ interface GroupState {
   loading: boolean;
   error: string;
   updateList: Group[];
+  currentBoardID: string;
 }
 
 const initialState: GroupState = {
@@ -28,15 +30,18 @@ const initialState: GroupState = {
   loading: false,
   error: '',
   updateList: [],
+  currentBoardID: '',
 };
 
 export const reorderGroupAsync = createAsyncThunk('group/reorder', async (_, { getState }) => {
   const state = getState() as { group: GroupState };
+  const params = useParams();
+
   const groupPositions = state.group.updateList.map(group => ({
     id: group.id,
     position: group.position,
   }));
-  const response = await reorderGroupAPI(groupPositions);
+  const response = await reorderGroupAPI(params?.boardId ?? '', groupPositions);
   return response.data;
 });
 
@@ -46,6 +51,9 @@ const groupSlice = createSlice({
   reducers: {
     setGroupList(state, action: PayloadAction<Group[]>) {
       state.groupList = action.payload;
+    },
+    setCurrentBoardID(state, action: PayloadAction<string>) {
+      state.currentBoardID = action.payload;
     },
     addGroup(
       state,
@@ -116,6 +124,6 @@ const groupSlice = createSlice({
   },
 });
 
-export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroupList } =
+export const { addGroup, updateGroup, deleteGroup, reorderGroup, setGroupList, setCurrentBoardID } =
   groupSlice.actions;
 export default groupSlice.reducer;

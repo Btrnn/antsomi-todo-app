@@ -24,3 +24,5 @@ export * from './Upload';
 export * from './Message';
 export * from './Tabs';
 export * from './Tree';
+export * from './List';
+export * from './Tooltip';

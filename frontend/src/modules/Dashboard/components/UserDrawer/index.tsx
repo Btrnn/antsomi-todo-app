@@ -15,10 +15,11 @@ import { MENU_KEY } from 'constants/tasks';
 
 // Stores
 import { RootState, AppDispatch, setGroupList, setTaskList } from 'store';
+import { useLoggedUser } from 'hooks';
 
 interface UserDrawerProp {
   isOpen: boolean;
-  isClose: () => void;
+  onClose: () => void;
 }
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -48,7 +49,7 @@ const items: MenuItem[] = [
 ];
 
 export const UserDrawer: React.FC<UserDrawerProp> = props => {
-  const { isOpen, isClose } = props;
+  const { isOpen, onClose: isClose } = props;
 
   const [messageCreate, contextHolder] = message.useMessage();
 
@@ -60,7 +61,8 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
   const cookies = new Cookies();
 
   // Stores
-  const currentUser = useSelector((state: RootState) => state.user.currentUser);
+  // const currentUser = useSelector((state: RootState) => state.user.currentUser);
+  const { user } = useLoggedUser();
 
   const onClose = () => {
     isClose();
@@ -100,7 +102,7 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
       title={
         <div className="flex flex-col items-center space-y-4 mt-10">
           <Avatar size={100} icon={<UserIcon />} />
-          <div className="text-lg font-bold">{currentUser.name}</div>
+          <div className="text-lg font-bold">{user?.name || 'Anonymous'}</div>
         </div>
       }
       placement="right"

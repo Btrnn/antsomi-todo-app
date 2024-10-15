@@ -22,3 +22,5 @@ export * from './AddFilledIcon';
 export * from './ClearIcon';
 export * from './ColorIcon';
 export * from './DownIcon';
+export * from './ShareIcon';
+export * from './RolesIcon';

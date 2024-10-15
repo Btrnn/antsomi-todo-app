@@ -17,16 +17,20 @@ import { Task } from 'models';
 
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
+import { checkAuthority } from 'utils';
+import { PERMISSION } from 'constants/common';
+import { useParams } from 'react-router-dom';
 
 interface TaskDetailProp {
   task: Task;
   onClose: () => void;
+  permission: string;
 }
 
 type FormType = Task;
 
 export const TaskDetail: React.FC<TaskDetailProp> = props => {
-  const { task, onClose } = props;
+  const { task, onClose, permission } = props;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -35,6 +39,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
 
   // Hooks
   const [form] = Form.useForm();
+  const params = useParams();
 
   // Effects
   useEffect(() => {
@@ -48,8 +53,9 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
 
   // Handlers
   const onFinishForm = (values: FormType) => {
+    const boardId = params?.boardId ?? '';
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
-    updatedTaskAPI(task.id, values);
+    updatedTaskAPI(boardId, { ...values, id: task.id });
     onClose();
   };
 
@@ -67,6 +73,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
       labelAlign="left"
       form={form}
       onFinish={onFinishForm}
+      disabled={checkAuthority(permission, PERMISSION.EDIT) ? false : true}
     >
       <Form.Item<FormType>
         label="Task Title:"

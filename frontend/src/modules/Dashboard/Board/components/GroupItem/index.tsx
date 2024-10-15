@@ -56,13 +56,17 @@ import {
 } from "services/task";
 
 // Utils
-import { getContrastTextColor } from "utils";
+import { checkAuthority, getContrastTextColor } from "utils";
+import { PERMISSION } from "constants/common";
 
 interface GroupItemProps {
   group: Group | undefined;
   allTasks: Task[];
   onDelete: (id: React.Key) => Promise<void>;
   isOverlay: boolean;
+  isRearrange: boolean;
+  boardId: React.Key;
+  permission: string;
 }
 
 type TState = {
@@ -76,10 +80,11 @@ type TState = {
   taskList: Task[];
   textColor: string;
   isClicked: boolean;
+  isChanged: boolean;
 };
 
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
-  const { group, allTasks, onDelete, isOverlay } = props;
+  const { group, allTasks, onDelete, isOverlay, boardId, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
   // Hooks
@@ -110,6 +115,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     taskList: [],
     textColor: "#FFFFFF",
     isClicked: false,
+    isChanged: false,
   });
 
   const {
@@ -123,6 +129,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     taskList,
     textColor,
     isClicked,
+    isChanged,
   } = state;
 
   // Handlers
@@ -133,16 +140,17 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         taskList: allTasks.filter((task) => task.status_id === group.id),
       }));
     }
-  }, [taskList]);
+  }, [allTasks]);
 
   useEffect(() => {
     if (group) {
       setState((prev) => ({
         ...prev,
         textColor: getContrastTextColor(group.color),
+        taskList: allTasks.filter((task) => task.status_id === group.id),
       }));
     }
-  });
+  }, []);
 
   const onChangeGroupNewName = (
     event: React.ChangeEvent<HTMLInputElement> | undefined
@@ -161,7 +169,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     try {
       if (group) {
         dispatch(deleteTaskByGroupID({ groupID: group?.id }));
-        deleteTaskByGroupIDAPI(group.id);
+        deleteTaskByGroupIDAPI(group.board_id, group.id);
         messageCreate.open({
           type: "success",
           content: <div className="text-orange-400">Group cleared!</div>,
@@ -176,10 +184,13 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onEnterRenameGroup = (groupID: React.Key) => {
-    dispatch(
-      updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
-    );
-    updateGroupAPI(groupID, { name: groupNewName });
+    if (groupNewName !== "") {
+      dispatch(
+        updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
+      );
+      updateGroupAPI(boardId, groupID, { name: groupNewName });
+    }
+
     setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
   };
 
@@ -198,18 +209,20 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickBeginRenaming = (groupID: React.Key, groupName: string) => {
-    setState((prev) => ({
-      ...prev,
-      isRename: true,
-      groupSelected: String(groupID),
-      groupNewName: groupName,
-    }));
+    if (checkAuthority(permission, PERMISSION.EDIT)) {
+      setState((prev) => ({
+        ...prev,
+        isRename: true,
+        groupSelected: String(groupID),
+        groupNewName: groupName,
+      }));
+    }
   };
 
   const onChangeSetColor = (value: Color, groupID: React.Key) => {
     if (typeof value === "string") {
       dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
-      updateGroupAPI(groupID, { color: value });
+      updateGroupAPI(boardId, groupID, { color: value });
       setState((prev) => ({ ...prev, textColor: getContrastTextColor(value) }));
     } else if (value && "toHexString" in value) {
       dispatch(
@@ -218,7 +231,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
           updatedGroup: { color: value.toHexString() },
         })
       );
-      updateGroupAPI(groupID, { color: value.toHexString() });
+      updateGroupAPI( boardId, groupID, { color: value.toHexString() });
       setState((prev) => ({
         ...prev,
         textColor: getContrastTextColor(value.toHexString()),
@@ -257,7 +270,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         position: taskList.length,
       };
       try {
-        const createdTask = await createTask(newTask);
+        const createdTask = await createTask(boardId, newTask);
         messageCreate.open({
           type: "success",
           content: <div>New task added!</div>,
@@ -282,38 +295,44 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickBeginAdding = () => {
-    if (isAdding === true) {
-      setState((prev) => ({ ...prev, isAdding: false }));
-    } else {
-      setState((prev) => ({ ...prev, isAdding: true, error: "" }));
+    if (checkAuthority(permission, PERMISSION.EDIT)) {
+      if (isAdding === true) {
+        setState((prev) => ({ ...prev, isAdding: false }));
+      } else {
+        setState((prev) => ({ ...prev, isAdding: true, error: "" }));
+      }
     }
   };
 
   const onClickShowDropDown = () => {
-    if (!isOpen) {
-      setState((prev) => ({
-        ...prev,
-        isOpen: true,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        isOpen: false,
-      }));
+    if (checkAuthority(permission, PERMISSION.EDIT)) {
+      if (!isOpen) {
+        setState((prev) => ({
+          ...prev,
+          isOpen: true,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isOpen: false,
+        }));
+      }
     }
   };
 
   const onClickChangeOpen = () => {
-    if (!isOpen) {
-      setState((prev) => ({
-        ...prev,
-        isOpen: true,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        isOpen: false,
-      }));
+    if (checkAuthority(permission, PERMISSION.EDIT)) {
+      if (!isOpen) {
+        setState((prev) => ({
+          ...prev,
+          isOpen: true,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isOpen: false,
+        }));
+      }
     }
   };
 
@@ -330,23 +349,31 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     {
       label: (
         <div
+          style={{
+            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
+            cursor: checkAuthority(permission, PERMISSION.MANAGE)
+              ? "pointer"
+              : "not-allowed",
+          }}
           className="flex p-2"
           onClick={() => {
-            Modal.confirm({
-              title: "Are you sure you want to clear this group?",
-              content: (
-                <div className="text-red-500 text-xs">
-                  All tasks belong to it will be removed.
-                </div>
-              ),
-              footer: (_, { OkBtn, CancelBtn }) => (
-                <>
-                  <CancelBtn />
-                  <OkBtn />
-                </>
-              ),
-              onOk: onConfirmClear,
-            });
+            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+              Modal.confirm({
+                title: "Are you sure you want to clear this group?",
+                content: (
+                  <div className="text-red-500 text-xs">
+                    All tasks belong to it will be removed.
+                  </div>
+                ),
+                footer: (_, { OkBtn, CancelBtn }) => (
+                  <>
+                    <CancelBtn />
+                    <OkBtn />
+                  </>
+                ),
+                onOk: onConfirmClear,
+              });
+            }
           }}
         >
           <ClearIcon className="mr-3" />
@@ -358,23 +385,31 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     {
       label: (
         <div
+          style={{
+            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
+            cursor: checkAuthority(permission, PERMISSION.MANAGE)
+              ? "pointer"
+              : "not-allowed",
+          }}
           className="flex p-2 text-red-500"
           onClick={() => {
-            Modal.confirm({
-              title: "Are you sure you want to delete this group?",
-              content: (
-                <div className="text-red-500 text-xs">
-                  Deleting this group will remove all its tasks.
-                </div>
-              ),
-              footer: (_, { OkBtn, CancelBtn }) => (
-                <>
-                  <CancelBtn />
-                  <OkBtn />
-                </>
-              ),
-              onOk: onConfirmDelete,
-            });
+            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+              Modal.confirm({
+                title: "Are you sure you want to delete this group?",
+                content: (
+                  <div className="text-red-500 text-xs">
+                    Deleting this group will remove all its tasks.
+                  </div>
+                ),
+                footer: (_, { OkBtn, CancelBtn }) => (
+                  <>
+                    <CancelBtn />
+                    <OkBtn />
+                  </>
+                ),
+                onOk: onConfirmDelete,
+              });
+            }
           }}
         >
           <DeleteIcon className="mr-3" />
@@ -387,7 +422,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
 
   const getTaskList = async () => {
     try {
-      const fetchedTasks = await getAllTasks();
+      const fetchedTasks = await getAllTasks(boardId);
       dispatch(setTaskList(fetchedTasks.data));
     } catch (error) {
       console.log(error);
@@ -425,7 +460,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                         borderColor: "transparent",
                       }}
                       autoFocus={true}
-                      value={groupNewName || group.name}
+                      value={groupNewName}
                       onChange={onChangeGroupNewName}
                       onPressEnter={() => onEnterRenameGroup(group.id)}
                       onBlur={(e) => {
@@ -468,6 +503,14 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                 )}
                 <div className="flex flex-row items-center text-[20px]">
                   <AddFilledIcon
+                    style={{
+                      opacity: checkAuthority(permission, PERMISSION.EDIT)
+                        ? 1
+                        : 0.5,
+                      cursor: checkAuthority(permission, PERMISSION.EDIT)
+                        ? "pointer"
+                        : "not-allowed",
+                    }}
                     className="mr-2 text-black"
                     onClick={onClickBeginAdding}
                     onMouseDown={(e) => {
@@ -487,11 +530,32 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                     onOpenChange={onClickChangeOpen}
                   >
                     <MoreIcon
+                      style={{
+                        opacity: checkAuthority(permission, PERMISSION.EDIT)
+                          ? 1
+                          : 0.5,
+                        cursor: checkAuthority(permission, PERMISSION.EDIT)
+                          ? "pointer"
+                          : "not-allowed",
+                      }}
                       className="mr-2 text-black"
                       onClick={onClickShowDropDown}
                     />
                   </Dropdown>
-                  <div className="text-black text-[25px]" {...listeners}>
+                  <div
+                    style={{
+                      opacity: checkAuthority(permission, PERMISSION.EDIT)
+                        ? 1
+                        : 0.5,
+                      cursor: checkAuthority(permission, PERMISSION.EDIT)
+                        ? "pointer"
+                        : "not-allowed",
+                    }}
+                    className="text-black text-[25px]"
+                    {...(checkAuthority(permission, PERMISSION.EDIT)
+                      ? listeners
+                      : {})}
+                  >
                     <DragIcon />
                   </div>
                 </div>
@@ -544,7 +608,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
               )}
             </div>
           )}
-          <TaskList group={group} taskList={taskList} />
+          <TaskList group={group} taskList={taskList} permission={permission} />
         </Card>
       ) : null}
     </>
