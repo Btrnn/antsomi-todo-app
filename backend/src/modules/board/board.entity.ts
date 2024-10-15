@@ -1,4 +1,3 @@
-//import { IdentifyId } from '@app/types';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('board')

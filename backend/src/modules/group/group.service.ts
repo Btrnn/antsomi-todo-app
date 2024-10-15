@@ -13,18 +13,25 @@ import { TaskEntity } from '../task/task.entity';
 // Repository
 import { GroupRepository } from './group.repository';
 
+// Constants
+import { PERMISSION } from '@app/constants';
+
+// Services
+import { AuthService } from '../auth/auth.service';
+
 @Injectable()
 export class GroupService {
   constructor(
     @InjectRepository(GroupEntity)
     private readonly groupRepository: GroupRepository,
     private readonly dataSource: DataSource,
+    private readonly authService: AuthService,
   ) {}
 
-  async findAll(userID: IdentifyId): Promise<ServiceResponse<GroupEntity[]>> {
+  async findAll(boardID: IdentifyId): Promise<ServiceResponse<GroupEntity[]>> {
     const entities = await this.groupRepository.find({
       where: {
-        owner_id: userID as string,
+        board_id: boardID as string,
       },
       order: {
         position: {
@@ -35,70 +42,35 @@ export class GroupService {
     return { data: entities, meta: { page: 1 } };
   }
 
-  // async findOne(id: IdentifyId): Promise<ServiceResponse<GroupEntity>> {
-  //   const entity = await this.groupRepository.findOneBy({ id: id as string });
-  //   return { data: entity, meta: {} };
-  // }
-
   async createGroup(
+    userID: IdentifyId,
     group: Omit<GroupEntity, 'id'>,
   ): Promise<ServiceResponse<GroupEntity>> {
-    const entity = await this.groupRepository
-      .createQueryBuilder()
-      .insert()
-      .into(GroupEntity)
-      .values(group)
-      .returning('*')
-      .execute();
-    return { data: entity.raw, meta: {} };
+    const entity = await this.groupRepository.save(group);
+    // const entity = await this.groupRepository
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into(GroupEntity)
+    //   .values(group)
+    //   .returning('*')
+    //   .execute();
+    return { data: entity, meta: {} };
   }
 
-  async deleteGroup(
-    id: IdentifyId,
-    userID: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
-    const currentGroup = await this.groupRepository.findOneBy({
-      id: id as string,
-    });
-
-    if (currentGroup.owner_id !== (userID as string)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.FORBIDDEN,
-          statusMessage:
-            'Deletion failed: You do not have permission to perform this action.',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
+  async deleteGroup(id: IdentifyId): Promise<ServiceResponse<boolean>> {
     await this.dataSource.transaction(async (manager) => {
       const result = await manager.delete(GroupEntity, { id });
       await manager.delete(TaskEntity, { status_id: id });
       return { data: result.affected > 0, meta: {} };
     });
+
     return { data: false, meta: {} };
   }
 
   async updateGroup(
     id: IdentifyId,
     updateData: Partial<GroupEntity>,
-    userID: IdentifyId,
   ): Promise<ServiceResponse<GroupEntity>> {
-    const currentGroup = await this.groupRepository.findOneBy({
-      id: id as string,
-    });
-
-    if (currentGroup.owner_id !== (userID as string)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.FORBIDDEN,
-          statusMessage:
-            'Update failed: You do not have permission to perform this action.',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
     const result = await this.groupRepository
       .createQueryBuilder()
       .update(GroupEntity)
@@ -111,8 +83,25 @@ export class GroupService {
   }
 
   async reorderGroup(
+    boardID: IdentifyId,
+    userID: IdentifyId,
     groupsPosition: { id: string; position: number }[],
   ): Promise<ServiceResponse<boolean>> {
+    const checkAuthor = await this.authService.isAcceptedPermission(
+      userID,
+      boardID,
+      PERMISSION.EDIT,
+    );
+    if (!checkAuthor.data) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.FORBIDDEN,
+          statusMessage:
+            'Action failed: You do not have permission to perform this action.',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     for (const { id, position } of groupsPosition) {
       await this.groupRepository.update({ id }, { position });
     }

@@ -14,9 +14,13 @@ import { GroupRepository } from './group.repository';
 // Entities
 import { GroupEntity } from './group.entity';
 
+// Modules
+import { AuthModule } from '../auth/auth.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([GroupEntity])],
+  imports: [TypeOrmModule.forFeature([GroupEntity]), AuthModule],
   controllers: [GroupController],
   providers: [TypeOrmModule, GroupService, GroupRepository],
+  exports: [GroupService],
 })
 export class GroupModule {}

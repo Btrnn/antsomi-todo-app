@@ -25,7 +25,8 @@ import { ResponseFormatInterceptor } from './interceptors/response-format.interc
 import { BoardService } from './modules/board/board.service';
 import { BoardController } from './modules/board/board.controller';
 import { BoardModule } from './modules/board/board.module';
-import { BoardUserModule } from './modules/board_user/board_user.module';
+import { BoardUserModule } from './modules/share_access/share_access.module';
+import { CaslModule } from './casl/casl.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { BoardUserModule } from './modules/board_user/board_user.module';
     AuthModule,
     BoardModule,
     BoardUserModule,
+    CaslModule,
   ],
   controllers: [AppController],
   providers: [

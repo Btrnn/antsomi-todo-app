@@ -13,9 +13,10 @@ import { TaskEntity } from './task.entity';
 
 // Repositories
 import { TaskRepository } from './task.repository';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TaskEntity])],
+  imports: [TypeOrmModule.forFeature([TaskEntity]), AuthModule],
   controllers: [TaskController],
   providers: [TypeOrmModule, TaskService, TaskRepository],
 })

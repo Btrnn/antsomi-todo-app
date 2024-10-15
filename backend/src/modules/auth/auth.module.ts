@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller';
 
 // Modules
 import { UserModule } from '@app/modules/user/user.module';
+import { BoardUserModule } from '../share_access/share_access.module';
 
 // Constants
 import { jwtConstants } from './constants';
@@ -22,8 +23,10 @@ import { jwtConstants } from './constants';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '8h' },
     }),
+    BoardUserModule,
   ],
   providers: [AuthService],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class AuthModule {}

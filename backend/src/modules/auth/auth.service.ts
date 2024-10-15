@@ -1,17 +1,23 @@
 // Libraries
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ServiceResponse } from '@app/types';
+import { IdentifyId, ServiceResponse } from '@app/types';
 import { JwtService } from '@nestjs/jwt';
+import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 // Services
 import { UserService } from '../user/user.service';
+import { AccessService } from '../share_access/share_access.service';
+import { BoardEntity } from '../board/board.entity';
+import { ACCESS_OBJECT, OBJECT_TYPE, PERMISSION } from '@app/constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly boardUserService: AccessService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async signIn(
@@ -44,5 +50,27 @@ export class AuthService {
       },
       HttpStatus.UNAUTHORIZED,
     );
+  }
+
+  async isAcceptedPermission(
+    userID: IdentifyId,
+    boardID: IdentifyId,
+    permissionActions: string[],
+  ): Promise<ServiceResponse<boolean>> {
+    const currentBoard = await this.dataSource.manager.findOneBy(BoardEntity, {
+      id: boardID as string,
+    });
+    if (currentBoard.owner_id === (userID as string)) {
+      return { data: true, meta: {} };
+    }
+    const permission = await this.boardUserService.findUserPermission(
+      userID,
+      boardID,
+      OBJECT_TYPE.BOARD,
+    );
+    if (permissionActions.includes(permission.data)) {
+      return { data: true, meta: {} };
+    }
+    return { data: false, meta: {} };
   }
 }

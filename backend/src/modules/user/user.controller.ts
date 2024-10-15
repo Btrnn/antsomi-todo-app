@@ -27,6 +27,11 @@ export class UserController {
     return this.userService.findOne(user.id);
   }
 
+  @Get(':email')
+  getInfoByEmail(@Param('email') email: string) {
+    return this.userService.findInfoByEmail(email);
+  }
+
   @Public()
   @Post('create')
   createUser(@Body() newUser: Omit<UserEntity, 'id'>) {

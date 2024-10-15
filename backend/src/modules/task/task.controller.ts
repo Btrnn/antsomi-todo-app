@@ -22,14 +22,20 @@ import { UserEntity } from '../user/user.entity';
 
 // Decorators
 import { User } from '@app/decorators';
+import { RequiresPermission } from '@app/decorators/authorize.decorator';
+import { ACCESS_OBJECT } from '@app/constants';
 
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Get()
-  getAllTasks(@User() user: UserEntity) {
-    return this.taskService.findAll(user.id);
+  @RequiresPermission('VIEW', ACCESS_OBJECT.BOARD)
+  @Get(`:${ACCESS_OBJECT.BOARD}`)
+  getAllTasks(
+    @Param(ACCESS_OBJECT.BOARD) boardID: IdentifyId,
+    @User() user: UserEntity,
+  ) {
+    return this.taskService.findAll(user.id, boardID);
   }
 
   // @Get(':id')
@@ -37,16 +43,14 @@ export class TaskController {
   //   return this.taskService.findOne(id);
   // }
 
-  @Put(':id')
-  update(
-    @Param('id') id: IdentifyId,
-    @Body() task: Partial<TaskEntity>,
-    @User() user: UserEntity,
-  ) {
-    return this.taskService.updateTask(id, task, user.id);
+  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @Put(`:${ACCESS_OBJECT.BOARD}`)
+  update(@Body() task: Partial<TaskEntity>) {
+    return this.taskService.updateTask(task.id, task);
   }
 
-  @Post()
+  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @Post(`:${ACCESS_OBJECT.BOARD}`)
   createTask(
     @Body() newTask: Omit<TaskEntity, 'id'>,
     @User() user: UserEntity,
@@ -57,20 +61,24 @@ export class TaskController {
     });
   }
 
-  @Delete(':id')
-  deleteTask(@Param('id') id: IdentifyId, @User() user: UserEntity) {
-    return this.taskService.deleteTask(id, user.id);
-  }
-
-  @Delete('clear/:groupID')
-  deleteTaskByGroupID(
-    @Param('groupID') id: IdentifyId,
+  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @Delete(`:${ACCESS_OBJECT.BOARD}`)
+  deleteTask(
+    @Param('boardID') boardID: IdentifyId,
+    @Body('id') id: IdentifyId,
     @User() user: UserEntity,
   ) {
-    return this.taskService.deleteTaskByGroupID(id, user.id);
+    return this.taskService.deleteTask(boardID, id, user.id);
   }
 
-  @Patch()
+  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @Delete(`clear/:${ACCESS_OBJECT.BOARD}`)
+  deleteTaskByGroupID(@Body('id') id: IdentifyId) {
+    return this.taskService.deleteTaskByGroupID(id);
+  }
+
+  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @Patch(`${ACCESS_OBJECT.BOARD}`)
   async updateTaskPositions(
     @Body() taskPositions: { id: string; position: number }[],
     @User() user: UserEntity,

@@ -22,4 +22,7 @@ export class GroupEntity {
 
   @Column()
   owner_id: string;
+
+  @Column()
+  board_id: string;
 }

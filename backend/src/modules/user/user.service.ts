@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { omit } from 'lodash';
 
 // Types
 import { IdentifyId, ServiceResponse } from '@app/types';
@@ -45,6 +46,27 @@ export class UserService {
         created_at: entity.created_at,
         role: entity.role,
       },
+      meta: {},
+    };
+  }
+
+  async findInfoByEmail(
+    email: string,
+  ): Promise<ServiceResponse<Partial<UserEntity>>> {
+    const entity = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (entity === null) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          statusMessage: 'Can not find this user',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return {
+      data: omit(entity, 'password'),
       meta: {},
     };
   }
