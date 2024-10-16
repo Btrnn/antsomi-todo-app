@@ -48,13 +48,14 @@ import {
   Card,
   List,
 } from "components/ui";
-import { UserDrawer } from "./components/UserDrawer";
+import { UserDrawer } from "../../components/common/UserDrawer";
 
 // Constants
 import {
   DASHBOARD_KEY,
   globalToken,
   MENU_KEY,
+  PERMISSION,
   ROLE_KEY,
   ROLE_OPTIONS,
 } from "../../constants";
@@ -87,6 +88,8 @@ import {
 } from "store";
 import { getInfo } from "services";
 import { IdentifyId } from "types";
+import { ShareAccessModal } from "components/common";
+import { checkAuthority } from "utils";
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
@@ -143,7 +146,7 @@ export const Dashboard: React.FC = () => {
     alreadySharedList: [],
     isAddingUser: false,
     isOpenBoardMenu: false,
-    userPermission: '',
+    userPermission: "",
   });
   const {
     isOpenSetting,
@@ -163,7 +166,7 @@ export const Dashboard: React.FC = () => {
     alreadySharedList,
     isAddingUser,
     isOpenBoardMenu,
-    userPermission
+    userPermission,
   } = state;
 
   // Store
@@ -177,15 +180,19 @@ export const Dashboard: React.FC = () => {
 
   //List
   const boardActionItems: MenuItem[] = [
-    {
-      label: (
-        <div className="flex p-2">
-          <EditIcon className="mr-3" />
-          <div>Rename</div>
-        </div>
-      ),
-      key: MENU_KEY.KEY2,
-    },
+    ...(checkAuthority(userPermission, PERMISSION.EDIT)
+      ? [
+          {
+            label: (
+              <div className="flex p-2">
+                <EditIcon className="mr-3" />
+                <div>Rename</div>
+              </div>
+            ),
+            key: MENU_KEY.KEY2,
+          },
+        ]
+      : []),
     {
       label: (
         <div className="flex p-2">
@@ -195,7 +202,7 @@ export const Dashboard: React.FC = () => {
       ),
       key: MENU_KEY.KEY3,
     },
-    {
+    ...(checkAuthority(userPermission, PERMISSION.OWN) ? [{
       label: (
         <div className="flex p-2 text-red-500">
           <DeleteIcon className="mr-3" />
@@ -203,7 +210,7 @@ export const Dashboard: React.FC = () => {
         </div>
       ),
       key: MENU_KEY.KEY1,
-    },
+    }] : []),
   ];
 
   // Hooks
@@ -212,14 +219,16 @@ export const Dashboard: React.FC = () => {
 
   // Memo
   const roleOptions = useMemo(() => {
-    return Object.values(ROLE_OPTIONS).map(({value, label, Icon}) => ({
+    return Object.values(ROLE_OPTIONS).map(({ value, label, Icon }) => ({
       value,
-      label: <>
-        <Icon className="mr-2 my-2"/>
-        {label}
-      </>
-    }))
-  }, [])
+      label: (
+        <>
+          <Icon className="mr-2 my-2" />
+          {label}
+        </>
+      ),
+    }));
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -238,7 +247,7 @@ export const Dashboard: React.FC = () => {
       ...prevState,
       title: currentTitle,
       selectedKey: currentKey,
-      boardSelected: params?.boardId ?? '',
+      boardSelected: params?.boardId ?? "",
     }));
 
     getBoardList();
@@ -247,7 +256,7 @@ export const Dashboard: React.FC = () => {
   // Handles
   const onClickSelectBoard = async (boardID: IdentifyId) => {
     const userPermission = await getPermission(boardID);
-    dispatch(setPermission(userPermission.data))
+    dispatch(setPermission(userPermission.data));
     navigate(`/dashboard/board/${boardID}`);
     setState((prev) => ({
       ...prev,
@@ -256,7 +265,6 @@ export const Dashboard: React.FC = () => {
   };
 
   const onClickShowBoardMenu = async (boardID: IdentifyId) => {
-    console.log("show")
     setState((prev) => ({
       ...prev,
       isOpenBoardMenu: true,
@@ -307,6 +315,14 @@ export const Dashboard: React.FC = () => {
 
   const onClickAddBoard = async () => {
     if (inputBoardName !== "") {
+      const boardExists = ownedBoardList.some(board => board.name === inputBoardName);
+      if (boardExists) {
+        messageCreate.open({
+          type: "error",
+          content: "Board already exists!",
+        }); 
+      }
+      else{
       try {
         const newBoard: Partial<Board> = {
           name: inputBoardName,
@@ -324,8 +340,9 @@ export const Dashboard: React.FC = () => {
           content: error as string,
         });
       }
+      setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
+      }
     }
-    setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
   };
 
   // const onClick: MenuProps["onClick"] = (e) => {
@@ -348,6 +365,7 @@ export const Dashboard: React.FC = () => {
             Deleting this board will remove all its groups.
           </div>
         ),
+
         footer: (_, { OkBtn, CancelBtn }) => (
           <>
             <CancelBtn />
@@ -369,174 +387,23 @@ export const Dashboard: React.FC = () => {
   };
 
   // Handle "SHARE"
-  const onClickBeginSharing = () => {
-    setState((prev) => ({ ...prev, isAddingUser: true }));
-  };
-
-  const onChangeInputUser = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputUser: event.target.value }));
-  };
-
-  const onClickAddUser = async () => {
-    if (inputUser) {
-      try {
-        const userInfo = await getInfo(inputUser);
-        const isExisted = [...shareUsers, ...alreadySharedList].find(
-          (user) => user.id === userInfo.data.id
-        );
-        if (isExisted) {
-          setState((prev) => ({
-            ...prev,
-            error: "User already added.",
-          }));
-        } else {
-          if (userInfo.data) {
-            setState((prev) => ({
-              ...prev,
-              shareUsers: [
-                ...shareUsers,
-                {
-                  id: userInfo.data.id ?? "",
-                  name: userInfo.data.name ?? "",
-                  email: inputUser,
-                  role: selectedRole,
-                },
-              ],
-              error: "",
-              inputUser: "",
-              isAddingUser: true,
-            }));
-          }
-        }
-      } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error as string,
-        }));
-      }
-    } else {
-      setState((prev) => ({
-        ...prev,
-        error: "This field is required !",
-      }));
-    }
-  };
-
-  const onClickRemoveUser = (id: React.Key) => {
+  const onCloseShareAccessModal = async () => {
     setState((prev) => ({
       ...prev,
-      shareUsers: shareUsers.filter((user) => user.id !== id),
+      boardSelected: "",
+      boardSharedName: "",
+      isSharing: false,
+      alreadySharedList: [],
     }));
   };
 
-  const onChangeRole = (value: string) => {
+  const onShareComplete = async () => {
+    const accessList = await getAccessList(boardSelected);
     setState((prev) => ({
       ...prev,
-      selectedRole: value,
+      alreadySharedList: accessList.data,
     }));
-  };
-
-  const onChangeRoleAddingList = (value: string, index: number) => {
-    setState((prev) => ({
-      ...prev,
-      shareUsers: shareUsers.map((user, i) =>
-        i === index ? { ...user, role: value } : user
-      ),
-    }));
-  };
-
-  const onChangeRoleExistedList = (value: string, index: number) => {
-    setState((prev) => ({
-      ...prev,
-      alreadySharedList: alreadySharedList.map((user, i) =>
-        i === index ? { ...user, permission: value } : user
-      ),
-    }));
-  };
-
-  const onClickShareBoard = async (boardID: React.Key) => {
-    if (isAddingUser) {
-      const listUser = shareUsers.map((user) => ({
-        user_id: user.id,
-        permission: user.role,
-      }));
-      if (listUser.length !== 0) {
-        try {
-          const response = await shareBoard(boardID, listUser);
-          messageCreate.open({
-            type: "success",
-            content: "Board shared",
-          });
-          const accessList = await getAccessList(boardID);
-          setState((prev) => ({
-            ...prev,
-            alreadySharedList: accessList.data,
-          }));
-        } catch (error) {
-          // messageCreate.open({
-          //   type: "error",
-          //   content: error as string,
-          // });
-          console.log(error);
-        }
-      }
-      setState((prev) => ({
-        ...prev,
-        inputUser: "",
-        shareUsers: [],
-        error: "",
-        selectedRole: ROLE_KEY.VIEWER,
-        isAddingUser: false,
-      }));
-    } else {
-      const updateList = alreadySharedList.map((user) => ({
-        user_id: user.id,
-        permission: user.permission,
-      }));
-      if (updateList.length !== 0) {
-        try {
-          const response = await updateAccessBoard(boardID, updateList);
-          messageCreate.open({
-            type: "success",
-            content: "Board updated",
-          });
-        } catch (error) {
-          messageCreate.open({
-            type: "error",
-            content: error as string,
-          });
-        }
-      }
-      setState((prev) => ({
-        ...prev,
-        boardSelected: "",
-        boardSharedName: "",
-        isSharing: false,
-        isAddingUser: false,
-      }));
-    }
-  };
-
-  const onCancelShareBoard = async () => {
-    //console.log("Board: ", boardID);
-    if (isAddingUser) {
-      setState((prev) => ({
-        ...prev,
-        inputUser: "",
-        shareUsers: [],
-        error: "",
-        selectedRole: ROLE_KEY.VIEWER,
-        isAddingUser: false,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        boardSelected: "",
-        boardSharedName: "",
-        isSharing: false,
-        alreadySharedList: [],
-      }));
-    }
+    getBoardList();
   };
 
   // Handle "RENAME"
@@ -620,10 +487,10 @@ export const Dashboard: React.FC = () => {
                   />
                 ) : (
                   <div
-                    className="flex justify-between"
+                    className="flex justify-between w-full"
                     onClick={() => onClickSelectBoard(board.id)}
                   >
-                    <div>{board.name}</div>
+                    <div className="flex overflow-hidden">{board.name}</div>
 
                     <Dropdown
                       key={board.id}
@@ -637,17 +504,17 @@ export const Dashboard: React.FC = () => {
                         isOpenBoardMenu &&
                         (board.id as string) === boardSelected
                       }
-                      trigger={['click']} 
+                      trigger={["click"]}
                       onOpenChange={(visible) => {
                         if (!visible) {
-                          onClickHideBoardMenu(); 
+                          onClickHideBoardMenu();
                         }
                       }}
                     >
                       <div
                         onClick={(e) => {
-                          e.preventDefault(); 
-                          onClickShowBoardMenu(board.id); 
+                          e.preventDefault();
+                          onClickShowBoardMenu(board.id);
                         }}
                       >
                         <MoreIcon />
@@ -693,11 +560,59 @@ export const Dashboard: React.FC = () => {
           key: "shared",
           label: "Shared with you",
           children: sharedBoardList.map((board) => ({
-            label: (
-              <NavLink to={`/dashboard/board/${board.id}`} onClick={() => onClickSelectBoard(board.id)} >
-                {board.name}
-              </NavLink>
-            ),
+            label:
+              isRename && boardSelected === (board.id as string) ? (
+                <Input
+                  className="w-full h-full p-0"
+                  style={{
+                    boxShadow: "none",
+                    borderColor: "transparent",
+                    backgroundColor: "transparent",
+                  }}
+                  autoFocus={true}
+                  value={boardNewName}
+                  onChange={onChangeBoardNewName}
+                  onPressEnter={() => onEnterRenameBoard(board.id)}
+                  onBlur={(e) => {
+                    onEnterRenameBoard(board.id);
+                  }}
+                />
+              ) : (
+                <div
+                  className="flex justify-between w-full"
+                  onClick={() => onClickSelectBoard(board.id)}
+                >
+                  <div className="flex overflow-hidden">{board.name}</div>
+
+                  <Dropdown
+                    key={board.id}
+                    menu={{
+                      items: boardActionItems,
+                      onClick: (event) =>
+                        onClickAction(event, board.id, board.name),
+                    }}
+                    placement="bottomLeft"
+                    open={
+                      isOpenBoardMenu && (board.id as string) === boardSelected
+                    }
+                    trigger={["click"]}
+                    onOpenChange={(visible) => {
+                      if (!visible) {
+                        onClickHideBoardMenu();
+                      }
+                    }}
+                  >
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onClickShowBoardMenu(board.id);
+                      }}
+                    >
+                      <MoreIcon />
+                    </div>
+                  </Dropdown>
+                </div>
+              ),
             key: board.id,
           })),
         },
@@ -738,141 +653,16 @@ export const Dashboard: React.FC = () => {
         </div>
       </Sider>
 
-      <Modal
-        title={
-          <div className="justify-between flex items-center align-middle">
-            <div className="mb-3 h-10 text-xl flex items-center">
-              <span className="mr-2">Share access</span>
-              <span className="font-bold text-green-400">
-                "{boardSharedName}"
-              </span>
-            </div>
-            <AddIcon
-              onClick={onClickBeginSharing}
-              className="ml-3 mb-3 h-10 text-[20px] flex items-center"
-            />
-          </div>
-        }
-        closeIcon={false}
-        open={isSharing}
-        onOk={() => onClickShareBoard(boardSelected)}
-        onCancel={onCancelShareBoard}
-        okText={isAddingUser ? "Share" : "Save"}
-        cancelText="Cancel"
-        width={"700px"}
-      >
-        <div className="h-[500px] mt-5 overflow-hidden">
-          {isAddingUser ? (
-            <div>
-              <div className="flex gap-1 flex-shrink-0 w-full h-10">
-                <Input
-                  className="p-2"
-                  style={{
-                    outline: "none",
-                    boxShadow: "none",
-                  }}
-                  placeholder="Enter users email to share access"
-                  value={inputUser}
-                  onChange={onChangeInputUser}
-                  onPressEnter={onClickAddUser}
-                />
-                <Select
-                  value={selectedRole}
-                  className="w-[140px] h-full"
-                  onChange={onChangeRole}
-                  options={roleOptions}
-                />
-              </div>
-              {error === "" ? (
-                <div className="p-[10px] w-full text-[#595959]">
-                  Press Enter to add users access
-                </div>
-              ) : (
-                <div className="text-red-500 p-[10px] w-full">{error}</div>
-              )}
-
-              <List
-                header={<span className="font-bold text-lg">Sharing List</span>}
-                className="overflow-auto mt-3 h-[400px]"
-                itemLayout="horizontal"
-                dataSource={shareUsers}
-                renderItem={(user, index) => (
-                  <List.Item className="h-full overflow-auto p-2">
-                    <List.Item.Meta
-                      title={user.name}
-                      description={user.email}
-                    />
-                    <Select
-                      value={user.role}
-                      className="w-[140px] h-full mr-3"
-                      onChange={(value) => onChangeRoleAddingList(value, index)}
-                      options={[
-                        {
-                          value: ROLE_KEY.VIEWER,
-                          label: (
-                            <>
-                              <ViewerIcon className="mr-2 my-2" />
-                              Viewer
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.COMMENTER,
-                          label: (
-                            <>
-                              <CommenterIcon className="mr-2 my-2" />
-                              Commenter
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.EDITOR,
-                          label: (
-                            <>
-                              <EditorIcon className="mr-2 my-2" />
-                              Editor
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.MANAGER,
-                          label: (
-                            <>
-                              <ManagerIcon className="mr-2 my-2" />
-                              Manager
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                    <CloseIcon onClick={() => onClickRemoveUser(user.id)} />
-                  </List.Item>
-                )}
-              />
-            </div>
-          ) : (
-            <List
-              header={
-                <span className="font-bold text-lg">People with access</span>
-              }
-              className="overflow-auto h-[500px]"
-              itemLayout="horizontal"
-              dataSource={alreadySharedList}
-              renderItem={(user, index) => (
-                <List.Item className="h-full">
-                  <List.Item.Meta title={user.name} description={user.email} />
-                  <Select
-                    value={user.permission}
-                    className="w-[150px] h-full"
-                    onChange={(value) => onChangeRoleExistedList(value, index)}
-                    options={roleOptions}
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </div>
-      </Modal>
+      <ShareAccessModal
+        isOpen={isSharing}
+        onClose={onCloseShareAccessModal}
+        object={"board"}
+        objectName={boardSharedName}
+        objectID={boardSelected}
+        accessList={alreadySharedList}
+        onShare={onShareComplete}
+        permission={userPermission}
+      />
 
       <Layout className="h-screen">
         <Header
@@ -907,9 +697,9 @@ export const Dashboard: React.FC = () => {
           </div>
           <Outlet />
         </Content>
-        
+
         {isOpenSetting && (
-        <UserDrawer isOpen={isOpenSetting} onClose={onCloseUserSetting} />
+          <UserDrawer isOpen={isOpenSetting} onClose={onCloseUserSetting} />
         )}
       </Layout>
     </Layout>

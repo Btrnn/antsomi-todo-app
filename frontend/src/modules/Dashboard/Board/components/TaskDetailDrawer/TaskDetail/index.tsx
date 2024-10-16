@@ -18,7 +18,7 @@ import { Task } from 'models';
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
 import { checkAuthority } from 'utils';
-import { PERMISSION } from 'constants/common';
+import { PERMISSION } from 'constants/role';
 import { useParams } from 'react-router-dom';
 
 interface TaskDetailProp {

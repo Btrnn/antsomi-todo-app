@@ -43,7 +43,7 @@ import {
 
 // Constants
 import { SORTABLE_TYPE } from "constants/tasks";
-import { PERMISSION, ROLE_KEY } from "constants/common";
+import { PERMISSION, ROLE_KEY } from "constants/role";
 
 // Services
 import {
@@ -211,7 +211,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         } else {
           updatedTaskAPI(boardId, {id: active.id, status_id: over.data.current?.groupID });
         }
-        dispatch(reorderTaskAsync());
+        dispatch(reorderTaskAsync(boardId));
       } catch (error) {
         messageCreate.open({
           type: "error",
@@ -219,9 +219,10 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         });
       }
     } else if (sourceType === SORTABLE_TYPE.GROUP) {
+      console.log("Group");
       dispatch(reorderGroup({ source: active, destination: over }));
       try {
-        dispatch(reorderGroupAsync());
+        dispatch(reorderGroupAsync(boardId));
       } catch (error) {
         messageCreate.open({
           type: "error",
@@ -243,7 +244,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       const deletedGroup = await deleteGroupAPI(boardId, id);
       getGroupList();
       dispatch(deleteGroup({id}));
-      dispatch(reorderGroupAsync());
+      dispatch(reorderGroupAsync(boardId));
       messageCreate.open({
         type: "success",
         content: <div className="z-10">Group deleted!</div>,

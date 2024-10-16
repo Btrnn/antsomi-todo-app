@@ -33,18 +33,20 @@ const initialState: TaskState = {
   updateList: [],
 };
 
-export const reorderTaskAsync = createAsyncThunk('task/reorder', async (_, { getState }) => {
-  const state = getState() as { task: TaskState };
-  const params = useParams();
-  const taskPositions = state.task.taskList.map(task => ({
-    id: task.id,
-    position: task.position,
-  }));
-  const response = await reorderTaskAPI(params?.boardId ?? '', taskPositions);
-  state.task.updateList = [];
+export const reorderTaskAsync = createAsyncThunk(
+  'task/reorder',
+  async (boardId: React.Key, { getState }) => {
+    const state = getState() as { task: TaskState };
+    const taskPositions = state.task.taskList.map(task => ({
+      id: task.id,
+      position: task.position,
+    }));
+    const response = await reorderTaskAPI(boardId, taskPositions);
+    state.task.updateList = [];
 
-  return response.data;
-});
+    return response.data;
+  },
+);
 
 const taskSlice = createSlice({
   name: 'task',

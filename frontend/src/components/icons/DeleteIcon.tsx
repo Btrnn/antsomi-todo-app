@@ -1,1 +1,1 @@
-export { DeleteOutlined as DeleteIcon } from '@ant-design/icons';
+export { DeleteFilled as DeleteIcon } from '@ant-design/icons';

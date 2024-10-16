@@ -59,7 +59,7 @@ export const reorderTask = async (
   taskPositions: { id: IdentifyId; position: number }[],
 ) => {
   try {
-    const response = await axiosInstance.patch(`task/${boardID}`, taskPositions);
+    const response = await axiosInstance.patch(`task/reorder/${boardID}`, taskPositions);
     return response.data;
   } catch (error) {
     return Promise.reject(error);

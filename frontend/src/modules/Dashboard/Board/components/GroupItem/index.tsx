@@ -57,7 +57,7 @@ import {
 
 // Utils
 import { checkAuthority, getContrastTextColor } from "utils";
-import { PERMISSION } from "constants/common";
+import { PERMISSION } from "constants/role";
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -81,6 +81,7 @@ type TState = {
   textColor: string;
   isClicked: boolean;
   isChanged: boolean;
+  isChangeColor: boolean;
 };
 
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
@@ -116,6 +117,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     textColor: "#FFFFFF",
     isClicked: false,
     isChanged: false,
+    isChangeColor: false,
   });
 
   const {
@@ -130,6 +132,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     textColor,
     isClicked,
     isChanged,
+    isChangeColor
   } = state;
 
   // Handlers
@@ -231,7 +234,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
           updatedGroup: { color: value.toHexString() },
         })
       );
-      updateGroupAPI( boardId, groupID, { color: value.toHexString() });
+      updateGroupAPI(boardId, groupID, { color: value.toHexString() });
       setState((prev) => ({
         ...prev,
         textColor: getContrastTextColor(value.toHexString()),
@@ -335,6 +338,23 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
       }
     }
   };
+
+  const onClickChangeColor = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (checkAuthority(permission, PERMISSION.EDIT)) {
+      if (!isOpen) {
+        setState((prev) => ({
+          ...prev,
+          isOpen: true,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isOpen: false,
+        }));
+      }
+    }
+  }
 
   const items: MenuProps["items"] = [
     {
@@ -472,8 +492,12 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                           onMouseDown={(e) => {
                             e.preventDefault();
                           }}
+                          onClick={(e) => {
+                            onClickChangeColor(e)
+                          }}
                         >
                           <ColorPicker
+                            open={isChangeColor && group.id === groupSelected}
                             trigger="click"
                             onChange={(value) =>
                               onChangeSetColor(value, group.id)
@@ -501,64 +525,42 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                     {group.name}
                   </Tag>
                 )}
-                <div className="flex flex-row items-center text-[20px]">
-                  <AddFilledIcon
-                    style={{
-                      opacity: checkAuthority(permission, PERMISSION.EDIT)
-                        ? 1
-                        : 0.5,
-                      cursor: checkAuthority(permission, PERMISSION.EDIT)
-                        ? "pointer"
-                        : "not-allowed",
-                    }}
-                    className="mr-2 text-black"
-                    onClick={onClickBeginAdding}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                    }}
-                  />
-                  <Dropdown
-                    key={group.id}
-                    menu={{
-                      items,
-                      onClick: (event) =>
-                        onClickAction(event, group.id, group.name),
-                    }}
-                    placement="bottomLeft"
-                    open={isOpen}
-                    trigger={["click"]}
-                    onOpenChange={onClickChangeOpen}
-                  >
-                    <MoreIcon
-                      style={{
-                        opacity: checkAuthority(permission, PERMISSION.EDIT)
-                          ? 1
-                          : 0.5,
-                        cursor: checkAuthority(permission, PERMISSION.EDIT)
-                          ? "pointer"
-                          : "not-allowed",
-                      }}
+                {checkAuthority(permission, PERMISSION.EDIT) && (
+                  <div className="flex flex-row items-center text-[20px]">
+                    <AddFilledIcon
                       className="mr-2 text-black"
-                      onClick={onClickShowDropDown}
+                      onClick={onClickBeginAdding}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                      }}
                     />
-                  </Dropdown>
-                  <div
-                    style={{
-                      opacity: checkAuthority(permission, PERMISSION.EDIT)
-                        ? 1
-                        : 0.5,
-                      cursor: checkAuthority(permission, PERMISSION.EDIT)
-                        ? "pointer"
-                        : "not-allowed",
-                    }}
-                    className="text-black text-[25px]"
-                    {...(checkAuthority(permission, PERMISSION.EDIT)
-                      ? listeners
-                      : {})}
-                  >
-                    <DragIcon />
+                    <Dropdown
+                      key={group.id}
+                      menu={{
+                        items,
+                        onClick: (event) =>
+                          onClickAction(event, group.id, group.name),
+                      }}
+                      placement="bottomLeft"
+                      open={isOpen}
+                      trigger={["click"]}
+                      onOpenChange={onClickChangeOpen}
+                    >
+                      <MoreIcon
+                        className="mr-2 text-black"
+                        onClick={onClickShowDropDown}
+                      />
+                    </Dropdown>
+                    <div
+                      className="text-black text-[25px]"
+                      {...(checkAuthority(permission, PERMISSION.EDIT)
+                        ? listeners
+                        : {})}
+                    >
+                      <DragIcon />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           }

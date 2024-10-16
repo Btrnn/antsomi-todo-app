@@ -64,10 +64,10 @@ export const TaskList: React.FC<TaskListProps> = props => {
   const onDeleteTask = async (id: React.Key) => {
     try {
       deleteTask(group.board_id, id);
-      dispatch(reorderTaskAsync());
+      dispatch(reorderTaskAsync(group.board_id));
       messageCreate.open({
         type: 'success',
-        content: <div className="text-red-500">Task deleted!</div>,
+        content: <div>Task deleted!</div>,
       });
     } catch (error) {
       messageCreate.open({
@@ -109,7 +109,7 @@ export const TaskList: React.FC<TaskListProps> = props => {
         items={taskList.filter(task => task.status_id === group.id).map(task => String(task.id))}
         strategy={verticalListSortingStrategy}
       >
-        <div key={group.id} className="items-center">
+        <div key={group.id} className="items-center w-full">
           {renderTasks(taskList)}
         </div>
         <div className="text-red-400">{error}</div>

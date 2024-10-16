@@ -19,7 +19,7 @@ import { Task } from 'models';
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 import { checkAuthority } from 'utils';
-import { PERMISSION } from 'constants/common';
+import { PERMISSION } from 'constants/role';
 
 interface TaskItemProp {
   groupInfo: {
@@ -107,13 +107,9 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     {
       label: (
         <div
-          style={{
-            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
-            cursor: checkAuthority(permission, PERMISSION.MANAGE) ? 'pointer' : 'not-allowed',
-          }}
           className="flex p-2 text-red-500"
           onClick={() => {
-            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+            if (checkAuthority(permission, PERMISSION.EDIT)) {
               Modal.confirm({
                 title: 'Are you sure you want to delete this task?',
                 content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
@@ -157,7 +153,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           disabled={!checkAuthority(permission, PERMISSION.EDIT)}
         >
           <Card
-            className="flex justify-between overflow-hidden mb-3 p-[10px]"
+            className="flex justify-between overflow-hidden mb-3 p-[5px] w-full"
             onClick={() => onClickShowDetail(task.id)}
             id={String(task.id)}
             onMouseDown={onMouseDown}
@@ -168,10 +164,10 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
               boxShadow: '0 2px 2px rgba(0, 0, 0, 0.1)',
             }}
           >
-            <div key={task.id}>
-              <div key={task.id} className="overflow-hidden w-52">
-                <div className="font-bold mb-2 whitespace-normal">{task.name}</div>
-                <div className="font-light whitespace-nowrap mb-2">{task.description}</div>
+            <div key={task.id} className="w-full p-0">
+              <div key={task.id} className="flex flex-col w-full overflow-hidden">
+                <div className="flex font-bold mb-2 whitespace-normal">{task.name}</div>
+                <div className="flex font-light mb-2 overflow-hidden">{task.description}</div>
               </div>
               <div className="flex flex-col items-start gap-y-3">
                 <Tag

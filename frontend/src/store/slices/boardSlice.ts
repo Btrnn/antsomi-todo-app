@@ -9,6 +9,7 @@ import { Board } from 'models/Board';
 
 // Services
 import { reorderBoard as reorderBoardAPI } from 'services';
+import { useParams } from 'react-router-dom';
 
 interface BoardState {
   ownedList: Board[];
