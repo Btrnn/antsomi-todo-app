@@ -45,7 +45,6 @@ export class AccessService {
 
   async deleteAccess(
     objectID: IdentifyId,
-    objectType: IdentifyId,
     userID: IdentifyId,
   ): Promise<ServiceResponse<boolean>> {
     const result = await this.accessRepository
@@ -54,7 +53,6 @@ export class AccessService {
       .from(AccessEntity)
       .where('object_id = :objectID', { objectID })
       .andWhere('user_id = :userID', { userID })
-      .andWhere('object_type = :objectType', { objectType })
       .execute();
     return {
       data: result.affected > 0,
@@ -76,13 +74,11 @@ export class AccessService {
   async findUserPermission(
     userID: IdentifyId,
     objectID: IdentifyId,
-    objectType: string,
   ): Promise<ServiceResponse<string>> {
     const entity = await this.accessRepository.findOne({
       where: {
         user_id: userID as string,
         object_id: objectID as string,
-        object_type: objectType,
       },
     });
     return { data: entity.permission, meta: {} };

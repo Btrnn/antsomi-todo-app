@@ -62,12 +62,10 @@ export class GroupController {
   }
 
   @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
-  @Patch(`:${ACCESS_OBJECT.BOARD}`)
+  @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
   async updateGroupPositions(
-    @Param('board_id') board_id: IdentifyId,
     @Body() groupPositions: { id: string; position: number }[],
-    @User() user: UserEntity,
   ) {
-    return this.groupService.reorderGroup(board_id, user.id, groupPositions);
+    return this.groupService.reorderGroup(groupPositions);
   }
 }

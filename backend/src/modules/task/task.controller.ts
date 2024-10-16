@@ -78,7 +78,7 @@ export class TaskController {
   }
 
   @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
-  @Patch(`${ACCESS_OBJECT.BOARD}`)
+  @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
   async updateTaskPositions(
     @Body() taskPositions: { id: string; position: number }[],
     @User() user: UserEntity,

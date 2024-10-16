@@ -83,25 +83,8 @@ export class GroupService {
   }
 
   async reorderGroup(
-    boardID: IdentifyId,
-    userID: IdentifyId,
     groupsPosition: { id: string; position: number }[],
   ): Promise<ServiceResponse<boolean>> {
-    const checkAuthor = await this.authService.isAcceptedPermission(
-      userID,
-      boardID,
-      PERMISSION.EDIT,
-    );
-    if (!checkAuthor.data) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.FORBIDDEN,
-          statusMessage:
-            'Action failed: You do not have permission to perform this action.',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
     for (const { id, position } of groupsPosition) {
       await this.groupRepository.update({ id }, { position });
     }

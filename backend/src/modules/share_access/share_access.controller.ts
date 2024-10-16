@@ -15,7 +15,7 @@ import { AccessService } from './share_access.service';
 // // Decorators
 // import { User } from '@app/decorators';
 
-@Controller('board-user')
+@Controller('share-access')
 export class AccessController {
   constructor(private readonly accessService: AccessService) {}
 }

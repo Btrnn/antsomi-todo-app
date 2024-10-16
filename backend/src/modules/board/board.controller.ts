@@ -88,7 +88,7 @@ export class BoardController {
     return this.boardService.updateBoard(board_id, board);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission('OWN', ACCESS_OBJECT.BOARD)
   @Put(`/updateAccess/:${ACCESS_OBJECT.BOARD}`)
   updateBoardAccess(
     @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
@@ -104,6 +104,33 @@ export class BoardController {
     @User() user: UserEntity,
   ) {
     return this.boardService.deleteBoard(id, user.id);
+  }
+
+  @RequiresPermission('MANAGE', ACCESS_OBJECT.BOARD)
+  @Delete(`deleteAccess/:${ACCESS_OBJECT.BOARD}`)
+  deleteAccessBoard(
+    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
+    @Body('userID') user_id: IdentifyId,
+  ) {
+    return this.accessService.deleteAccess(board_id, user_id);
+  }
+
+  @RequiresPermission('OWN', ACCESS_OBJECT.BOARD)
+  @Put(`changeOwner/:${ACCESS_OBJECT.BOARD}`)
+  changeBoardOwner(
+    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
+    @Body('new_owner') new_owner_id: IdentifyId,
+    @User() current_owner: UserEntity,
+  ) {
+    console.log('🚀 ~ BoardController ~ current_owner:', current_owner);
+    console.log('🚀 ~ BoardController ~ new_owner_id:', new_owner_id);
+    console.log('🚀 ~ BoardController ~ board_id:', board_id);
+
+    return this.boardService.changeBoardOwner(
+      board_id,
+      new_owner_id,
+      current_owner.id,
+    );
   }
 
   @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)

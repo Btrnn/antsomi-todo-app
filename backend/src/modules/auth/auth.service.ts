@@ -54,19 +54,18 @@ export class AuthService {
 
   async isAcceptedPermission(
     userID: IdentifyId,
-    boardID: IdentifyId,
+    objectID: IdentifyId,
     permissionActions: string[],
   ): Promise<ServiceResponse<boolean>> {
     const currentBoard = await this.dataSource.manager.findOneBy(BoardEntity, {
-      id: boardID as string,
+      id: objectID as string,
     });
     if (currentBoard.owner_id === (userID as string)) {
       return { data: true, meta: {} };
     }
     const permission = await this.boardUserService.findUserPermission(
       userID,
-      boardID,
-      OBJECT_TYPE.BOARD,
+      objectID,
     );
     if (permissionActions.includes(permission.data)) {
       return { data: true, meta: {} };

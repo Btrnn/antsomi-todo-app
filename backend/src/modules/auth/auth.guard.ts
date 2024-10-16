@@ -84,6 +84,7 @@ export class AuthGuard implements CanActivate {
       request.params[objectType],
       PERMISSION[requiredPermission],
     );
+    console.log('🚀 ~ AuthGuard ~ canActivate ~ hasAccess:', hasAccess);
 
     if (!hasAccess.data) {
       throw new HttpException(
