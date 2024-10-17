@@ -33,13 +33,14 @@ export class UserService {
   }
 
   async findOne(
-    id: string,
-  ): Promise<ServiceResponse<Omit<UserEntity, 'id' | 'password'>>> {
+    id: IdentifyId,
+  ): Promise<ServiceResponse<Omit<UserEntity, 'password'>>> {
     const entity = await this.userRepository.findOneBy({
-      id: id,
+      id: id as string,
     });
     return {
       data: {
+        id: id as string,
         name: entity.name,
         phone_number: entity.phone_number,
         email: entity.email,
