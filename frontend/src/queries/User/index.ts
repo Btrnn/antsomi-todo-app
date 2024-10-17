@@ -14,7 +14,7 @@ import { ServiceResponse } from 'types';
 import { User } from 'models';
 
 type UseGetUserInfoProps = {
-  options?: UseQueryOptions<ServiceResponse<Omit<User, 'id' | 'password'>>>;
+  options?: UseQueryOptions<ServiceResponse<Omit<User, 'password'>>>;
 };
 
 type UseGetUserByEmailProps = {
@@ -27,7 +27,7 @@ type UseGetUserByEmailProps = {
  *
  * @param {UseGetUserInfoProps} [props] The options for the `useQuery` hook.
  *
- * @returns {UseQueryResult<ServiceResponse<Omit<User, 'id' | 'password'>>>} The result of the query.
+ * @returns {UseQueryResult<ServiceResponse<Omit<User, 'password'>>>} The result of the query.
  */
 export const useGetUserInfo = (props?: UseGetUserInfoProps) => {
   return useQuery({

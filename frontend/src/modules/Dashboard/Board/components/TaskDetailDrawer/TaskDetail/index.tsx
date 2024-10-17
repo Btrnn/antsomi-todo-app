@@ -18,8 +18,9 @@ import { Task } from 'models';
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
 import { checkAuthority } from 'utils';
-import { PERMISSION } from 'constants/role';
+import { PERMISSION, ROLE_KEY } from 'constants/role';
 import { useParams } from 'react-router-dom';
+import TextArea from 'antd/es/input/TextArea';
 
 interface TaskDetailProp {
   task: Task;
@@ -73,7 +74,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
       labelAlign="left"
       form={form}
       onFinish={onFinishForm}
-      disabled={checkAuthority(permission, PERMISSION.EDIT) ? false : true}
+      disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
     >
       <Form.Item<FormType>
         label="Task Title:"
@@ -83,7 +84,10 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         <Input placeholder="Enter a brief, clear title for the task" />
       </Form.Item>
       <Form.Item<FormType> label="Description:" name="description">
-        <Input placeholder="Provide a detailed explanation of the task" />
+        <TextArea
+          placeholder="Provide a detailed explanation of the task"
+          autoSize={{ minRows: 2, maxRows: 8 }}
+        />
       </Form.Item>
       <Form.Item<FormType> label="Assignee:" name="assignee_id">
         <Select

@@ -9322,6 +9322,11 @@ react-beautiful-dnd@^13.1.1:
     redux "^4.0.4"
     use-memo-one "^1.1.1"
 
+react-click-outside-hook@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/react-click-outside-hook/-/react-click-outside-hook-1.1.1.tgz#e64d354aee463ff7c5c8dca4c5e2fd947b16df5f"
+  integrity sha512-wIPef9ik68f/Tz/0uvuOZI7hE7XLOc2moKUGWu9c68LqYS8b0D9LnR7J9i0Uc0DiXZaJENlRqZpmaYJFhjADMA==
+
 react-cookie@^7.2.0:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/react-cookie/-/react-cookie-7.2.0.tgz#5770cd8d6b3c60c5d34ec4b7926f90281aee22ae"

@@ -19,7 +19,7 @@ import { Task } from 'models';
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 import { checkAuthority } from 'utils';
-import { PERMISSION } from 'constants/role';
+import { PERMISSION, ROLE_KEY } from 'constants/role';
 
 interface TaskItemProp {
   groupInfo: {
@@ -77,7 +77,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
       return;
     }
     const id = setTimeout(() => {
-      if (checkAuthority(permission, PERMISSION.EDIT)) {
+      if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
         if (listeners && typeof listeners.onMouseDown === 'function') {
           listeners.onMouseDown(event);
         }
@@ -109,7 +109,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
         <div
           className="flex p-2 text-red-500"
           onClick={() => {
-            if (checkAuthority(permission, PERMISSION.EDIT)) {
+            if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
               Modal.confirm({
                 title: 'Are you sure you want to delete this task?',
                 content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
@@ -150,7 +150,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
             onClick: event => onClickAction(event, task.id),
           }}
           trigger={['contextMenu']}
-          disabled={!checkAuthority(permission, PERMISSION.EDIT)}
+          disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
         >
           <Card
             className="flex justify-between overflow-hidden mb-3 p-[5px] w-full"

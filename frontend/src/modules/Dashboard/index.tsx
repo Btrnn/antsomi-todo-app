@@ -180,7 +180,7 @@ export const Dashboard: React.FC = () => {
 
   //List
   const boardActionItems: MenuItem[] = [
-    ...(checkAuthority(userPermission, PERMISSION.EDIT)
+    ...(checkAuthority(userPermission, PERMISSION[ROLE_KEY.EDITOR])
       ? [
           {
             label: (
@@ -202,15 +202,19 @@ export const Dashboard: React.FC = () => {
       ),
       key: MENU_KEY.KEY3,
     },
-    ...(checkAuthority(userPermission, PERMISSION.OWN) ? [{
-      label: (
-        <div className="flex p-2 text-red-500">
-          <DeleteIcon className="mr-3" />
-          <div>Delete</div>
-        </div>
-      ),
-      key: MENU_KEY.KEY1,
-    }] : []),
+    ...(checkAuthority(userPermission, PERMISSION.owner)
+      ? [
+          {
+            label: (
+              <div className="flex p-2 text-red-500">
+                <DeleteIcon className="mr-3" />
+                <div>Delete</div>
+              </div>
+            ),
+            key: MENU_KEY.KEY1,
+          },
+        ]
+      : []),
   ];
 
   // Hooks
@@ -255,13 +259,20 @@ export const Dashboard: React.FC = () => {
 
   // Handles
   const onClickSelectBoard = async (boardID: IdentifyId) => {
-    const userPermission = await getPermission(boardID);
-    dispatch(setPermission(userPermission.data));
-    navigate(`/dashboard/board/${boardID}`);
-    setState((prev) => ({
-      ...prev,
-      userPermission: userPermission.data,
-    }));
+    try {
+      const userPermission = await getPermission(boardID);
+      dispatch(setPermission(userPermission.data));
+      navigate(`/dashboard/board/${boardID}`);
+      setState((prev) => ({
+        ...prev,
+        userPermission: userPermission.data,
+      }));
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
+    }
   };
 
   const onClickShowBoardMenu = async (boardID: IdentifyId) => {
@@ -300,7 +311,10 @@ export const Dashboard: React.FC = () => {
       dispatch(setOwnedList(ownedBoards?.data));
       dispatch(setSharedList(sharedBoards?.data));
     } catch (error) {
-      console.log(error);
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
   };
 
@@ -315,32 +329,33 @@ export const Dashboard: React.FC = () => {
 
   const onClickAddBoard = async () => {
     if (inputBoardName !== "") {
-      const boardExists = ownedBoardList.some(board => board.name === inputBoardName);
+      const boardExists = ownedBoardList.some(
+        (board) => board.name === inputBoardName
+      );
       if (boardExists) {
         messageCreate.open({
           type: "error",
           content: "Board already exists!",
-        }); 
-      }
-      else{
-      try {
-        const newBoard: Partial<Board> = {
-          name: inputBoardName,
-          position: ownedBoardList.length,
-        };
-        const createdBoard = await createBoard(newBoard);
-        messageCreate.open({
-          type: "success",
-          content: <div>New board added!</div>,
         });
-        getBoardList();
-      } catch (error) {
-        messageCreate.open({
-          type: "error",
-          content: error as string,
-        });
-      }
-      setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
+      } else {
+        try {
+          const newBoard: Partial<Board> = {
+            name: inputBoardName,
+            position: ownedBoardList.length,
+          };
+          const createdBoard = await createBoard(newBoard);
+          messageCreate.open({
+            type: "success",
+            content: <div>New board added!</div>,
+          });
+          getBoardList();
+        } catch (error) {
+          messageCreate.open({
+            type: "error",
+            content: error as string,
+          });
+        }
+        setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
       }
     }
   };
@@ -375,14 +390,21 @@ export const Dashboard: React.FC = () => {
         onOk: () => onConfirmDeleteBoard(boardID),
       });
     } else if (event.key === MENU_KEY.KEY3) {
-      const accessList = await getAccessList(boardID);
-      setState((prev) => ({
-        ...prev,
-        isSharing: true,
-        boardSelected: boardID as string,
-        boardSharedName: boardName,
-        alreadySharedList: accessList.data,
-      }));
+      try {
+        const accessList = await getAccessList(boardID);
+        setState((prev) => ({
+          ...prev,
+          isSharing: true,
+          boardSelected: boardID as string,
+          boardSharedName: boardName,
+          alreadySharedList: accessList.data,
+        }));
+      } catch (error) {
+        messageCreate.open({
+          type: "error",
+          content: error as string,
+        });
+      }
     }
   };
 
@@ -398,12 +420,19 @@ export const Dashboard: React.FC = () => {
   };
 
   const onShareComplete = async () => {
-    const accessList = await getAccessList(boardSelected);
-    setState((prev) => ({
-      ...prev,
-      alreadySharedList: accessList.data,
-    }));
-    getBoardList();
+    try {
+      const accessList = await getAccessList(boardSelected);
+      setState((prev) => ({
+        ...prev,
+        alreadySharedList: accessList.data,
+      }));
+      getBoardList();
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
+    }
   };
 
   // Handle "RENAME"

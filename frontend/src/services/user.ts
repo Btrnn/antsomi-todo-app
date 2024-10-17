@@ -15,7 +15,7 @@ export const getAllUsers = async (): Promise<ServiceResponse<User[]>> => {
   }
 };
 
-export const getUserInfo = async (): Promise<ServiceResponse<Omit<User, 'id' | 'password'>>> => {
+export const getUserInfo = async (): Promise<ServiceResponse<Omit<User, 'password'>>> => {
   try {
     const response = await axiosInstance.get('user/info');
     return response.data;

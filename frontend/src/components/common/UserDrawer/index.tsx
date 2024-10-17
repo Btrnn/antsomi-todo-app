@@ -62,6 +62,8 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
 
   // Stores
   // const currentUser = useSelector((state: RootState) => state.user.currentUser);
+
+  // Hooks
   const { user } = useLoggedUser();
 
   const onClose = () => {

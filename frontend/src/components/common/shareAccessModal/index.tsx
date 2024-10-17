@@ -1,8 +1,8 @@
 // Libraries
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
-import { Modal, Input, List, Select, message } from "../../ui";
+import { Modal, Input, List, Select, message, Tag, AutoComplete } from '../../ui';
 import {
   AddIcon,
   CloseIcon,
@@ -12,10 +12,10 @@ import {
   ManagerIcon,
   DeleteIcon,
   SwitchUserIcon,
-} from "../../icons";
+} from '../../icons';
 
 // Constants
-import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from "constants/role";
+import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
 import {
   changeBoardOwner,
   deleteAccessBoard,
@@ -23,9 +23,10 @@ import {
   getInfo,
   shareBoard,
   updateAccessBoard,
-} from "services";
-import { on } from "events";
-import { checkAuthority } from "utils";
+} from 'services';
+import { on } from 'events';
+import { checkAuthority } from 'utils';
+import { useLoggedUser } from 'hooks';
 
 interface ShareAccessProp {
   isOpen: boolean;
@@ -58,7 +59,7 @@ type TState = {
   objectOwner: { id: React.Key; name: string; email: string };
 };
 
-export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
+export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   const {
     isOpen,
     onClose: onClose,
@@ -71,21 +72,23 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
   } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
+  // Hooks
+  const { user: current_user } = useLoggedUser();
+
   // States
   const [state, setState] = useState<TState>({
     shareUsers: [],
-    inputUser: "",
-    error: "",
+    inputUser: '',
+    error: '',
     selectedRole: ROLE_KEY.VIEWER,
     alreadySharedList: accessList,
     isAddingUser: false,
-    objectOwner: { id: "", name: "Unknown", email: "" },
+    objectOwner: { id: '', name: 'Unknown', email: '' },
   });
 
   // Effects
   useEffect(() => {
-    console.log(permission);
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       objectOwner: accessList[0],
       alreadySharedList: accessList,
@@ -94,16 +97,22 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
 
   // Memo
   const roleOptions = useMemo(() => {
-    return Object.values(ROLE_OPTIONS).map(({ value, label, Icon }) => ({
-      value,
-      label: (
-        <>
-          <Icon className="mr-2 my-2" />
-          {label}
-        </>
-      ),
-    }));
-  }, []);
+    return Object.values(ROLE_OPTIONS)
+      .map(({ value, label, Icon }) => {
+        return PERMISSION[value as string]?.includes(permission)
+          ? {
+              value,
+              label: (
+                <>
+                  <Icon className="mr-2 my-2" />
+                  {label}
+                </>
+              ),
+            }
+          : {};
+      })
+      .filter(option => Object.keys(option).length > 0);
+  }, [permission]);
 
   const {
     shareUsers,
@@ -115,11 +124,11 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
     objectOwner,
   } = state;
   const onClickBeginSharing = () => {
-    setState((prev) => ({ ...prev, isAddingUser: true }));
+    setState(prev => ({ ...prev, isAddingUser: true }));
   };
 
   const onChangeInputUser = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputUser: event.target.value }));
+    setState(prev => ({ ...prev, inputUser: event.target.value }));
   };
 
   const onClickAddUser = async () => {
@@ -127,90 +136,86 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
       try {
         const userInfo = await getInfo(inputUser);
         const isExisted = [...shareUsers, ...alreadySharedList].find(
-          (user) => user.id === userInfo.data.id
+          user => user.id === userInfo.data.id,
         );
         if (isExisted) {
-          setState((prev) => ({
+          setState(prev => ({
             ...prev,
-            error: "User already added.",
+            error: 'User already added.',
           }));
         } else if (userInfo.data.id === objectOwner.id) {
-          setState((prev) => ({
+          setState(prev => ({
             ...prev,
             error: "This is board's owner.",
           }));
         } else {
           if (userInfo.data) {
-            setState((prev) => ({
+            setState(prev => ({
               ...prev,
               shareUsers: [
                 ...shareUsers,
                 {
-                  id: userInfo.data.id ?? "",
-                  name: userInfo.data.name ?? "",
+                  id: userInfo.data.id ?? '',
+                  name: userInfo.data.name ?? '',
                   email: inputUser,
                   role: selectedRole,
                 },
               ],
-              error: "",
-              inputUser: "",
+              error: '',
+              inputUser: '',
               isAddingUser: true,
             }));
           }
         }
       } catch (error) {
-        setState((prev) => ({
+        setState(prev => ({
           ...prev,
           error: error as string,
         }));
       }
     } else {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        error: "This field is required !",
+        error: 'This field is required !',
       }));
     }
   };
 
   const onClickRemoveUser = (id: React.Key) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
-      shareUsers: shareUsers.filter((user) => user.id !== id),
+      shareUsers: shareUsers.filter(user => user.id !== id),
     }));
   };
 
   const onChangeRole = (value: string) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       selectedRole: value,
     }));
   };
 
   const onChangeRoleAddingList = (value: string, index: number) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
-      shareUsers: shareUsers.map((user, i) =>
-        i === index ? { ...user, role: value } : user
-      ),
+      shareUsers: shareUsers.map((user, i) => (i === index ? { ...user, role: value } : user)),
     }));
   };
 
   const onConfirmDeleteAccess = async (userID: React.Key) => {
     try {
       const deletedAccess = await deleteAccessBoard(objectID as string, userID);
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        alreadySharedList: alreadySharedList.filter(
-          (user) => user.id !== userID
-        ),
+        alreadySharedList: alreadySharedList.filter(user => user.id !== userID),
       }));
       messageCreate.open({
-        type: "success",
+        type: 'success',
         content: "User's access removed.",
       });
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
@@ -221,25 +226,24 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
       const changeOwner = await changeBoardOwner(objectID as string, userID);
       onShare();
       messageCreate.open({
-        type: "success",
-        content: "User's access removed.",
+        type: 'success',
+        content: "Board's owner changed.",
       });
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
   };
 
   const onChangeRoleExistedList = (value: string, index: number) => {
-    if (value === "delete") {
+    if (value === 'delete') {
       Modal.confirm({
         title: "Are you sure you want to remove this user's access?",
         content: (
           <div className="text-red-500 text-xs">
-            Removing this user&apos;s access will revoke their permissions to
-            this board.
+            Removing this user&apos;s access will revoke their permissions to this board.
           </div>
         ),
 
@@ -251,13 +255,13 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
         ),
         onOk: () => onConfirmDeleteAccess(alreadySharedList[index].id),
       });
-    } else if (value === "change owner") {
+    } else if (value === 'change owner') {
       Modal.confirm({
-        title: "Are you sure you want to transfer your ownership?",
+        title: 'Are you sure you want to transfer your ownership?',
         content: (
           <div className="text-red-500 text-xs">
-            This action will grant full control to the new owner, including
-            permissions and responsibilities.
+            This action will grant full control to the new owner, including permissions and
+            responsibilities.
           </div>
         ),
 
@@ -270,10 +274,10 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
         onOk: () => onConfirmChangeOwner(alreadySharedList[index].id),
       });
     } else {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         alreadySharedList: alreadySharedList.map((user, i) =>
-          i === index ? { ...user, permission: value } : user
+          i === index ? { ...user, permission: value } : user,
         ),
       }));
     }
@@ -281,7 +285,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
 
   const onClickShareAccess = async (boardID: React.Key) => {
     if (isAddingUser) {
-      const listUser = shareUsers.map((user) => ({
+      const listUser = shareUsers.map(user => ({
         user_id: user.id,
         permission: user.role,
       }));
@@ -289,28 +293,27 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
         try {
           const response = await shareBoard(boardID, listUser);
           messageCreate.open({
-            type: "success",
-            content: "Board shared",
+            type: 'success',
+            content: 'Board shared',
           });
           onShare();
         } catch (error) {
-          // messageCreate.open({
-          //   type: "error",
-          //   content: error as string,
-          // });
-          console.log(error);
+          messageCreate.open({
+            type: 'error',
+            content: error as string,
+          });
         }
       }
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        inputUser: "",
+        inputUser: '',
         shareUsers: [],
-        error: "",
+        error: '',
         selectedRole: ROLE_KEY.VIEWER,
         isAddingUser: false,
       }));
     } else {
-      const updateList = alreadySharedList.splice(1).map((user) => ({
+      const updateList = alreadySharedList.splice(1).map(user => ({
         user_id: user.id,
         permission: user.permission,
       }));
@@ -318,13 +321,13 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
         try {
           const response = await updateAccessBoard(boardID, updateList);
           messageCreate.open({
-            type: "success",
-            content: "Board updated",
+            type: 'success',
+            content: 'Board updated',
           });
           onShare();
         } catch (error) {
           messageCreate.open({
-            type: "error",
+            type: 'error',
             content: error as string,
           });
         }
@@ -335,11 +338,11 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
 
   const onCancelShareAccess = async () => {
     if (isAddingUser) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        inputUser: "",
+        inputUser: '',
         shareUsers: [],
-        error: "",
+        error: '',
         selectedRole: ROLE_KEY.VIEWER,
         isAddingUser: false,
       }));
@@ -347,6 +350,12 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
       onClose();
     }
   };
+
+  const users = [
+    { email: 'user1@example.com', name: 'User One' },
+    { email: 'user2@example.com', name: 'User Two' },
+    { email: 'user3@example.com', name: 'User Three' },
+  ];
 
   return (
     <>
@@ -356,9 +365,9 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
           <div className="justify-between flex items-center align-middle">
             <div className="mb-3 h-10 text-xl flex items-center">
               <span className="mr-2">Share access</span>
-              <span className="font-bold">"{objectName}"</span>
+              <span className="font-bold">&quot;{objectName}&quot;</span>
             </div>
-            {checkAuthority(permission, PERMISSION.EDIT) && (
+            {checkAuthority(permission, PERMISSION[ROLE_KEY.VIEWER]) && (
               <AddIcon
                 onClick={onClickBeginSharing}
                 className="ml-3 mb-3 h-10 text-[20px] flex items-center"
@@ -370,20 +379,44 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
         open={isOpen}
         onOk={() => onClickShareAccess(objectID)}
         onCancel={onCancelShareAccess}
-        okText={isAddingUser ? "Share" : "Save"}
+        okText={isAddingUser ? 'Share' : 'Save'}
         cancelText="Cancel"
-        width={"700px"}
+        width={'700px'}
       >
         <div className="h-[500px] mt-5 overflow-hidden">
           {isAddingUser ? (
             <div>
               <div className="flex gap-1 flex-shrink-0 w-full h-10">
-                <Input
-                  className="p-2"
-                  style={{
-                    outline: "none",
-                    boxShadow: "none",
+                {/* <AutoComplete
+                  className="flex w-full h-full"
+                  placeholder="Enter users email to share access"
+                  searchValue={inputUser}
+                  onSearch={onChangeInputUser}
+                  // onChange={onChangeInputUser}
+                  onSelect={onClickAddUser}
+                  filterOption={(inputUser, option) => {
+                    if (!option) {
+                      return false;
+                    }
+                    return option.value.toUpperCase().indexOf(inputUser.toUpperCase()) !== -1;
                   }}
+                  options={users.map(user => ({
+                    value: user.email,
+                    label: (
+                      <div className="flex flex-col">
+                        <span>{user.name}</span>
+                        <span>{user.email}</span>
+                      </div>
+                    ),
+                  }))}
+                >
+                  <Input.Search
+                    enterButton
+                    className="w-full h-full p-2 outline-none shadow-none"
+                  />
+                </AutoComplete> */}
+                <Input
+                  className="p-2 outline-none shadow-none"
                   placeholder="Enter users email to share access"
                   value={inputUser}
                   onChange={onChangeInputUser}
@@ -396,7 +429,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
                   options={roleOptions}
                 />
               </div>
-              {error === "" ? (
+              {error === '' ? (
                 <div className="p-[10px] w-full text-[#595959]">
                   Press Enter to add users access
                 </div>
@@ -411,14 +444,11 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
                 dataSource={shareUsers}
                 renderItem={(user, index) => (
                   <List.Item className="h-full overflow-auto p-2">
-                    <List.Item.Meta
-                      title={user.name}
-                      description={user.email}
-                    />
+                    <List.Item.Meta title={user.name} description={user.email} />
                     <Select
                       value={user.role}
                       className="w-[140px] h-full mr-3"
-                      onChange={(value) => onChangeRoleAddingList(value, index)}
+                      onChange={value => onChangeRoleAddingList(value, index)}
                       options={roleOptions}
                     />
                     <CloseIcon onClick={() => onClickRemoveUser(user.id)} />
@@ -428,67 +458,59 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = (props) => {
             </div>
           ) : (
             <List
-              header={
-                <span className="font-bold text-lg">People with access</span>
-              }
+              header={<span className="font-bold text-lg">People with access</span>}
               className="overflow-auto h-[500px]"
               itemLayout="horizontal"
               dataSource={alreadySharedList}
               renderItem={(user, index) => (
                 <List.Item className="h-full">
+                  <List.Item.Meta
+                    title={
+                      <>
+                        {user.name}{' '}
+                        {user.id === (current_user?.id as string) ? <Tag>You</Tag> : <></>}
+                      </>
+                    }
+                    description={user.email}
+                  />
                   {index === 0 ? (
-                    <>
-                      <List.Item.Meta
-                        title={objectOwner.name}
-                        description={objectOwner.email}
-                      />
-                      <div className="text-[#595959] font-semibold opacity-60">
-                        Board&apos;s owner
-                      </div>
-                    </>
+                    <div className="text-[#595959] font-semibold opacity-60">
+                      Board&apos;s owner
+                    </div>
                   ) : (
-                    <>
-                      <List.Item.Meta
-                        title={user.name}
-                        description={user.email}
-                      />
-                      <Select
-                        value={user.permission}
-                        className="w-[150px] h-full"
-                        disabled={!checkAuthority(permission, PERMISSION.OWN)}
-                        onChange={(value) =>
-                          onChangeRoleExistedList(value, index)
-                        }
-                        options={[
-                          ...roleOptions,
-                          ...(checkAuthority(permission, PERMISSION.OWN)
-                            ? [
-                                {
-                                  value: "change owner",
-                                  icon: <SwitchUserIcon />,
-                                  label: (
-                                    <div className="my-1 font-semibold">
-                                      <SwitchUserIcon className="mr-2" />
-                                      Change Owner
-                                    </div>
-                                  ),
-                                },
-                              ]
-                            : []),
-                          {
-                            value: "delete",
-                            icon: <DeleteIcon />,
-                            label: (
-                              <div className="text-red-500 my-1">
-                                <DeleteIcon className="mr-2" />
-                                Delete Access
-                              </div>
-                            ),
-                          },
-                        ]}
-
-                      />
-                    </>
+                    <Select
+                      value={user.permission}
+                      className="w-[130px] h-full"
+                      disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
+                      onChange={value => onChangeRoleExistedList(value, index)}
+                      options={[
+                        ...roleOptions,
+                        ...(checkAuthority(permission, PERMISSION.owner)
+                          ? [
+                              {
+                                value: 'change owner',
+                                icon: <SwitchUserIcon />,
+                                label: (
+                                  <div className="my-1 font-semibold">
+                                    <SwitchUserIcon className="mr-2" />
+                                    Change Owner
+                                  </div>
+                                ),
+                              },
+                            ]
+                          : []),
+                        {
+                          value: 'delete',
+                          icon: <DeleteIcon />,
+                          label: (
+                            <div className="text-red-500 my-1">
+                              <DeleteIcon className="mr-2" />
+                              Delete Access
+                            </div>
+                          ),
+                        },
+                      ]}
+                    />
                   )}
                 </List.Item>
               )}

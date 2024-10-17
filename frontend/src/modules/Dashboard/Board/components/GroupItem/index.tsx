@@ -57,7 +57,7 @@ import {
 
 // Utils
 import { checkAuthority, getContrastTextColor } from "utils";
-import { PERMISSION } from "constants/role";
+import { PERMISSION, ROLE_KEY } from "constants/role";
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -132,7 +132,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     textColor,
     isClicked,
     isChanged,
-    isChangeColor
+    isChangeColor,
   } = state;
 
   // Handlers
@@ -193,8 +193,8 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
       );
       updateGroupAPI(boardId, groupID, { name: groupNewName });
     }
-
-    setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
+    if (!isChangeColor)
+      setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
   };
 
   const onClickAction = (
@@ -212,7 +212,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickBeginRenaming = (groupID: React.Key, groupName: string) => {
-    if (checkAuthority(permission, PERMISSION.EDIT)) {
+    if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
       setState((prev) => ({
         ...prev,
         isRename: true,
@@ -298,7 +298,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickBeginAdding = () => {
-    if (checkAuthority(permission, PERMISSION.EDIT)) {
+    if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
       if (isAdding === true) {
         setState((prev) => ({ ...prev, isAdding: false }));
       } else {
@@ -308,7 +308,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickShowDropDown = () => {
-    if (checkAuthority(permission, PERMISSION.EDIT)) {
+    if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
       if (!isOpen) {
         setState((prev) => ({
           ...prev,
@@ -324,7 +324,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickChangeOpen = () => {
-    if (checkAuthority(permission, PERMISSION.EDIT)) {
+    if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
       if (!isOpen) {
         setState((prev) => ({
           ...prev,
@@ -340,21 +340,22 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickChangeColor = (event: React.MouseEvent) => {
-    event.preventDefault();
-    if (checkAuthority(permission, PERMISSION.EDIT)) {
-      if (!isOpen) {
-        setState((prev) => ({
-          ...prev,
-          isOpen: true,
-        }));
-      } else {
-        setState((prev) => ({
-          ...prev,
-          isOpen: false,
-        }));
-      }
+    setState((prev) => ({
+      ...prev,
+      isChangeColor: true,
+    }));
+  };
+
+  const onClickCloseColorPicker = (open: boolean) => {
+    if(!open){
+      setState((prev) => ({
+      ...prev,
+      isChangeColor: false,
+      isRename: false,
+      groupSelected: "",
+    }));
     }
-  }
+  };
 
   const items: MenuProps["items"] = [
     {
@@ -369,15 +370,9 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     {
       label: (
         <div
-          style={{
-            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
-            cursor: checkAuthority(permission, PERMISSION.MANAGE)
-              ? "pointer"
-              : "not-allowed",
-          }}
           className="flex p-2"
           onClick={() => {
-            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+            if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
               Modal.confirm({
                 title: "Are you sure you want to clear this group?",
                 content: (
@@ -405,15 +400,9 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     {
       label: (
         <div
-          style={{
-            opacity: checkAuthority(permission, PERMISSION.MANAGE) ? 1 : 0.5,
-            cursor: checkAuthority(permission, PERMISSION.MANAGE)
-              ? "pointer"
-              : "not-allowed",
-          }}
           className="flex p-2 text-red-500"
           onClick={() => {
-            if (checkAuthority(permission, PERMISSION.MANAGE)) {
+            if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
               Modal.confirm({
                 title: "Are you sure you want to delete this group?",
                 content: (
@@ -445,7 +434,10 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
       const fetchedTasks = await getAllTasks(boardId);
       dispatch(setTaskList(fetchedTasks.data));
     } catch (error) {
-      console.log(error);
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
   };
 
@@ -484,25 +476,23 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                       onChange={onChangeGroupNewName}
                       onPressEnter={() => onEnterRenameGroup(group.id)}
                       onBlur={(e) => {
-                        console.log({ e });
                         onEnterRenameGroup(group.id);
                       }}
                       addonAfter={
                         <div
                           onMouseDown={(e) => {
                             e.preventDefault();
-                          }}
-                          onClick={(e) => {
-                            onClickChangeColor(e)
+                            onClickChangeColor(e);
                           }}
                         >
                           <ColorPicker
-                            open={isChangeColor && group.id === groupSelected}
                             trigger="click"
                             onChange={(value) =>
                               onChangeSetColor(value, group.id)
                             }
                             defaultValue={group.color}
+                            onOpenChange={open => onClickCloseColorPicker(open)}
+
                           >
                             <ColorIcon
                               style={{
@@ -525,7 +515,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                     {group.name}
                   </Tag>
                 )}
-                {checkAuthority(permission, PERMISSION.EDIT) && (
+                {checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR]) && (
                   <div className="flex flex-row items-center text-[20px]">
                     <AddFilledIcon
                       className="mr-2 text-black"
@@ -553,7 +543,10 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                     </Dropdown>
                     <div
                       className="text-black text-[25px]"
-                      {...(checkAuthority(permission, PERMISSION.EDIT)
+                      {...(checkAuthority(
+                        permission,
+                        PERMISSION[ROLE_KEY.EDITOR]
+                      )
                         ? listeners
                         : {})}
                     >
