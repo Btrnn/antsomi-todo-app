@@ -108,7 +108,7 @@ export class BoardController {
     return this.boardService.deleteBoard(id, user.id);
   }
 
-  @RequiresPermission(ROLE.MANAGER, ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Delete(`deleteAccess/:${ACCESS_OBJECT.BOARD}`)
   deleteAccessBoard(
     @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
