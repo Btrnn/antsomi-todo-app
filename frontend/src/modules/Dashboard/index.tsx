@@ -47,12 +47,14 @@ import {
   Tooltip,
   Card,
   List,
+  Typography,
 } from "components/ui";
-import { UserDrawer } from "../../components/common/UserDrawer";
+import { UserDrawer } from "../../components/common";
 
 // Constants
 import {
   DASHBOARD_KEY,
+  DASHBOARD_NAME,
   globalToken,
   MENU_KEY,
   PERMISSION,
@@ -119,8 +121,10 @@ type TState = {
   isAddingUser: boolean;
   isOpenBoardMenu: boolean;
   userPermission: string;
+  selectedPath: { title: string }[];
 };
 
+const { Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 export const Dashboard: React.FC = () => {
@@ -147,6 +151,7 @@ export const Dashboard: React.FC = () => {
     isAddingUser: false,
     isOpenBoardMenu: false,
     userPermission: "",
+    selectedPath: [],
   });
   const {
     isOpenSetting,
@@ -167,6 +172,7 @@ export const Dashboard: React.FC = () => {
     isAddingUser,
     isOpenBoardMenu,
     userPermission,
+    selectedPath,
   } = state;
 
   // Store
@@ -239,19 +245,24 @@ export const Dashboard: React.FC = () => {
     const { pathname } = location;
     let currentTitle = "Home";
     let currentKey = "";
-    if (pathname.includes("/board")) {
-      currentTitle = "Task List";
-      currentKey = DASHBOARD_KEY.TASKS;
-    } else if (pathname.includes("/home")) {
-      currentTitle = "Home";
+    let isSubMenu = true;
+    if (pathname.includes("/home")) {
+      currentTitle = DASHBOARD_NAME[DASHBOARD_KEY.HOME];
       currentKey = DASHBOARD_KEY.HOME;
+      isSubMenu = false;
+    } else if (pathname.includes("/board")) {
+      currentKey = DASHBOARD_KEY.BOARD;
+      currentTitle =
+        [...ownedBoardList, ...sharedBoardList].find(
+          (board) => board.id === params?.boardId
+        )?.name || "Board List";
     }
-
     setState((prevState) => ({
       ...prevState,
       title: currentTitle,
       selectedKey: currentKey,
       boardSelected: params?.boardId ?? "",
+      selectedPath: isSubMenu ? [{ title: currentTitle }] : [],
     }));
 
     getBoardList();
@@ -327,7 +338,7 @@ export const Dashboard: React.FC = () => {
     setState((prev) => ({ ...prev, isAdding: true }));
   };
 
-  const onClickAddBoard = async () => {
+  const onClickAddBoard = async (event: any) => {
     if (inputBoardName !== "") {
       const boardExists = ownedBoardList.some(
         (board) => board.name === inputBoardName
@@ -337,6 +348,13 @@ export const Dashboard: React.FC = () => {
           type: "error",
           content: "Board already exists!",
         });
+        if (event.type === "blur") {
+          setState((prev) => ({
+            ...prev,
+            inputBoardName: "",
+            isAdding: false,
+          }));
+        }
       } else {
         try {
           const newBoard: Partial<Board> = {
@@ -357,6 +375,8 @@ export const Dashboard: React.FC = () => {
         }
         setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
       }
+    } else {
+      setState((prev) => ({ ...prev, isAdding: false }));
     }
   };
 
@@ -481,6 +501,11 @@ export const Dashboard: React.FC = () => {
   };
 
   // Lists
+  const breadcrumbItems = [
+    { title: "Dashboard" },
+    { title: DASHBOARD_NAME[selectedKey] },
+  ];
+
   const dashBoardItems: MenuItem[] = [
     {
       key: DASHBOARD_KEY.HOME,
@@ -488,12 +513,12 @@ export const Dashboard: React.FC = () => {
       label: <NavLink to={DASHBOARD_KEY.HOME}>{"Home"}</NavLink>,
     },
     {
-      key: "boardList",
+      key: DASHBOARD_KEY.BOARD,
       icon: <DataIcon />,
-      label: "Boards",
+      label: <NavLink to={DASHBOARD_KEY.BOARD}>{"Boards"}</NavLink>,
       children: [
         {
-          key: "owned",
+          key: DASHBOARD_KEY.OWNED,
           label: "Your Boards",
           children: [
             ...ownedBoardList.map((board) => ({
@@ -515,12 +540,16 @@ export const Dashboard: React.FC = () => {
                     }}
                   />
                 ) : (
+                  <Tooltip title={board.name} placement="right">
                   <div
                     className="flex justify-between w-full"
                     onClick={() => onClickSelectBoard(board.id)}
                   >
-                    <div className="flex overflow-hidden">{board.name}</div>
-
+                    
+                      <div className="truncate">
+                        {board.name}
+                      </div>
+                    
                     <Dropdown
                       key={board.id}
                       menu={{
@@ -550,6 +579,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                     </Dropdown>
                   </div>
+                  </Tooltip>
                 ),
               key: board.id,
             })),
@@ -586,13 +616,13 @@ export const Dashboard: React.FC = () => {
           ],
         },
         {
-          key: "shared",
+          key: DASHBOARD_KEY.SHARED,
           label: "Shared with you",
           children: sharedBoardList.map((board) => ({
             label:
               isRename && boardSelected === (board.id as string) ? (
                 <Input
-                  className="w-full h-full p-0"
+                  className="w-full h-full p-0 border-none"
                   style={{
                     boxShadow: "none",
                     borderColor: "transparent",
@@ -607,12 +637,13 @@ export const Dashboard: React.FC = () => {
                   }}
                 />
               ) : (
+                <Tooltip title={board.name} placement="right">
                 <div
-                  className="flex justify-between w-full"
+                  className="flex flex-row justify-between w-full"
                   onClick={() => onClickSelectBoard(board.id)}
                 >
-                  <div className="flex overflow-hidden">{board.name}</div>
-
+                    <div className="truncate">{board.name}</div>
+                  
                   <Dropdown
                     key={board.id}
                     menu={{
@@ -641,6 +672,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </Dropdown>
                 </div>
+                </Tooltip>
               ),
             key: board.id,
           })),
@@ -675,6 +707,7 @@ export const Dashboard: React.FC = () => {
                 defaultSelectedKeys={[boardSelected]}
                 // onClick={onClick}
                 items={dashBoardItems}
+                onSelect={(e) => console.log(e)}
                 style={{ borderInlineEnd: "0px" }}
               />
             </div>
@@ -717,10 +750,19 @@ export const Dashboard: React.FC = () => {
             background: colorBgContainer,
           }}
         >
-          <div className="mb-10">
-            <div className=" font-black align-bottom text-3xl">{title}</div>
+          <div className="mb-10 sticky">
+            <div className="font-black align-bottom text-3xl">{title}</div>
             <Breadcrumb
-              items={[{ title: "Home" }, { title: "Task List" }]}
+              items={[
+                {
+                  title: "Dashboard",
+                },
+                {
+                  title: DASHBOARD_NAME[selectedKey],
+                  href: `/dashboard/${selectedKey}`,
+                },
+                ...selectedPath,
+              ]}
               className="mt-5 text-sm"
             />
           </div>

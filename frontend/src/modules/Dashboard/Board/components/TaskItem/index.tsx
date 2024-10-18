@@ -20,6 +20,7 @@ import { Task } from 'models';
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 import { checkAuthority } from 'utils';
 import { PERMISSION, ROLE_KEY } from 'constants/role';
+import { useUserList } from 'hooks/useUserList';
 
 interface TaskItemProp {
   groupInfo: {
@@ -47,9 +48,9 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     id: String(task?.id),
     data: { groupID: groupInfo.groupID, type: SORTABLE_TYPE.TASK },
   });
+  const { list: userList } = useUserList();
 
   // Store
-  const userList = useSelector((state: RootState) => state.user.userList);
   const dispatch: AppDispatch = useDispatch();
 
   // States
@@ -164,10 +165,12 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
               boxShadow: '0 2px 2px rgba(0, 0, 0, 0.1)',
             }}
           >
-            <div key={task.id} className="w-full p-0">
+            <div key={task.id} className="w-full p-0 h-full">
               <div key={task.id} className="flex flex-col w-full overflow-hidden">
                 <div className="flex font-bold mb-2 whitespace-normal">{task.name}</div>
-                <div className="flex font-light mb-2 overflow-hidden">{task.description}</div>
+                <div className="flex font-light mb-2 whitespace-break-spaces h-full overflow-hidden">
+                  {task.description}
+                </div>
               </div>
               <div className="flex flex-col items-start gap-y-3">
                 <Tag

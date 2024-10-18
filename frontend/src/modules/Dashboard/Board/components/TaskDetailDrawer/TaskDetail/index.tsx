@@ -1,7 +1,7 @@
 // Libraries
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 //Providers
 import { RootState, AppDispatch, updateTask } from 'store';
@@ -10,7 +10,17 @@ import { RootState, AppDispatch, updateTask } from 'store';
 import {} from 'components/icons';
 
 // Components
-import { Tag, Form, Input, Select, DatePicker, InputNumber, Flex, Button } from 'components/ui';
+import {
+  Tag,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  InputNumber,
+  Flex,
+  Button,
+  message,
+} from 'components/ui';
 
 // Models
 import { Task } from 'models';
@@ -21,6 +31,8 @@ import { checkAuthority } from 'utils';
 import { PERMISSION, ROLE_KEY } from 'constants/role';
 import { useParams } from 'react-router-dom';
 import TextArea from 'antd/es/input/TextArea';
+import { getAllUsers } from 'services';
+import { useUserList } from 'hooks/useUserList';
 
 interface TaskDetailProp {
   task: Task;
@@ -32,15 +44,16 @@ type FormType = Task;
 
 export const TaskDetail: React.FC<TaskDetailProp> = props => {
   const { task, onClose, permission } = props;
+  const [messageCreate, contextHolder] = message.useMessage();
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const userList = useSelector((state: RootState) => state.user.userList);
   const groupList = useSelector((state: RootState) => state.group.groupList);
 
   // Hooks
   const [form] = Form.useForm();
   const params = useParams();
+  const { list: userList } = useUserList();
 
   // Effects
   useEffect(() => {

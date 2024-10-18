@@ -24,6 +24,16 @@ export const TASK_STATUS = {
 
 export const DASHBOARD_KEY = {
   HOME: 'home',
-  TASKS: 'tasks',
+  BOARD: 'board',
+  OWNED: 'owned',
+  SHARED: 'shared',
   USER: 'user',
+} as const;
+
+export const DASHBOARD_NAME = {
+  [DASHBOARD_KEY.HOME]: 'Home',
+  [DASHBOARD_KEY.BOARD]: 'Boards',
+  [DASHBOARD_KEY.OWNED]: 'Your board',
+  [DASHBOARD_KEY.SHARED]: 'Shared board',
+  [DASHBOARD_KEY.USER]: 'User',
 } as const;

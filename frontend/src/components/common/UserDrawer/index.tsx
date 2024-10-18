@@ -105,6 +105,7 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
         <div className="flex flex-col items-center space-y-4 mt-10">
           <Avatar size={100} icon={<UserIcon />} />
           <div className="text-lg font-bold">{user?.name || 'Anonymous'}</div>
+          <div className="text-sm font-normal">{user?.email || 'Email not found'}</div>
         </div>
       }
       placement="right"

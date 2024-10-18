@@ -1,1 +1,2 @@
-export * from './shareAccessModal';
+export * from './ShareAccessModal';
+export * from './UserDrawer';

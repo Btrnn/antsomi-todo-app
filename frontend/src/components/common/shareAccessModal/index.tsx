@@ -2,24 +2,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
-import { Modal, Input, List, Select, message, Tag, AutoComplete } from '../../ui';
 import {
-  AddIcon,
-  CloseIcon,
-  ViewerIcon,
-  EditorIcon,
-  CommenterIcon,
-  ManagerIcon,
-  DeleteIcon,
-  SwitchUserIcon,
-} from '../../icons';
+  Modal,
+  Input,
+  List,
+  Select,
+  message,
+  Tag,
+  AutoComplete,
+  Tooltip,
+  Typography,
+} from '../../ui';
+import { AddIcon, CloseIcon, DeleteIcon, SwitchUserIcon } from '../../icons';
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
 import {
   changeBoardOwner,
   deleteAccessBoard,
-  getAccessList,
+  getAllUsers,
   getInfo,
   shareBoard,
   updateAccessBoard,
@@ -27,6 +28,8 @@ import {
 import { on } from 'events';
 import { checkAuthority } from 'utils';
 import { useLoggedUser } from 'hooks';
+import { set } from 'lodash';
+import { useUserList } from 'hooks/useUserList';
 
 interface ShareAccessProp {
   isOpen: boolean;
@@ -44,6 +47,8 @@ interface ShareAccessProp {
   permission: string;
 }
 
+const { Text } = Typography;
+
 type TState = {
   shareUsers: { id: React.Key; name: string; email: string; role: string }[];
   inputUser: string;
@@ -56,6 +61,7 @@ type TState = {
     permission: string;
   }[];
   isAddingUser: boolean;
+  isSearching: boolean;
   objectOwner: { id: React.Key; name: string; email: string };
 };
 
@@ -73,7 +79,8 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   const [messageCreate, contextHolder] = message.useMessage();
 
   // Hooks
-  const { user: current_user } = useLoggedUser();
+  const { user: currentUser } = useLoggedUser();
+  const { list: userList } = useUserList();
 
   // States
   const [state, setState] = useState<TState>({
@@ -82,9 +89,21 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
     error: '',
     selectedRole: ROLE_KEY.VIEWER,
     alreadySharedList: accessList,
+    isSearching: false,
     isAddingUser: false,
     objectOwner: { id: '', name: 'Unknown', email: '' },
   });
+
+  const {
+    shareUsers,
+    inputUser,
+    error,
+    selectedRole,
+    alreadySharedList,
+    isAddingUser,
+    objectOwner,
+    isSearching,
+  } = state;
 
   // Effects
   useEffect(() => {
@@ -103,10 +122,10 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
           ? {
               value,
               label: (
-                <>
+                <Tooltip title={label} placement="left">
                   <Icon className="mr-2 my-2" />
-                  {label}
-                </>
+                  <span className="truncate">{label}</span>
+                </Tooltip>
               ),
             }
           : {};
@@ -114,24 +133,24 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       .filter(option => Object.keys(option).length > 0);
   }, [permission]);
 
-  const {
-    shareUsers,
-    inputUser,
-    error,
-    selectedRole,
-    alreadySharedList,
-    isAddingUser,
-    objectOwner,
-  } = state;
+  // Handles
   const onClickBeginSharing = () => {
     setState(prev => ({ ...prev, isAddingUser: true }));
   };
 
-  const onChangeInputUser = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState(prev => ({ ...prev, inputUser: event.target.value }));
+  const onSearchInputUser = (event: string) => {
+    setState(prev => ({ ...prev, inputUser: event }));
+  };
+
+  const onSelectInputUser = (event: string) => {
+    setState(prev => ({ ...prev, inputUser: event, error: '' }));
   };
 
   const onClickAddUser = async () => {
+    setState(prev => ({
+      ...prev,
+      isSearching: false,
+    }));
     if (inputUser) {
       try {
         const userInfo = await getInfo(inputUser);
@@ -163,6 +182,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
               ],
               error: '',
               inputUser: '',
+              isSearching: false,
               isAddingUser: true,
             }));
           }
@@ -219,6 +239,10 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         content: error as string,
       });
     }
+  };
+
+  const onClickStartSearchInputUser = () => {
+    setState(prev => ({ ...prev, isSearching: true }));
   };
 
   const onConfirmChangeOwner = async (userID: React.Key) => {
@@ -351,12 +375,6 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
     }
   };
 
-  const users = [
-    { email: 'user1@example.com', name: 'User One' },
-    { email: 'user2@example.com', name: 'User Two' },
-    { email: 'user3@example.com', name: 'User Three' },
-  ];
-
   return (
     <>
       {contextHolder}
@@ -380,48 +398,54 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         onOk={() => onClickShareAccess(objectID)}
         onCancel={onCancelShareAccess}
         okText={isAddingUser ? 'Share' : 'Save'}
-        cancelText="Cancel"
+        cancelText={isAddingUser ? 'Back' : 'Cancel'}
         width={'700px'}
       >
-        <div className="h-[500px] mt-5 overflow-hidden">
+        <div className="h-[500px] w-full mt-5 overflow-hidden">
           {isAddingUser ? (
             <div>
-              <div className="flex gap-1 flex-shrink-0 w-full h-10">
-                {/* <AutoComplete
-                  className="flex w-full h-full"
-                  placeholder="Enter users email to share access"
+              <div className="flex gap-1 flex-shrink-0 w-full h-full">
+                <AutoComplete
+                  className="w-full h-full"
                   searchValue={inputUser}
-                  onSearch={onChangeInputUser}
-                  // onChange={onChangeInputUser}
-                  onSelect={onClickAddUser}
+                  onSearch={onSearchInputUser}
+                  onSelect={onSelectInputUser}
+                  value={inputUser}
                   filterOption={(inputUser, option) => {
                     if (!option) {
                       return false;
                     }
                     return option.value.toUpperCase().indexOf(inputUser.toUpperCase()) !== -1;
                   }}
-                  options={users.map(user => ({
-                    value: user.email,
-                    label: (
-                      <div className="flex flex-col">
-                        <span>{user.name}</span>
-                        <span>{user.email}</span>
-                      </div>
-                    ),
-                  }))}
+                  options={
+                    isSearching
+                      ? userList.map(user => ({
+                          value: user.email,
+                          label: (
+                            <div className="flex flex-col w-full">
+                              <span className="font-semibold">{user.name}</span>
+                              <span>{user.email}</span>
+                            </div>
+                          ),
+                        }))
+                      : []
+                  }
                 >
                   <Input.Search
-                    enterButton
-                    className="w-full h-full p-2 outline-none shadow-none"
+                    style={{ width: '100%' }}
+                    placeholder="Enter users email to share access"
+                    onPressEnter={onClickAddUser}
+                    onClick={onClickStartSearchInputUser}
                   />
-                </AutoComplete> */}
-                <Input
+                </AutoComplete>
+
+                {/* <Input
                   className="p-2 outline-none shadow-none"
                   placeholder="Enter users email to share access"
                   value={inputUser}
                   onChange={onChangeInputUser}
                   onPressEnter={onClickAddUser}
-                />
+                /> */}
                 <Select
                   value={selectedRole}
                   className="w-[140px] h-full"
@@ -468,7 +492,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                     title={
                       <>
                         {user.name}{' '}
-                        {user.id === (current_user?.id as string) ? <Tag>You</Tag> : <></>}
+                        {user.id === (currentUser?.id as string) ? <Tag>You</Tag> : <></>}
                       </>
                     }
                     description={user.email}
@@ -491,10 +515,12 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                                 value: 'change owner',
                                 icon: <SwitchUserIcon />,
                                 label: (
-                                  <div className="my-1 font-semibold">
-                                    <SwitchUserIcon className="mr-2" />
-                                    Change Owner
-                                  </div>
+                                  <Tooltip title="Change Owner" placement="left">
+                                    <div className="my-1 font-semibold truncate">
+                                      <SwitchUserIcon className="mr-2" />
+                                      Change Owner
+                                    </div>
+                                  </Tooltip>
                                 ),
                               },
                             ]
@@ -503,10 +529,12 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                           value: 'delete',
                           icon: <DeleteIcon />,
                           label: (
-                            <div className="text-red-500 my-1">
-                              <DeleteIcon className="mr-2" />
-                              Delete Access
-                            </div>
+                            <Tooltip title="Delete Access" placement="left">
+                              <div className="text-red-500 my-1 truncate">
+                                <DeleteIcon className="mr-2" />
+                                Delete Access
+                              </div>
+                            </Tooltip>
                           ),
                         },
                       ]}
