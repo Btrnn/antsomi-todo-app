@@ -48,6 +48,7 @@ import {
   Card,
   List,
   Typography,
+  LevelKeysProps,
 } from "components/ui";
 import { UserDrawer } from "../../components/common";
 
@@ -91,7 +92,8 @@ import {
 import { getInfo } from "services";
 import { IdentifyId } from "types";
 import { ShareAccessModal } from "components/common";
-import { checkAuthority } from "utils";
+import { checkAuthority, getDashBoardLevelKeys } from "utils";
+import { useBoardList } from "hooks/useBoardList";
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
@@ -122,6 +124,7 @@ type TState = {
   isOpenBoardMenu: boolean;
   userPermission: string;
   selectedPath: { title: string }[];
+  isLoading: boolean;
 };
 
 const { Text } = Typography;
@@ -152,6 +155,7 @@ export const Dashboard: React.FC = () => {
     isOpenBoardMenu: false,
     userPermission: "",
     selectedPath: [],
+    isLoading: true,
   });
   const {
     isOpenSetting,
@@ -173,16 +177,17 @@ export const Dashboard: React.FC = () => {
     isOpenBoardMenu,
     userPermission,
     selectedPath,
+    isLoading,
   } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const ownedBoardList = useSelector(
-    (state: RootState) => state.board.ownedList
-  );
-  const sharedBoardList = useSelector(
-    (state: RootState) => state.board.sharedList
-  );
+  // const ownedBoardList = useSelector(
+  //   (state: RootState) => state.board.ownedList
+  // );
+  // const sharedBoardList = useSelector(
+  //   (state: RootState) => state.board.sharedList
+  // );
 
   //List
   const boardActionItems: MenuItem[] = [
@@ -226,6 +231,11 @@ export const Dashboard: React.FC = () => {
   // Hooks
   const location = useLocation();
   const params = useParams();
+  const {
+    owned: ownedBoardList,
+    shared: sharedBoardList,
+    isLoading: boardLoading,
+  } = useBoardList();
 
   // Memo
   const roleOptions = useMemo(() => {
@@ -246,6 +256,7 @@ export const Dashboard: React.FC = () => {
     let currentTitle = "Home";
     let currentKey = "";
     let isSubMenu = true;
+
     if (pathname.includes("/home")) {
       currentTitle = DASHBOARD_NAME[DASHBOARD_KEY.HOME];
       currentKey = DASHBOARD_KEY.HOME;
@@ -257,6 +268,7 @@ export const Dashboard: React.FC = () => {
           (board) => board.id === params?.boardId
         )?.name || "Board List";
     }
+
     setState((prevState) => ({
       ...prevState,
       title: currentTitle,
@@ -264,9 +276,7 @@ export const Dashboard: React.FC = () => {
       boardSelected: params?.boardId ?? "",
       selectedPath: isSubMenu ? [{ title: currentTitle }] : [],
     }));
-
-    getBoardList();
-  }, [location]);
+  }, [location, boardLoading]);
 
   // Handles
   const onClickSelectBoard = async (boardID: IdentifyId) => {
@@ -315,20 +325,6 @@ export const Dashboard: React.FC = () => {
     }));
   };
 
-  const getBoardList = async () => {
-    try {
-      const ownedBoards = await getAllBoards("owned");
-      const sharedBoards = await getAllBoards("shared");
-      dispatch(setOwnedList(ownedBoards?.data));
-      dispatch(setSharedList(sharedBoards?.data));
-    } catch (error) {
-      messageCreate.open({
-        type: "error",
-        content: error as string,
-      });
-    }
-  };
-
   // Handle "ADD"
   const onChangeInputBoard = (event: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, inputBoardName: event.target.value }));
@@ -366,7 +362,6 @@ export const Dashboard: React.FC = () => {
             type: "success",
             content: <div>New board added!</div>,
           });
-          getBoardList();
         } catch (error) {
           messageCreate.open({
             type: "error",
@@ -379,10 +374,6 @@ export const Dashboard: React.FC = () => {
       setState((prev) => ({ ...prev, isAdding: false }));
     }
   };
-
-  // const onClick: MenuProps["onClick"] = (e) => {
-  //   console.log("click", e);
-  // };
 
   const onClickAction = async (
     event: MenuInfo,
@@ -446,7 +437,6 @@ export const Dashboard: React.FC = () => {
         ...prev,
         alreadySharedList: accessList.data,
       }));
-      getBoardList();
     } catch (error) {
       messageCreate.open({
         type: "error",
@@ -515,72 +505,73 @@ export const Dashboard: React.FC = () => {
     {
       key: DASHBOARD_KEY.BOARD,
       icon: <DataIcon />,
-      label: <NavLink to={DASHBOARD_KEY.BOARD}>{"Boards"}</NavLink>,
+      label: <NavLink to={DASHBOARD_KEY.BOARD}>{"Board List"}</NavLink>,
       children: [
         {
           key: DASHBOARD_KEY.OWNED,
           label: "Your Boards",
           children: [
             ...ownedBoardList.map((board) => ({
-              label:
-                isRename && boardSelected === (board.id as string) ? (
-                  <Input
-                    className="w-full h-full p-0"
-                    style={{
-                      boxShadow: "none",
-                      borderColor: "transparent",
-                      backgroundColor: "transparent",
-                    }}
-                    autoFocus={true}
-                    value={boardNewName}
-                    onChange={onChangeBoardNewName}
-                    onPressEnter={() => onEnterRenameBoard(board.id)}
-                    onBlur={(e) => {
-                      onEnterRenameBoard(board.id);
-                    }}
-                  />
-                ) : (
-                  <Tooltip title={board.name} placement="right">
-                  <div
-                    className="flex justify-between w-full"
-                    onClick={() => onClickSelectBoard(board.id)}
-                  >
-                    
-                      <div className="truncate">
-                        {board.name}
-                      </div>
-                    
-                    <Dropdown
-                      key={board.id}
-                      menu={{
-                        items: boardActionItems,
-                        onClick: (event) =>
-                          onClickAction(event, board.id, board.name),
+              label: (
+                <div onClick={() => onClickSelectBoard(board.id)}>
+                  {isRename && boardSelected === (board.id as string) ? (
+                    <Input
+                      className="w-full h-full p-0"
+                      style={{
+                        boxShadow: "none",
+                        borderColor: "transparent",
+                        backgroundColor: "transparent",
                       }}
-                      placement="bottomLeft"
-                      open={
-                        isOpenBoardMenu &&
-                        (board.id as string) === boardSelected
-                      }
-                      trigger={["click"]}
-                      onOpenChange={(visible) => {
-                        if (!visible) {
-                          onClickHideBoardMenu();
-                        }
+                      autoFocus={true}
+                      value={boardNewName}
+                      onChange={onChangeBoardNewName}
+                      onPressEnter={() => onEnterRenameBoard(board.id)}
+                      onBlur={(e) => {
+                        onEnterRenameBoard(board.id);
                       }}
-                    >
-                      <div
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onClickShowBoardMenu(board.id);
+                    />
+                  ) : (
+                    <div className="flex flex-row justify-between items-center h-full">
+                      <Typography.Text
+                        ellipsis={{
+                          tooltip: { placement: "right" },
                         }}
                       >
-                        <MoreIcon />
-                      </div>
-                    </Dropdown>
-                  </div>
-                  </Tooltip>
-                ),
+                        {board.name}
+                      </Typography.Text>
+
+                      <Dropdown
+                        key={board.id}
+                        menu={{
+                          items: boardActionItems,
+                          onClick: (event) =>
+                            onClickAction(event, board.id, board.name),
+                        }}
+                        placement="bottomLeft"
+                        open={
+                          isOpenBoardMenu &&
+                          (board.id as string) === boardSelected
+                        }
+                        trigger={["click"]}
+                        onOpenChange={(visible) => {
+                          if (!visible) {
+                            onClickHideBoardMenu();
+                          }
+                        }}
+                      >
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onClickShowBoardMenu(board.id);
+                          }}
+                        >
+                          <MoreIcon />
+                        </div>
+                      </Dropdown>
+                    </div>
+                  )}
+                </div>
+              ),
               key: board.id,
             })),
             ...[
@@ -619,61 +610,66 @@ export const Dashboard: React.FC = () => {
           key: DASHBOARD_KEY.SHARED,
           label: "Shared with you",
           children: sharedBoardList.map((board) => ({
-            label:
-              isRename && boardSelected === (board.id as string) ? (
-                <Input
-                  className="w-full h-full p-0 border-none"
-                  style={{
-                    boxShadow: "none",
-                    borderColor: "transparent",
-                    backgroundColor: "transparent",
-                  }}
-                  autoFocus={true}
-                  value={boardNewName}
-                  onChange={onChangeBoardNewName}
-                  onPressEnter={() => onEnterRenameBoard(board.id)}
-                  onBlur={(e) => {
-                    onEnterRenameBoard(board.id);
-                  }}
-                />
-              ) : (
-                <Tooltip title={board.name} placement="right">
-                <div
-                  className="flex flex-row justify-between w-full"
-                  onClick={() => onClickSelectBoard(board.id)}
-                >
-                    <div className="truncate">{board.name}</div>
-                  
-                  <Dropdown
-                    key={board.id}
-                    menu={{
-                      items: boardActionItems,
-                      onClick: (event) =>
-                        onClickAction(event, board.id, board.name),
+            label: (
+              <div onClick={() => onClickSelectBoard(board.id)}>
+                {isRename && boardSelected === (board.id as string) ? (
+                  <Input
+                    className="w-full h-full p-0 border-none"
+                    style={{
+                      boxShadow: "none",
+                      borderColor: "transparent",
+                      backgroundColor: "transparent",
                     }}
-                    placement="bottomLeft"
-                    open={
-                      isOpenBoardMenu && (board.id as string) === boardSelected
-                    }
-                    trigger={["click"]}
-                    onOpenChange={(visible) => {
-                      if (!visible) {
-                        onClickHideBoardMenu();
-                      }
+                    autoFocus={true}
+                    value={boardNewName}
+                    onChange={onChangeBoardNewName}
+                    onPressEnter={() => onEnterRenameBoard(board.id)}
+                    onBlur={(e) => {
+                      onEnterRenameBoard(board.id);
                     }}
-                  >
-                    <div
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onClickShowBoardMenu(board.id);
+                  />
+                ) : (
+                  <div className="flex flex-row justify-between items-center h-full">
+                    <Typography.Text
+                      ellipsis={{
+                        tooltip: { placement: "right" },
                       }}
                     >
-                      <MoreIcon />
-                    </div>
-                  </Dropdown>
-                </div>
-                </Tooltip>
-              ),
+                      {board.name}
+                    </Typography.Text>
+
+                    <Dropdown
+                      key={board.id}
+                      menu={{
+                        items: boardActionItems,
+                        onClick: (event) =>
+                          onClickAction(event, board.id, board.name),
+                      }}
+                      placement="bottomLeft"
+                      open={
+                        isOpenBoardMenu &&
+                        (board.id as string) === boardSelected
+                      }
+                      trigger={["click"]}
+                      onOpenChange={(visible) => {
+                        if (!visible) {
+                          onClickHideBoardMenu();
+                        }
+                      }}
+                    >
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onClickShowBoardMenu(board.id);
+                        }}
+                      >
+                        <MoreIcon />
+                      </div>
+                    </Dropdown>
+                  </div>
+                )}
+              </div>
+            ),
             key: board.id,
           })),
         },
@@ -681,6 +677,8 @@ export const Dashboard: React.FC = () => {
     },
   ];
 
+  // Utils
+  const levelKeys = getDashBoardLevelKeys(dashBoardItems as LevelKeysProps[]);
   return (
     <Layout className="h-screen">
       {contextHolder}
@@ -704,7 +702,9 @@ export const Dashboard: React.FC = () => {
             <div className="flex flex-col w-full overflow-auto h-full">
               <Menu
                 mode="inline"
-                defaultSelectedKeys={[boardSelected]}
+                defaultSelectedKeys={[DASHBOARD_KEY.HOME]}
+                defaultOpenKeys={[DASHBOARD_KEY.HOME]}
+                selectedKeys={[boardSelected]}
                 // onClick={onClick}
                 items={dashBoardItems}
                 onSelect={(e) => console.log(e)}

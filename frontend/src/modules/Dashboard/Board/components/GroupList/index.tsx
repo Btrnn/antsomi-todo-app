@@ -64,6 +64,7 @@ interface GroupsProps {
   type: string;
   permission: string;
   boardId: React.Key;
+  
 }
 
 type TState = {
@@ -225,7 +226,6 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         });
       }
     } else if (sourceType === SORTABLE_TYPE.GROUP) {
-      console.log("Group");
       dispatch(reorderGroup({ source: active, destination: over }));
       try {
         dispatch(reorderGroupAsync(boardId));

@@ -11,7 +11,15 @@ import { RootState, AppDispatch, deleteTask } from 'store';
 import { DeleteIcon, EditIcon } from 'components/icons';
 
 // Components
-import { Tag, Dropdown, type MenuProps, type MenuInfo, Card, Modal } from 'components/ui';
+import {
+  Tag,
+  Dropdown,
+  type MenuProps,
+  type MenuInfo,
+  Card,
+  Modal,
+  Typography,
+} from 'components/ui';
 
 // Models
 import { Task } from 'models';
@@ -168,9 +176,9 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
             <div key={task.id} className="w-full p-0 h-full">
               <div key={task.id} className="flex flex-col w-full overflow-hidden">
                 <div className="flex font-bold mb-2 whitespace-normal">{task.name}</div>
-                <div className="flex font-light mb-2 whitespace-break-spaces h-full overflow-hidden">
+                <Typography.Paragraph ellipsis={{ rows: 3 }} className="font-light mb-2">
                   {task.description}
-                </div>
+                </Typography.Paragraph>
               </div>
               <div className="flex flex-col items-start gap-y-3">
                 <Tag

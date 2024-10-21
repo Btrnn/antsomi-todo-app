@@ -36,7 +36,7 @@ import { useUserList } from 'hooks/useUserList';
 
 interface TaskDetailProp {
   task: Task;
-  onClose: () => void;
+  onClose: (message: string) => void;
   permission: string;
 }
 
@@ -70,48 +70,51 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
     const boardId = params?.boardId ?? '';
     dispatch(updateTask({ id: String(task.id), updatedTask: values }));
     updatedTaskAPI(boardId, { ...values, id: task.id });
-    onClose();
+    onClose('Task updated!');
   };
 
   return (
-    <Form<FormType>
-      style={{
-        maxWidth: 700,
-        width: 'full',
-        height: 'full',
-        padding: '12px',
-      }}
-      labelCol={{ span: 5 }}
-      wrapperCol={{ span: 19 }}
-      layout="horizontal"
-      labelAlign="left"
-      form={form}
-      onFinish={onFinishForm}
-      disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
-    >
-      <Form.Item<FormType>
-        label="Task Title:"
-        name="name"
-        rules={[{ required: true, message: 'This field is required!' }]}
+    <>
+      {contextHolder}
+      <Form<FormType>
+        style={{
+          maxWidth: 700,
+          width: 'full',
+          height: 'full',
+          padding: '12px',
+        }}
+        labelCol={{ span: 5 }}
+        wrapperCol={{ span: 19 }}
+        layout="horizontal"
+        labelAlign="left"
+        form={form}
+        onFinish={onFinishForm}
+        onBlur={() => onFinishForm}
+        disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
       >
-        <Input placeholder="Enter a brief, clear title for the task" />
-      </Form.Item>
-      <Form.Item<FormType> label="Description:" name="description">
-        <TextArea
-          placeholder="Provide a detailed explanation of the task"
-          autoSize={{ minRows: 2, maxRows: 8 }}
-        />
-      </Form.Item>
-      <Form.Item<FormType> label="Assignee:" name="assignee_id">
-        <Select
-          placeholder="Select the person responsible for this task"
-          options={userList.map(user => ({
-            value: user.id,
-            label: user.name,
-          }))}
-        />
-      </Form.Item>
-      {/* <Form.Item<FormType> label="Status:" name="status_id">
+        <Form.Item<FormType>
+          label="Task Title:"
+          name="name"
+          rules={[{ required: true, message: 'This field is required!' }]}
+        >
+          <Input placeholder="Enter a brief, clear title for the task" />
+        </Form.Item>
+        <Form.Item<FormType> label="Description:" name="description">
+          <TextArea
+            placeholder="Provide a detailed explanation of the task"
+            autoSize={{ minRows: 2, maxRows: 8 }}
+          />
+        </Form.Item>
+        <Form.Item<FormType> label="Assignee:" name="assignee_id">
+          <Select
+            placeholder="Select the person responsible for this task"
+            options={userList.map(user => ({
+              value: user.id,
+              label: user.name,
+            }))}
+          />
+        </Form.Item>
+        {/* <Form.Item<FormType> label="Status:" name="status_id">
         <Select
           options={groupList.map(group => ({
             value: group.id,
@@ -123,29 +126,30 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
           }))}
         />
       </Form.Item> */}
-      <Form.Item<FormType> label="Estimate time:" name="est_time">
-        <InputNumber
-          placeholder="Enter the estimated time to complete the task"
-          className="w-11/12"
-          addonAfter="hours"
-        />
-      </Form.Item>
-      <Form.Item<FormType> label="Start Date:" name="start_date">
-        <DatePicker />
-      </Form.Item>
-      <Form.Item<FormType> label="End Date:" name="end_date">
-        <DatePicker />
-      </Form.Item>
-      <Flex gap={10} justify="right">
-        <Form.Item>
-          <Button onClick={onClose}>Cancel</Button>
+        <Form.Item<FormType> label="Estimate time:" name="est_time">
+          <InputNumber
+            placeholder="Enter the estimated time to complete the task"
+            className="w-11/12"
+            addonAfter="hours"
+          />
         </Form.Item>
-        <Form.Item>
-          <Button type="primary" onClick={() => form.submit()}>
-            Save
-          </Button>
+        <Form.Item<FormType> label="Start Date:" name="start_date">
+          <DatePicker />
         </Form.Item>
-      </Flex>
-    </Form>
+        <Form.Item<FormType> label="End Date:" name="end_date">
+          <DatePicker />
+        </Form.Item>
+        <Flex gap={10} justify="right">
+          <Form.Item>
+            <Button onClick={() => onClose('')}>Cancel</Button>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={() => form.submit()}>
+              Save
+            </Button>
+          </Form.Item>
+        </Flex>
+      </Form>
+    </>
   );
 };

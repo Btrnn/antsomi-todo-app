@@ -32,13 +32,12 @@ function App() {
         </div>
       )}
       <ReactQueryClientProvider>
-
-      <AntdConfigProvider>
-        <div className="App">
-          <RouterProvider router={router} />
-        </div>
-      </AntdConfigProvider>
-        </ReactQueryClientProvider>
+        <AntdConfigProvider>
+          <div className="App">
+            <RouterProvider router={router} />
+          </div>
+        </AntdConfigProvider>
+      </ReactQueryClientProvider>
     </Provider>
   );
 }

@@ -6,9 +6,11 @@ import { IdentifyId, ServiceResponse } from 'types';
 // Models
 import { Board } from 'models';
 
-export const getAllBoards = async (type: string): Promise<ServiceResponse<Board[]>> => {
+export const getAllBoards = async (): Promise<
+  ServiceResponse<{ owned: Board[]; shared: Board[] }>
+> => {
   try {
-    const response = await axiosInstance.get(`board/${type}`);
+    const response = await axiosInstance.get('board');
     return response.data;
   } catch (error) {
     return Promise.reject(error);

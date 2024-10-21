@@ -2,17 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
-import {
-  Modal,
-  Input,
-  List,
-  Select,
-  message,
-  Tag,
-  AutoComplete,
-  Tooltip,
-  Typography,
-} from '../../ui';
+import { Modal, Input, List, Select, message, Tag, AutoComplete, Typography } from '../../ui';
 import { AddIcon, CloseIcon, DeleteIcon, SwitchUserIcon } from '../../icons';
 
 // Constants
@@ -25,11 +15,12 @@ import {
   shareBoard,
   updateAccessBoard,
 } from 'services';
-import { on } from 'events';
+
+// Utils
 import { checkAuthority } from 'utils';
-import { useLoggedUser } from 'hooks';
-import { set } from 'lodash';
-import { useUserList } from 'hooks/useUserList';
+
+// Hooks
+import { useLoggedUser, useUserList } from 'hooks';
 
 interface ShareAccessProp {
   isOpen: boolean;
@@ -121,12 +112,25 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         return PERMISSION[value as string]?.includes(permission)
           ? {
               value,
-              label: (
-                <Tooltip title={label} placement="left">
-                  <Icon className="mr-2 my-2" />
-                  <span className="truncate">{label}</span>
-                </Tooltip>
-              ),
+              Icon,
+              label,
+              // label: (
+              //   <Flex className="w-full" align="center">
+              //     <Icon className="mr-2 my-2" />
+
+              //     <Text
+              //       ellipsis={{
+              //         tooltip: {
+              //           zIndex: 10000,
+
+              //           getPopupContainer: () => document.body,
+              //         },
+              //       }}
+              //     >
+              //       {label} 213131
+              //     </Text>
+              //   </Flex>
+              // ),
             }
           : {};
       })
@@ -138,7 +142,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
     setState(prev => ({ ...prev, isAddingUser: true }));
   };
 
-  const onSearchInputUser = (event: string) => {
+  const onChangeSearchInputUser = (event: string) => {
     setState(prev => ({ ...prev, inputUser: event }));
   };
 
@@ -233,6 +237,9 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         type: 'success',
         content: "User's access removed.",
       });
+      if (currentUser?.id === userID) {
+        onClose();
+      }
     } catch (error) {
       messageCreate.open({
         type: 'error',
@@ -403,12 +410,12 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       >
         <div className="h-[500px] w-full mt-5 overflow-hidden">
           {isAddingUser ? (
-            <div>
-              <div className="flex gap-1 flex-shrink-0 w-full h-full">
+            <div className="w-full">
+              <div className="flex flex-row gap-1 w-full h-full">
                 <AutoComplete
                   className="w-full h-full"
                   searchValue={inputUser}
-                  onSearch={onSearchInputUser}
+                  onSearch={onChangeSearchInputUser}
                   onSelect={onSelectInputUser}
                   value={inputUser}
                   filterOption={(inputUser, option) => {
@@ -447,10 +454,20 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                   onPressEnter={onClickAddUser}
                 /> */}
                 <Select
+                  className="w-[120px] shrink-0"
                   value={selectedRole}
-                  className="w-[140px] h-full"
                   onChange={onChangeRole}
                   options={roleOptions}
+                  optionRender={option => {
+                    const { Icon, label, className } = (option.data as any) || {};
+
+                    return (
+                      <Text ellipsis={{ tooltip: true }} className={`${className} w-full`}>
+                        {Icon ? <Icon className="mr-2 my-2 shrink-0" /> : null}
+                        {label}
+                      </Text>
+                    );
+                  }}
                 />
               </div>
               {error === '' ? (
@@ -471,7 +488,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                     <List.Item.Meta title={user.name} description={user.email} />
                     <Select
                       value={user.role}
-                      className="w-[140px] h-full mr-3"
+                      className="w-[120px] h-full mr-3"
                       onChange={value => onChangeRoleAddingList(value, index)}
                       options={roleOptions}
                     />
@@ -503,8 +520,9 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                     </div>
                   ) : (
                     <Select
+                      className="w-[120px]"
                       value={user.permission}
-                      className="w-[130px] h-full"
+                      virtual={false}
                       disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
                       onChange={value => onChangeRoleExistedList(value, index)}
                       options={[
@@ -513,31 +531,28 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                           ? [
                               {
                                 value: 'change owner',
-                                icon: <SwitchUserIcon />,
-                                label: (
-                                  <Tooltip title="Change Owner" placement="left">
-                                    <div className="my-1 font-semibold truncate">
-                                      <SwitchUserIcon className="mr-2" />
-                                      Change Owner
-                                    </div>
-                                  </Tooltip>
-                                ),
+                                Icon: SwitchUserIcon,
+                                label: 'Change owner 12333',
                               },
                             ]
                           : []),
                         {
                           value: 'delete',
-                          icon: <DeleteIcon />,
-                          label: (
-                            <Tooltip title="Delete Access" placement="left">
-                              <div className="text-red-500 my-1 truncate">
-                                <DeleteIcon className="mr-2" />
-                                Delete Access
-                              </div>
-                            </Tooltip>
-                          ),
+                          Icon: DeleteIcon,
+                          className: 'text-red-500',
+                          label: 'Delete Access',
                         },
                       ]}
+                      optionRender={option => {
+                        const { Icon, label, className } = (option.data as any) || {};
+
+                        return (
+                          <Text ellipsis={{ tooltip: true }} className={`${className} w-full`}>
+                            {Icon ? <Icon className="mr-2 my-2 shrink-0" /> : null}
+                            {label}
+                          </Text>
+                        );
+                      }}
                     />
                   )}
                 </List.Item>

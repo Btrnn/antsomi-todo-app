@@ -60,9 +60,6 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
   // Cookies
   const cookies = new Cookies();
 
-  // Stores
-  // const currentUser = useSelector((state: RootState) => state.user.currentUser);
-
   // Hooks
   const { user } = useLoggedUser();
 
@@ -83,6 +80,7 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
         break;
       case MENU_KEY.KEY4:
         cookies.remove('authToken', { path: '/' });
+
         messageCreate.open({
           type: 'warning',
           content: 'You have been logged out.',
@@ -90,7 +88,7 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
         setTimeout(() => {
           dispatch(setGroupList([]));
           dispatch(setTaskList([]));
-          navigate('/login');
+          navigate('/login', { replace: true });
         }, 1000);
         break;
       default:
@@ -100,28 +98,30 @@ export const UserDrawer: React.FC<UserDrawerProp> = props => {
   };
 
   return (
-    <Drawer
-      title={
-        <div className="flex flex-col items-center space-y-4 mt-10">
-          <Avatar size={100} icon={<UserIcon />} />
-          <div className="text-lg font-bold">{user?.name || 'Anonymous'}</div>
-          <div className="text-sm font-normal">{user?.email || 'Email not found'}</div>
-        </div>
-      }
-      placement="right"
-      size={'default'}
-      onClose={onClose}
-      open={isOpen}
-      footer={false}
-      closeIcon={null}
-    >
+    <>
       {contextHolder}
-      <Menu
-        onClick={onClickSelectMenu}
-        className="w-full h-full m-0 space-y-5"
-        mode="inline"
-        items={items}
-      />
-    </Drawer>
+      <Drawer
+        title={
+          <div className="flex flex-col items-center space-y-4 mt-10">
+            <Avatar size={100} icon={<UserIcon />} />
+            <div className="text-lg font-bold">{user?.name || 'Anonymous'}</div>
+            <div className="text-sm font-normal">{user?.email || 'Email not found'}</div>
+          </div>
+        }
+        placement="right"
+        size={'default'}
+        onClose={onClose}
+        open={isOpen}
+        footer={false}
+        closeIcon={null}
+      >
+        <Menu
+          onClick={onClickSelectMenu}
+          className="w-full h-full m-0 space-y-5"
+          mode="inline"
+          items={items}
+        />
+      </Drawer>
+    </>
   );
 };
