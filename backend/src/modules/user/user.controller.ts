@@ -13,7 +13,10 @@ import { IdentifyId } from '@app/types';
 // Decorators
 import { Public, User } from '@app/decorators';
 
-@Controller('user')
+// Constants
+import { ROUTES } from '@app/constants';
+
+@Controller(ROUTES.USER)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

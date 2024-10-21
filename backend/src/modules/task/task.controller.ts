@@ -23,9 +23,11 @@ import { UserEntity } from '../user/user.entity';
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
-import { ACCESS_OBJECT, ROLE } from '@app/constants';
 
-@Controller('task')
+// Constants
+import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+
+@Controller(ROUTES.TASK)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 

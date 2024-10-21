@@ -66,6 +66,17 @@ export class BoardService {
     return { data: entities, meta: { page: 1 } };
   }
 
+  async findAll(
+    userID: IdentifyId,
+  ): Promise<ServiceResponse<{ shared: BoardEntity[]; owned: BoardEntity[] }>> {
+    const owned = await this.findOwned(userID);
+    const shared = await this.findShared(userID);
+    return {
+      data: { owned: owned.data, shared: shared.data },
+      meta: { page: 1 },
+    };
+  }
+
   async findPermission(
     userID: IdentifyId,
     boardID: IdentifyId,

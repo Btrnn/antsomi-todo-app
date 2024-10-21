@@ -12,19 +12,23 @@ import {
 
 // Services
 import { BoardService } from './board.service';
+import { AccessService } from '../share_access/share_access.service';
 
 // Entities
 import { UserEntity } from '../user/user.entity';
 import { BoardEntity } from './board.entity';
 
+// Types
+import { IdentifyId } from '@app/types';
+
 // Decorators
 import { User } from '@app/decorators';
-import { IdentifyId } from '@app/types';
-import { AccessService } from '../share_access/share_access.service';
-import { ACCESS_OBJECT, ROLE } from '@app/constants';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
-@Controller('board')
+// Constants
+import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+
+@Controller(ROUTES.BOARD)
 export class BoardController {
   constructor(
     private readonly boardService: BoardService,
@@ -36,9 +40,10 @@ export class BoardController {
     return this.boardService.findOwned(user.id);
   }
 
-  @Get('/shared')
-  getSharedBoards(@User() user: UserEntity) {
-    return this.boardService.findShared(user.id);
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
+  @Get()
+  getAllBoards(@User() user: UserEntity) {
+    return this.boardService.findAll(user.id);
   }
 
   @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)

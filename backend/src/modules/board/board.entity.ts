@@ -1,6 +1,10 @@
+// Libraries
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('board')
+// Constants
+import { ROUTES } from '@app/constants';
+
+@Entity(ROUTES.BOARD)
 export class BoardEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
