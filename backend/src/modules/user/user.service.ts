@@ -12,7 +12,7 @@ import { omit } from 'lodash';
 // Types
 import { IdentifyId, ServiceResponse } from '@app/types';
 
-// Models
+// Entities
 import { UserEntity } from './user.entity';
 
 // Repositories

@@ -21,6 +21,7 @@ import { checkAuthority } from 'utils';
 
 // Hooks
 import { useLoggedUser, useUserList } from 'hooks';
+import { AccessDropDown } from '../AccessDropdown';
 
 interface ShareAccessProp {
   isOpen: boolean;
@@ -114,23 +115,6 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
               value,
               Icon,
               label,
-              // label: (
-              //   <Flex className="w-full" align="center">
-              //     <Icon className="mr-2 my-2" />
-
-              //     <Text
-              //       ellipsis={{
-              //         tooltip: {
-              //           zIndex: 10000,
-
-              //           getPopupContainer: () => document.body,
-              //         },
-              //       }}
-              //     >
-              //       {label} 213131
-              //     </Text>
-              //   </Flex>
-              // ),
             }
           : {};
       })
@@ -519,40 +503,13 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                       Board&apos;s owner
                     </div>
                   ) : (
-                    <Select
-                      className="w-[120px]"
-                      value={user.permission}
-                      virtual={false}
-                      disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
-                      onChange={value => onChangeRoleExistedList(value, index)}
-                      options={[
-                        ...roleOptions,
-                        ...(checkAuthority(permission, PERMISSION.owner)
-                          ? [
-                              {
-                                value: 'change owner',
-                                Icon: SwitchUserIcon,
-                                label: 'Change owner 12333',
-                              },
-                            ]
-                          : []),
-                        {
-                          value: 'delete',
-                          Icon: DeleteIcon,
-                          className: 'text-red-500',
-                          label: 'Delete Access',
-                        },
-                      ]}
-                      optionRender={option => {
-                        const { Icon, label, className } = (option.data as any) || {};
-
-                        return (
-                          <Text ellipsis={{ tooltip: true }} className={`${className} w-full`}>
-                            {Icon ? <Icon className="mr-2 my-2 shrink-0" /> : null}
-                            {label}
-                          </Text>
-                        );
+                    <AccessDropDown
+                      onSelect={role => {
+                        onChangeRoleExistedList(role, index);
                       }}
+                      permission={permission}
+                      currentRole={user.permission}
+                      disable={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
                     />
                   )}
                 </List.Item>
