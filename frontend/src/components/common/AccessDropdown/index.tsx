@@ -7,6 +7,8 @@ import { AddIcon, CloseIcon, DeleteIcon, SwitchUserIcon } from '../../icons';
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
+
+// Services
 import {
   changeBoardOwner,
   deleteAccessBoard,
