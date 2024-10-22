@@ -505,7 +505,6 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                   ) : (
                     <AccessDropDown
                       onSelect={role => {
-                        console.log(role);
                         onChangeRoleExistedList(role, index);
                       }}
                       permission={permission}
