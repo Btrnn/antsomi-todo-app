@@ -43,7 +43,7 @@ import {
 
 // Constants
 import { SORTABLE_TYPE } from "constants/tasks";
-import { PERMISSION, ROLE_KEY } from "constants/common";
+import { PERMISSION, ROLE_KEY } from "constants/role";
 
 // Services
 import {
@@ -64,6 +64,7 @@ interface GroupsProps {
   type: string;
   permission: string;
   boardId: React.Key;
+  
 }
 
 type TState = {
@@ -125,7 +126,10 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       const fetchedGroups = await getGroupListAPI(boardId);
       dispatch(setGroupList(fetchedGroups?.data));
     } catch (error) {
-      console.log(error);
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
   };
 
@@ -207,11 +211,14 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       dispatch(reorderTask({ source: active, destination: over }));
       try {
         if (over.data.current?.type === SORTABLE_TYPE.GROUP) {
-          updatedTaskAPI(boardId , { id: active.id, status_id: over.id });
+          updatedTaskAPI(boardId, { id: active.id, status_id: over.id });
         } else {
-          updatedTaskAPI(boardId, {id: active.id, status_id: over.data.current?.groupID });
+          updatedTaskAPI(boardId, {
+            id: active.id,
+            status_id: over.data.current?.groupID,
+          });
         }
-        dispatch(reorderTaskAsync());
+        dispatch(reorderTaskAsync(boardId));
       } catch (error) {
         messageCreate.open({
           type: "error",
@@ -221,7 +228,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
     } else if (sourceType === SORTABLE_TYPE.GROUP) {
       dispatch(reorderGroup({ source: active, destination: over }));
       try {
-        dispatch(reorderGroupAsync());
+        dispatch(reorderGroupAsync(boardId));
       } catch (error) {
         messageCreate.open({
           type: "error",
@@ -242,8 +249,8 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
     try {
       const deletedGroup = await deleteGroupAPI(boardId, id);
       getGroupList();
-      dispatch(deleteGroup({id}));
-      dispatch(reorderGroupAsync());
+      dispatch(deleteGroup({ id }));
+      dispatch(reorderGroupAsync(boardId));
       messageCreate.open({
         type: "success",
         content: <div className="z-10">Group deleted!</div>,
@@ -261,7 +268,10 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       const fetchedTasks = await getAllTasks(boardId);
       dispatch(setTaskList(fetchedTasks.data));
     } catch (error) {
-      console.log(error);
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
   };
 
@@ -297,24 +307,24 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
             />
           ))}
         </SortableContext>
-        { checkAuthority(permission, PERMISSION.EDIT) &&
-        <div className="flex gap-1 flex-shrink-0 w-[280px]">
-          <Input
-            className="p-2"
-            style={{
-              outline: "none",
-              boxShadow: "none",
-            }}
-            placeholder="Add new group"
-            value={inputGroupName}
-            onChange={onChangeInputGroup}
-            onPressEnter={onClickAddGroup}
-          />
-          <Button className="w-10 h-10" onClick={onClickAddGroup}>
-            <AddIcon />
-          </Button>
-        </div>
-        }
+        {checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR]) && (
+          <div className="flex gap-1 flex-shrink-0 w-[280px]">
+            <Input
+              className="p-2"
+              style={{
+                outline: "none",
+                boxShadow: "none",
+              }}
+              placeholder="Add new group"
+              value={inputGroupName}
+              onChange={onChangeInputGroup}
+              onPressEnter={onClickAddGroup}
+            />
+            <Button className="w-10 h-10" onClick={onClickAddGroup}>
+              <AddIcon />
+            </Button>
+          </div>
+        )}
       </Flex>
       <DragOverlay dropAnimation={dropAnimation}>
         {activeID ? (
@@ -341,7 +351,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
               onDelete={async () => {}}
               isOverlay={true}
               isRearrange={false}
-              boardId={''}
+              boardId={""}
               permission={permission}
             />
           )

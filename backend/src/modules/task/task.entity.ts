@@ -1,6 +1,10 @@
+// Libraries
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('task')
+// Constants
+import { ROUTES } from '@app/constants';
+
+@Entity(ROUTES.TASK)
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

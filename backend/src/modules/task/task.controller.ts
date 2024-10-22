@@ -23,13 +23,15 @@ import { UserEntity } from '../user/user.entity';
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
-import { ACCESS_OBJECT } from '@app/constants';
 
-@Controller('task')
+// Constants
+import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+
+@Controller(ROUTES.TASK)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @RequiresPermission('VIEW', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Get(`:${ACCESS_OBJECT.BOARD}`)
   getAllTasks(
     @Param(ACCESS_OBJECT.BOARD) boardID: IdentifyId,
@@ -43,13 +45,13 @@ export class TaskController {
   //   return this.taskService.findOne(id);
   // }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
   update(@Body() task: Partial<TaskEntity>) {
     return this.taskService.updateTask(task.id, task);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Post(`:${ACCESS_OBJECT.BOARD}`)
   createTask(
     @Body() newTask: Omit<TaskEntity, 'id'>,
@@ -61,7 +63,7 @@ export class TaskController {
     });
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Delete(`:${ACCESS_OBJECT.BOARD}`)
   deleteTask(
     @Param('boardID') boardID: IdentifyId,
@@ -71,14 +73,14 @@ export class TaskController {
     return this.taskService.deleteTask(boardID, id, user.id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Delete(`clear/:${ACCESS_OBJECT.BOARD}`)
   deleteTaskByGroupID(@Body('id') id: IdentifyId) {
     return this.taskService.deleteTaskByGroupID(id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
-  @Patch(`${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
+  @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
   async updateTaskPositions(
     @Body() taskPositions: { id: string; position: number }[],
     @User() user: UserEntity,

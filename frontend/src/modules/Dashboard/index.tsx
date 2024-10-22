@@ -47,14 +47,18 @@ import {
   Tooltip,
   Card,
   List,
+  Typography,
+  LevelKeysProps,
 } from "components/ui";
-import { UserDrawer } from "./components/UserDrawer";
+import { UserDrawer } from "../../components/common";
 
 // Constants
 import {
   DASHBOARD_KEY,
+  DASHBOARD_NAME,
   globalToken,
   MENU_KEY,
+  PERMISSION,
   ROLE_KEY,
   ROLE_OPTIONS,
 } from "../../constants";
@@ -87,6 +91,9 @@ import {
 } from "store";
 import { getInfo } from "services";
 import { IdentifyId } from "types";
+import { ShareAccessModal } from "components/common";
+import { checkAuthority, getDashBoardLevelKeys } from "utils";
+import { useBoardList } from "hooks/useBoardList";
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
@@ -116,8 +123,11 @@ type TState = {
   isAddingUser: boolean;
   isOpenBoardMenu: boolean;
   userPermission: string;
+  selectedPath: { title: string }[];
+  isLoading: boolean;
 };
 
+const { Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 export const Dashboard: React.FC = () => {
@@ -143,7 +153,9 @@ export const Dashboard: React.FC = () => {
     alreadySharedList: [],
     isAddingUser: false,
     isOpenBoardMenu: false,
-    userPermission: '',
+    userPermission: "",
+    selectedPath: [],
+    isLoading: true,
   });
   const {
     isOpenSetting,
@@ -163,29 +175,35 @@ export const Dashboard: React.FC = () => {
     alreadySharedList,
     isAddingUser,
     isOpenBoardMenu,
-    userPermission
+    userPermission,
+    selectedPath,
+    isLoading,
   } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const ownedBoardList = useSelector(
-    (state: RootState) => state.board.ownedList
-  );
-  const sharedBoardList = useSelector(
-    (state: RootState) => state.board.sharedList
-  );
+  // const ownedBoardList = useSelector(
+  //   (state: RootState) => state.board.ownedList
+  // );
+  // const sharedBoardList = useSelector(
+  //   (state: RootState) => state.board.sharedList
+  // );
 
   //List
   const boardActionItems: MenuItem[] = [
-    {
-      label: (
-        <div className="flex p-2">
-          <EditIcon className="mr-3" />
-          <div>Rename</div>
-        </div>
-      ),
-      key: MENU_KEY.KEY2,
-    },
+    ...(checkAuthority(userPermission, PERMISSION[ROLE_KEY.EDITOR])
+      ? [
+          {
+            label: (
+              <div className="flex p-2">
+                <EditIcon className="mr-3" />
+                <div>Rename</div>
+              </div>
+            ),
+            key: MENU_KEY.KEY2,
+          },
+        ]
+      : []),
     {
       label: (
         <div className="flex p-2">
@@ -195,68 +213,90 @@ export const Dashboard: React.FC = () => {
       ),
       key: MENU_KEY.KEY3,
     },
-    {
-      label: (
-        <div className="flex p-2 text-red-500">
-          <DeleteIcon className="mr-3" />
-          <div>Delete</div>
-        </div>
-      ),
-      key: MENU_KEY.KEY1,
-    },
+    ...(checkAuthority(userPermission, PERMISSION.owner)
+      ? [
+          {
+            label: (
+              <div className="flex p-2 text-red-500">
+                <DeleteIcon className="mr-3" />
+                <div>Delete</div>
+              </div>
+            ),
+            key: MENU_KEY.KEY1,
+          },
+        ]
+      : []),
   ];
 
   // Hooks
   const location = useLocation();
   const params = useParams();
+  const {
+    owned: ownedBoardList,
+    shared: sharedBoardList,
+    isLoading: boardLoading,
+  } = useBoardList();
 
   // Memo
   const roleOptions = useMemo(() => {
-    return Object.values(ROLE_OPTIONS).map(({value, label, Icon}) => ({
+    return Object.values(ROLE_OPTIONS).map(({ value, label, Icon }) => ({
       value,
-      label: <>
-        <Icon className="mr-2 my-2"/>
-        {label}
-      </>
-    }))
-  }, [])
+      label: (
+        <>
+          <Icon className="mr-2 my-2" />
+          {label}
+        </>
+      ),
+    }));
+  }, []);
 
   // Effects
   useEffect(() => {
     const { pathname } = location;
     let currentTitle = "Home";
     let currentKey = "";
-    if (pathname.includes("/board")) {
-      currentTitle = "Task List";
-      currentKey = DASHBOARD_KEY.TASKS;
-    } else if (pathname.includes("/home")) {
-      currentTitle = "Home";
+    let isSubMenu = true;
+
+    if (pathname.includes("/home")) {
+      currentTitle = DASHBOARD_NAME[DASHBOARD_KEY.HOME];
       currentKey = DASHBOARD_KEY.HOME;
+      isSubMenu = false;
+    } else if (pathname.includes("/board")) {
+      currentKey = DASHBOARD_KEY.BOARD;
+      currentTitle =
+        [...ownedBoardList, ...sharedBoardList].find(
+          (board) => board.id === params?.boardId
+        )?.name || "Board List";
     }
 
     setState((prevState) => ({
       ...prevState,
       title: currentTitle,
       selectedKey: currentKey,
-      boardSelected: params?.boardId ?? '',
+      boardSelected: params?.boardId ?? "",
+      selectedPath: isSubMenu ? [{ title: currentTitle }] : [],
     }));
-
-    getBoardList();
-  }, [location]);
+  }, [location, boardLoading]);
 
   // Handles
   const onClickSelectBoard = async (boardID: IdentifyId) => {
-    const userPermission = await getPermission(boardID);
-    dispatch(setPermission(userPermission.data))
-    navigate(`/dashboard/board/${boardID}`);
-    setState((prev) => ({
-      ...prev,
-      userPermission: userPermission.data,
-    }));
+    try {
+      const userPermission = await getPermission(boardID);
+      dispatch(setPermission(userPermission.data));
+      navigate(`/dashboard/board/${boardID}`);
+      setState((prev) => ({
+        ...prev,
+        userPermission: userPermission.data,
+      }));
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
+    }
   };
 
   const onClickShowBoardMenu = async (boardID: IdentifyId) => {
-    console.log("show")
     setState((prev) => ({
       ...prev,
       isOpenBoardMenu: true,
@@ -285,17 +325,6 @@ export const Dashboard: React.FC = () => {
     }));
   };
 
-  const getBoardList = async () => {
-    try {
-      const ownedBoards = await getAllBoards("owned");
-      const sharedBoards = await getAllBoards("shared");
-      dispatch(setOwnedList(ownedBoards?.data));
-      dispatch(setSharedList(sharedBoards?.data));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   // Handle "ADD"
   const onChangeInputBoard = (event: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, inputBoardName: event.target.value }));
@@ -305,32 +334,46 @@ export const Dashboard: React.FC = () => {
     setState((prev) => ({ ...prev, isAdding: true }));
   };
 
-  const onClickAddBoard = async () => {
+  const onClickAddBoard = async (event: any) => {
     if (inputBoardName !== "") {
-      try {
-        const newBoard: Partial<Board> = {
-          name: inputBoardName,
-          position: ownedBoardList.length,
-        };
-        const createdBoard = await createBoard(newBoard);
-        messageCreate.open({
-          type: "success",
-          content: <div>New board added!</div>,
-        });
-        getBoardList();
-      } catch (error) {
+      const boardExists = ownedBoardList.some(
+        (board) => board.name === inputBoardName
+      );
+      if (boardExists) {
         messageCreate.open({
           type: "error",
-          content: error as string,
+          content: "Board already exists!",
         });
+        if (event.type === "blur") {
+          setState((prev) => ({
+            ...prev,
+            inputBoardName: "",
+            isAdding: false,
+          }));
+        }
+      } else {
+        try {
+          const newBoard: Partial<Board> = {
+            name: inputBoardName,
+            position: ownedBoardList.length,
+          };
+          const createdBoard = await createBoard(newBoard);
+          messageCreate.open({
+            type: "success",
+            content: <div>New board added!</div>,
+          });
+        } catch (error) {
+          messageCreate.open({
+            type: "error",
+            content: error as string,
+          });
+        }
+        setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
       }
+    } else {
+      setState((prev) => ({ ...prev, isAdding: false }));
     }
-    setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
   };
-
-  // const onClick: MenuProps["onClick"] = (e) => {
-  //   console.log("click", e);
-  // };
 
   const onClickAction = async (
     event: MenuInfo,
@@ -348,6 +391,7 @@ export const Dashboard: React.FC = () => {
             Deleting this board will remove all its groups.
           </div>
         ),
+
         footer: (_, { OkBtn, CancelBtn }) => (
           <>
             <CancelBtn />
@@ -357,185 +401,47 @@ export const Dashboard: React.FC = () => {
         onOk: () => onConfirmDeleteBoard(boardID),
       });
     } else if (event.key === MENU_KEY.KEY3) {
-      const accessList = await getAccessList(boardID);
-      setState((prev) => ({
-        ...prev,
-        isSharing: true,
-        boardSelected: boardID as string,
-        boardSharedName: boardName,
-        alreadySharedList: accessList.data,
-      }));
+      try {
+        const accessList = await getAccessList(boardID);
+        setState((prev) => ({
+          ...prev,
+          isSharing: true,
+          boardSelected: boardID as string,
+          boardSharedName: boardName,
+          alreadySharedList: accessList.data,
+        }));
+      } catch (error) {
+        messageCreate.open({
+          type: "error",
+          content: error as string,
+        });
+      }
     }
   };
 
   // Handle "SHARE"
-  const onClickBeginSharing = () => {
-    setState((prev) => ({ ...prev, isAddingUser: true }));
-  };
-
-  const onChangeInputUser = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputUser: event.target.value }));
-  };
-
-  const onClickAddUser = async () => {
-    if (inputUser) {
-      try {
-        const userInfo = await getInfo(inputUser);
-        const isExisted = [...shareUsers, ...alreadySharedList].find(
-          (user) => user.id === userInfo.data.id
-        );
-        if (isExisted) {
-          setState((prev) => ({
-            ...prev,
-            error: "User already added.",
-          }));
-        } else {
-          if (userInfo.data) {
-            setState((prev) => ({
-              ...prev,
-              shareUsers: [
-                ...shareUsers,
-                {
-                  id: userInfo.data.id ?? "",
-                  name: userInfo.data.name ?? "",
-                  email: inputUser,
-                  role: selectedRole,
-                },
-              ],
-              error: "",
-              inputUser: "",
-              isAddingUser: true,
-            }));
-          }
-        }
-      } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error as string,
-        }));
-      }
-    } else {
-      setState((prev) => ({
-        ...prev,
-        error: "This field is required !",
-      }));
-    }
-  };
-
-  const onClickRemoveUser = (id: React.Key) => {
+  const onCloseShareAccessModal = async () => {
     setState((prev) => ({
       ...prev,
-      shareUsers: shareUsers.filter((user) => user.id !== id),
+      boardSelected: "",
+      boardSharedName: "",
+      isSharing: false,
+      alreadySharedList: [],
     }));
   };
 
-  const onChangeRole = (value: string) => {
-    setState((prev) => ({
-      ...prev,
-      selectedRole: value,
-    }));
-  };
-
-  const onChangeRoleAddingList = (value: string, index: number) => {
-    setState((prev) => ({
-      ...prev,
-      shareUsers: shareUsers.map((user, i) =>
-        i === index ? { ...user, role: value } : user
-      ),
-    }));
-  };
-
-  const onChangeRoleExistedList = (value: string, index: number) => {
-    setState((prev) => ({
-      ...prev,
-      alreadySharedList: alreadySharedList.map((user, i) =>
-        i === index ? { ...user, permission: value } : user
-      ),
-    }));
-  };
-
-  const onClickShareBoard = async (boardID: React.Key) => {
-    if (isAddingUser) {
-      const listUser = shareUsers.map((user) => ({
-        user_id: user.id,
-        permission: user.role,
-      }));
-      if (listUser.length !== 0) {
-        try {
-          const response = await shareBoard(boardID, listUser);
-          messageCreate.open({
-            type: "success",
-            content: "Board shared",
-          });
-          const accessList = await getAccessList(boardID);
-          setState((prev) => ({
-            ...prev,
-            alreadySharedList: accessList.data,
-          }));
-        } catch (error) {
-          // messageCreate.open({
-          //   type: "error",
-          //   content: error as string,
-          // });
-          console.log(error);
-        }
-      }
+  const onShareComplete = async () => {
+    try {
+      const accessList = await getAccessList(boardSelected);
       setState((prev) => ({
         ...prev,
-        inputUser: "",
-        shareUsers: [],
-        error: "",
-        selectedRole: ROLE_KEY.VIEWER,
-        isAddingUser: false,
+        alreadySharedList: accessList.data,
       }));
-    } else {
-      const updateList = alreadySharedList.map((user) => ({
-        user_id: user.id,
-        permission: user.permission,
-      }));
-      if (updateList.length !== 0) {
-        try {
-          const response = await updateAccessBoard(boardID, updateList);
-          messageCreate.open({
-            type: "success",
-            content: "Board updated",
-          });
-        } catch (error) {
-          messageCreate.open({
-            type: "error",
-            content: error as string,
-          });
-        }
-      }
-      setState((prev) => ({
-        ...prev,
-        boardSelected: "",
-        boardSharedName: "",
-        isSharing: false,
-        isAddingUser: false,
-      }));
-    }
-  };
-
-  const onCancelShareBoard = async () => {
-    //console.log("Board: ", boardID);
-    if (isAddingUser) {
-      setState((prev) => ({
-        ...prev,
-        inputUser: "",
-        shareUsers: [],
-        error: "",
-        selectedRole: ROLE_KEY.VIEWER,
-        isAddingUser: false,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        boardSelected: "",
-        boardSharedName: "",
-        isSharing: false,
-        alreadySharedList: [],
-      }));
+    } catch (error) {
+      messageCreate.open({
+        type: "error",
+        content: error as string,
+      });
     }
   };
 
@@ -585,6 +491,11 @@ export const Dashboard: React.FC = () => {
   };
 
   // Lists
+  const breadcrumbItems = [
+    { title: "Dashboard" },
+    { title: DASHBOARD_NAME[selectedKey] },
+  ];
+
   const dashBoardItems: MenuItem[] = [
     {
       key: DASHBOARD_KEY.HOME,
@@ -592,69 +503,75 @@ export const Dashboard: React.FC = () => {
       label: <NavLink to={DASHBOARD_KEY.HOME}>{"Home"}</NavLink>,
     },
     {
-      key: "boardList",
+      key: DASHBOARD_KEY.BOARD,
       icon: <DataIcon />,
-      label: "Boards",
+      label: <NavLink to={DASHBOARD_KEY.BOARD}>{"Board List"}</NavLink>,
       children: [
         {
-          key: "owned",
+          key: DASHBOARD_KEY.OWNED,
           label: "Your Boards",
           children: [
             ...ownedBoardList.map((board) => ({
-              label:
-                isRename && boardSelected === (board.id as string) ? (
-                  <Input
-                    className="w-full h-full p-0"
-                    style={{
-                      boxShadow: "none",
-                      borderColor: "transparent",
-                      backgroundColor: "transparent",
-                    }}
-                    autoFocus={true}
-                    value={boardNewName}
-                    onChange={onChangeBoardNewName}
-                    onPressEnter={() => onEnterRenameBoard(board.id)}
-                    onBlur={(e) => {
-                      onEnterRenameBoard(board.id);
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="flex justify-between"
-                    onClick={() => onClickSelectBoard(board.id)}
-                  >
-                    <div>{board.name}</div>
-
-                    <Dropdown
-                      key={board.id}
-                      menu={{
-                        items: boardActionItems,
-                        onClick: (event) =>
-                          onClickAction(event, board.id, board.name),
+              label: (
+                <div onClick={() => onClickSelectBoard(board.id)}>
+                  {isRename && boardSelected === (board.id as string) ? (
+                    <Input
+                      className="w-full h-full p-0"
+                      style={{
+                        boxShadow: "none",
+                        borderColor: "transparent",
+                        backgroundColor: "transparent",
                       }}
-                      placement="bottomLeft"
-                      open={
-                        isOpenBoardMenu &&
-                        (board.id as string) === boardSelected
-                      }
-                      trigger={['click']} 
-                      onOpenChange={(visible) => {
-                        if (!visible) {
-                          onClickHideBoardMenu(); 
-                        }
+                      autoFocus={true}
+                      value={boardNewName}
+                      onChange={onChangeBoardNewName}
+                      onPressEnter={() => onEnterRenameBoard(board.id)}
+                      onBlur={(e) => {
+                        onEnterRenameBoard(board.id);
                       }}
-                    >
-                      <div
-                        onClick={(e) => {
-                          e.preventDefault(); 
-                          onClickShowBoardMenu(board.id); 
+                    />
+                  ) : (
+                    <div className="flex flex-row justify-between items-center h-full">
+                      <Typography.Text
+                        ellipsis={{
+                          tooltip: { placement: "right" },
                         }}
                       >
-                        <MoreIcon />
-                      </div>
-                    </Dropdown>
-                  </div>
-                ),
+                        {board.name}
+                      </Typography.Text>
+
+                      <Dropdown
+                        key={board.id}
+                        menu={{
+                          items: boardActionItems,
+                          onClick: (event) =>
+                            onClickAction(event, board.id, board.name),
+                        }}
+                        placement="bottomLeft"
+                        open={
+                          isOpenBoardMenu &&
+                          (board.id as string) === boardSelected
+                        }
+                        trigger={["click"]}
+                        onOpenChange={(visible) => {
+                          if (!visible) {
+                            onClickHideBoardMenu();
+                          }
+                        }}
+                      >
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onClickShowBoardMenu(board.id);
+                          }}
+                        >
+                          <MoreIcon />
+                        </div>
+                      </Dropdown>
+                    </div>
+                  )}
+                </div>
+              ),
               key: board.id,
             })),
             ...[
@@ -690,13 +607,68 @@ export const Dashboard: React.FC = () => {
           ],
         },
         {
-          key: "shared",
+          key: DASHBOARD_KEY.SHARED,
           label: "Shared with you",
           children: sharedBoardList.map((board) => ({
             label: (
-              <NavLink to={`/dashboard/board/${board.id}`} onClick={() => onClickSelectBoard(board.id)} >
-                {board.name}
-              </NavLink>
+              <div onClick={() => onClickSelectBoard(board.id)}>
+                {isRename && boardSelected === (board.id as string) ? (
+                  <Input
+                    className="w-full h-full p-0 border-none"
+                    style={{
+                      boxShadow: "none",
+                      borderColor: "transparent",
+                      backgroundColor: "transparent",
+                    }}
+                    autoFocus={true}
+                    value={boardNewName}
+                    onChange={onChangeBoardNewName}
+                    onPressEnter={() => onEnterRenameBoard(board.id)}
+                    onBlur={(e) => {
+                      onEnterRenameBoard(board.id);
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-row justify-between items-center h-full">
+                    <Typography.Text
+                      ellipsis={{
+                        tooltip: { placement: "right" },
+                      }}
+                    >
+                      {board.name}
+                    </Typography.Text>
+
+                    <Dropdown
+                      key={board.id}
+                      menu={{
+                        items: boardActionItems,
+                        onClick: (event) =>
+                          onClickAction(event, board.id, board.name),
+                      }}
+                      placement="bottomLeft"
+                      open={
+                        isOpenBoardMenu &&
+                        (board.id as string) === boardSelected
+                      }
+                      trigger={["click"]}
+                      onOpenChange={(visible) => {
+                        if (!visible) {
+                          onClickHideBoardMenu();
+                        }
+                      }}
+                    >
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onClickShowBoardMenu(board.id);
+                        }}
+                      >
+                        <MoreIcon />
+                      </div>
+                    </Dropdown>
+                  </div>
+                )}
+              </div>
             ),
             key: board.id,
           })),
@@ -705,6 +677,8 @@ export const Dashboard: React.FC = () => {
     },
   ];
 
+  // Utils
+  const levelKeys = getDashBoardLevelKeys(dashBoardItems as LevelKeysProps[]);
   return (
     <Layout className="h-screen">
       {contextHolder}
@@ -728,9 +702,12 @@ export const Dashboard: React.FC = () => {
             <div className="flex flex-col w-full overflow-auto h-full">
               <Menu
                 mode="inline"
-                defaultSelectedKeys={[boardSelected]}
+                defaultSelectedKeys={[DASHBOARD_KEY.HOME]}
+                defaultOpenKeys={[DASHBOARD_KEY.HOME]}
+                selectedKeys={[boardSelected]}
                 // onClick={onClick}
                 items={dashBoardItems}
+                onSelect={(e) => console.log(e)}
                 style={{ borderInlineEnd: "0px" }}
               />
             </div>
@@ -738,141 +715,16 @@ export const Dashboard: React.FC = () => {
         </div>
       </Sider>
 
-      <Modal
-        title={
-          <div className="justify-between flex items-center align-middle">
-            <div className="mb-3 h-10 text-xl flex items-center">
-              <span className="mr-2">Share access</span>
-              <span className="font-bold text-green-400">
-                "{boardSharedName}"
-              </span>
-            </div>
-            <AddIcon
-              onClick={onClickBeginSharing}
-              className="ml-3 mb-3 h-10 text-[20px] flex items-center"
-            />
-          </div>
-        }
-        closeIcon={false}
-        open={isSharing}
-        onOk={() => onClickShareBoard(boardSelected)}
-        onCancel={onCancelShareBoard}
-        okText={isAddingUser ? "Share" : "Save"}
-        cancelText="Cancel"
-        width={"700px"}
-      >
-        <div className="h-[500px] mt-5 overflow-hidden">
-          {isAddingUser ? (
-            <div>
-              <div className="flex gap-1 flex-shrink-0 w-full h-10">
-                <Input
-                  className="p-2"
-                  style={{
-                    outline: "none",
-                    boxShadow: "none",
-                  }}
-                  placeholder="Enter users email to share access"
-                  value={inputUser}
-                  onChange={onChangeInputUser}
-                  onPressEnter={onClickAddUser}
-                />
-                <Select
-                  value={selectedRole}
-                  className="w-[140px] h-full"
-                  onChange={onChangeRole}
-                  options={roleOptions}
-                />
-              </div>
-              {error === "" ? (
-                <div className="p-[10px] w-full text-[#595959]">
-                  Press Enter to add users access
-                </div>
-              ) : (
-                <div className="text-red-500 p-[10px] w-full">{error}</div>
-              )}
-
-              <List
-                header={<span className="font-bold text-lg">Sharing List</span>}
-                className="overflow-auto mt-3 h-[400px]"
-                itemLayout="horizontal"
-                dataSource={shareUsers}
-                renderItem={(user, index) => (
-                  <List.Item className="h-full overflow-auto p-2">
-                    <List.Item.Meta
-                      title={user.name}
-                      description={user.email}
-                    />
-                    <Select
-                      value={user.role}
-                      className="w-[140px] h-full mr-3"
-                      onChange={(value) => onChangeRoleAddingList(value, index)}
-                      options={[
-                        {
-                          value: ROLE_KEY.VIEWER,
-                          label: (
-                            <>
-                              <ViewerIcon className="mr-2 my-2" />
-                              Viewer
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.COMMENTER,
-                          label: (
-                            <>
-                              <CommenterIcon className="mr-2 my-2" />
-                              Commenter
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.EDITOR,
-                          label: (
-                            <>
-                              <EditorIcon className="mr-2 my-2" />
-                              Editor
-                            </>
-                          ),
-                        },
-                        {
-                          value: ROLE_KEY.MANAGER,
-                          label: (
-                            <>
-                              <ManagerIcon className="mr-2 my-2" />
-                              Manager
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                    <CloseIcon onClick={() => onClickRemoveUser(user.id)} />
-                  </List.Item>
-                )}
-              />
-            </div>
-          ) : (
-            <List
-              header={
-                <span className="font-bold text-lg">People with access</span>
-              }
-              className="overflow-auto h-[500px]"
-              itemLayout="horizontal"
-              dataSource={alreadySharedList}
-              renderItem={(user, index) => (
-                <List.Item className="h-full">
-                  <List.Item.Meta title={user.name} description={user.email} />
-                  <Select
-                    value={user.permission}
-                    className="w-[150px] h-full"
-                    onChange={(value) => onChangeRoleExistedList(value, index)}
-                    options={roleOptions}
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </div>
-      </Modal>
+      <ShareAccessModal
+        isOpen={isSharing}
+        onClose={onCloseShareAccessModal}
+        object={"board"}
+        objectName={boardSharedName}
+        objectID={boardSelected}
+        accessList={alreadySharedList}
+        onShare={onShareComplete}
+        permission={userPermission}
+      />
 
       <Layout className="h-screen">
         <Header
@@ -898,18 +750,27 @@ export const Dashboard: React.FC = () => {
             background: colorBgContainer,
           }}
         >
-          <div className="mb-10">
-            <div className=" font-black align-bottom text-3xl">{title}</div>
+          <div className="mb-10 sticky">
+            <div className="font-black align-bottom text-3xl">{title}</div>
             <Breadcrumb
-              items={[{ title: "Home" }, { title: "Task List" }]}
+              items={[
+                {
+                  title: "Dashboard",
+                },
+                {
+                  title: DASHBOARD_NAME[selectedKey],
+                  href: `/dashboard/${selectedKey}`,
+                },
+                ...selectedPath,
+              ]}
               className="mt-5 text-sm"
             />
           </div>
           <Outlet />
         </Content>
-        
+
         {isOpenSetting && (
-        <UserDrawer isOpen={isOpenSetting} onClose={onCloseUserSetting} />
+          <UserDrawer isOpen={isOpenSetting} onClose={onCloseUserSetting} />
         )}
       </Layout>
     </Layout>

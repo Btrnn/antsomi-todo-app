@@ -14,6 +14,7 @@ import { reorderSingleArray } from 'utils';
 // Services
 import { reorderGroup as reorderGroupAPI } from 'services';
 import { useParams } from 'react-router-dom';
+import { Identifier } from 'typescript';
 
 interface GroupState {
   groupList: Group[];
@@ -33,17 +34,18 @@ const initialState: GroupState = {
   currentBoardID: '',
 };
 
-export const reorderGroupAsync = createAsyncThunk('group/reorder', async (_, { getState }) => {
-  const state = getState() as { group: GroupState };
-  const params = useParams();
-
-  const groupPositions = state.group.updateList.map(group => ({
-    id: group.id,
-    position: group.position,
-  }));
-  const response = await reorderGroupAPI(params?.boardId ?? '', groupPositions);
-  return response.data;
-});
+export const reorderGroupAsync = createAsyncThunk(
+  'group/reorder',
+  async (boardID: React.Key, { getState }) => {
+    const state = getState() as { group: GroupState };
+    const groupPositions = state.group.updateList.map(group => ({
+      id: group.id,
+      position: group.position,
+    }));
+    const response = await reorderGroupAPI(boardID, groupPositions);
+    return response.data;
+  },
+);
 
 const groupSlice = createSlice({
   name: 'group',

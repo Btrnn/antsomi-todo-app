@@ -1,21 +1,13 @@
 // Libraries
 import { Controller } from '@nestjs/common';
+
+// Services
 import { AccessService } from './share_access.service';
 
-// // Entities
-// import { GroupEntity } from './group.entity';
-// import { UserEntity } from '../user/user.entity';
+// Constants
+import { ROUTES } from '@app/constants';
 
-// // Services
-// import { GroupService } from './group.service';
-
-// // Types
-// import { IdentifyId } from '@app/types';
-
-// // Decorators
-// import { User } from '@app/decorators';
-
-@Controller('board-user')
+@Controller(ROUTES.SHARE_ACCESS)
 export class AccessController {
   constructor(private readonly accessService: AccessService) {}
 }

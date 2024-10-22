@@ -5,7 +5,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { QUERY_KEYS } from 'constants/query';
 
 // Services
-import { getInfo, getUserInfo } from 'services';
+import { getAllUsers, getInfo, getUserInfo } from 'services';
 
 // Types
 import { ServiceResponse } from 'types';
@@ -14,7 +14,11 @@ import { ServiceResponse } from 'types';
 import { User } from 'models';
 
 type UseGetUserInfoProps = {
-  options?: UseQueryOptions<ServiceResponse<Omit<User, 'id' | 'password'>>>;
+  options?: UseQueryOptions<ServiceResponse<Omit<User, 'password'>>>;
+};
+
+type useGetUserListProps = {
+  options?: UseQueryOptions<ServiceResponse<Pick<User, 'id' | 'email' | 'name'>[]>>;
 };
 
 type UseGetUserByEmailProps = {
@@ -27,12 +31,20 @@ type UseGetUserByEmailProps = {
  *
  * @param {UseGetUserInfoProps} [props] The options for the `useQuery` hook.
  *
- * @returns {UseQueryResult<ServiceResponse<Omit<User, 'id' | 'password'>>>} The result of the query.
+ * @returns {UseQueryResult<ServiceResponse<Omit<User, 'password'>>>} The result of the query.
  */
 export const useGetUserInfo = (props?: UseGetUserInfoProps) => {
   return useQuery({
     queryKey: [QUERY_KEYS.GET_USER_INFO],
     queryFn: getUserInfo,
+    ...props?.options,
+  });
+};
+
+export const useGetUserList = (props?: useGetUserListProps) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_ALL_USERS],
+    queryFn: getAllUsers,
     ...props?.options,
   });
 };

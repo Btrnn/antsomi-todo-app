@@ -1,3 +1,6 @@
+// Components
+import { LevelKeysProps } from 'components/ui';
+
 /**
  * Reorders an array by moving an item from the start index to the end index.
  *
@@ -46,4 +49,20 @@ export const checkAuthority = (userPermission: string, rolesAccepted: string[]) 
     return true;
   }
   return false;
+};
+
+export const getDashBoardLevelKeys = (items: LevelKeysProps[]) => {
+  const key: Record<string, number> = {};
+  const getLevelKeyList = (itemList: LevelKeysProps[], level = 1) => {
+    itemList.forEach(item => {
+      if (item.key) {
+        key[item.key] = level;
+      }
+      if (item.children) {
+        getLevelKeyList(item.children, level + 1);
+      }
+    });
+  };
+  getLevelKeyList(items);
+  return key;
 };

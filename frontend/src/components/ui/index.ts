@@ -26,3 +26,7 @@ export * from './Tabs';
 export * from './Tree';
 export * from './List';
 export * from './Tooltip';
+export * from './AutoComplete';
+export * from './Typography';
+export * from './Result';
+export * from './Flex';

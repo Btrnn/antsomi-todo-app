@@ -12,19 +12,23 @@ import {
 
 // Services
 import { BoardService } from './board.service';
+import { AccessService } from '../share_access/share_access.service';
 
 // Entities
 import { UserEntity } from '../user/user.entity';
 import { BoardEntity } from './board.entity';
 
+// Types
+import { IdentifyId } from '@app/types';
+
 // Decorators
 import { User } from '@app/decorators';
-import { IdentifyId } from '@app/types';
-import { AccessService } from '../share_access/share_access.service';
-import { ACCESS_OBJECT } from '@app/constants';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
-@Controller('board')
+// Constants
+import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+
+@Controller(ROUTES.BOARD)
 export class BoardController {
   constructor(
     private readonly boardService: BoardService,
@@ -36,12 +40,13 @@ export class BoardController {
     return this.boardService.findOwned(user.id);
   }
 
-  @Get('/shared')
-  getSharedBoards(@User() user: UserEntity) {
-    return this.boardService.findShared(user.id);
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
+  @Get()
+  getAllBoards(@User() user: UserEntity) {
+    return this.boardService.findAll(user.id);
   }
 
-  @RequiresPermission('VIEW', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Get(`/permission/:${ACCESS_OBJECT.BOARD}`)
   getBoardPermission(
     @User() user: UserEntity,
@@ -50,7 +55,7 @@ export class BoardController {
     return this.boardService.findPermission(user.id, boardID);
   }
 
-  @RequiresPermission('VIEW', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Get(`/accessList/:${ACCESS_OBJECT.BOARD}`)
   getUserAccessList(
     @User() user: UserEntity,
@@ -70,16 +75,17 @@ export class BoardController {
     });
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Post(`/share/:${ACCESS_OBJECT.BOARD}`)
   shareBoard(
     @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
     @Body() user_permission: { user_id: IdentifyId; permission: string }[],
+    @User() user: UserEntity,
   ) {
-    return this.boardService.shareBoard(board_id, user_permission);
+    return this.boardService.shareBoard(board_id, user_permission, user.id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
   updateBoard(
     @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
@@ -88,16 +94,17 @@ export class BoardController {
     return this.boardService.updateBoard(board_id, board);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`/updateAccess/:${ACCESS_OBJECT.BOARD}`)
   updateBoardAccess(
     @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
     @Body() accessList: { user_id: IdentifyId; permission: string }[],
+    @User() user: UserEntity,
   ) {
-    return this.boardService.updateAccessBoard(board_id, accessList);
+    return this.boardService.updateAccessBoard(board_id, accessList, user.id);
   }
 
-  @RequiresPermission('MANAGE', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.MANAGER, ACCESS_OBJECT.BOARD)
   @Delete(`:${ACCESS_OBJECT.BOARD}`)
   deleteBoard(
     @Param(ACCESS_OBJECT.BOARD) id: IdentifyId,
@@ -106,7 +113,30 @@ export class BoardController {
     return this.boardService.deleteBoard(id, user.id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
+  @Delete(`deleteAccess/:${ACCESS_OBJECT.BOARD}`)
+  deleteAccessBoard(
+    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
+    @Body('userID') user_id: IdentifyId,
+  ) {
+    return this.accessService.deleteAccess(board_id, user_id);
+  }
+
+  @RequiresPermission(ROLE.OWNER, ACCESS_OBJECT.BOARD)
+  @Put(`changeOwner/:${ACCESS_OBJECT.BOARD}`)
+  changeBoardOwner(
+    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
+    @Body('new_owner') new_owner_id: IdentifyId,
+    @User() current_owner: UserEntity,
+  ) {
+    return this.boardService.changeBoardOwner(
+      board_id,
+      new_owner_id,
+      current_owner.id,
+    );
+  }
+
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Patch()
   async updateBoardPositions(
     @Body() boardPositions: { id: string; position: number }[],

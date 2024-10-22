@@ -28,16 +28,19 @@ import {
   Input,
   message,
   Modal,
+  Result,
   Tag,
   type MenuInfo,
   type MenuProps,
 } from 'components/ui';
 import { GroupList } from './components/GroupList';
-import { MENU_KEY } from 'constants/tasks';
+
+// Services
 import { getPermission } from 'services';
 
 export const Board: React.FC = () => {
   const [permission, setPermission] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
   const params = useParams();
 
   useEffect(() => {
@@ -48,12 +51,23 @@ export const Board: React.FC = () => {
           setPermission(response.data);
         })
         .catch(error => {
-          console.error('Error fetching permission:', error);
+          setIsError(true);
         });
     }
   }, [params?.boardId]);
 
-  return (
+  return isError ? (
+    <Result
+      status="403"
+      title="403"
+      subTitle="Sorry, you are not authorized to access this page."
+      extra={
+        <Button type="primary" href="/dashboard/board">
+          Back To Board List
+        </Button>
+      }
+    />
+  ) : (
     <GroupList boardId={params?.boardId ?? ''} type={'status'} permission={permission ?? ''} />
   );
 };

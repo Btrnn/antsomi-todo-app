@@ -21,7 +21,10 @@ import { UserEntity } from '@app/modules/user/user.entity';
 // Decorators
 import { Public } from '@app/decorators';
 
-@Controller('auth')
+// Constants
+import { ROUTES } from '@app/constants';
+
+@Controller(ROUTES.AUTH)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -6,9 +6,11 @@ import { IdentifyId, ServiceResponse } from 'types';
 // Models
 import { Board } from 'models';
 
-export const getAllBoards = async (type: string): Promise<ServiceResponse<Board[]>> => {
+export const getAllBoards = async (): Promise<
+  ServiceResponse<{ owned: Board[]; shared: Board[] }>
+> => {
   try {
-    const response = await axiosInstance.get(`board/${type}`);
+    const response = await axiosInstance.get('board');
     return response.data;
   } catch (error) {
     return Promise.reject(error);
@@ -72,6 +74,34 @@ export const updateAccessBoard = async (
 ): Promise<ServiceResponse<boolean>> => {
   try {
     const response = await axiosInstance.put(`board/updateAccess/${boardID}`, userPermission);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+export const changeBoardOwner = async (
+  boardID: IdentifyId,
+  newOwnerID: IdentifyId,
+): Promise<ServiceResponse<boolean>> => {
+  try {
+    const response = await axiosInstance.put(`board/changeOwner/${boardID}`, {
+      new_owner: newOwnerID,
+    });
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+export const deleteAccessBoard = async (
+  boardID: IdentifyId,
+  userID: IdentifyId,
+): Promise<ServiceResponse<boolean>> => {
+  try {
+    const response = await axiosInstance.delete(`board/deleteAccess/${boardID}`, {
+      data: { userID },
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

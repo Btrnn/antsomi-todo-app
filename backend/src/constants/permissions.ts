@@ -6,16 +6,18 @@ export const ROLE = {
   MANAGER: 'manager',
 } as const;
 
+const OWN = [ROLE.OWNER];
 const MANAGE = [ROLE.OWNER, ROLE.MANAGER];
 const EDIT = [...MANAGE, ROLE.EDITOR];
 const COMMENT = [...EDIT, ROLE.COMMENTER];
 const VIEW = [...COMMENT, ROLE.VIEWER];
 
 export const PERMISSION = {
-  MANAGE,
-  EDIT,
-  VIEW,
-  COMMENT,
+  [ROLE.OWNER]: OWN,
+  [ROLE.MANAGER]: MANAGE,
+  [ROLE.EDITOR]: EDIT,
+  [ROLE.VIEWER]: VIEW,
+  [ROLE.COMMENTER]: COMMENT,
 } as const;
 
 export const ACCESS_OBJECT = {

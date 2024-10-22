@@ -1,6 +1,10 @@
+// Libraries
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('group')
+// Constants
+import { ROUTES } from '@app/constants';
+
+@Entity(ROUTES.GROUP)
 export class GroupEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

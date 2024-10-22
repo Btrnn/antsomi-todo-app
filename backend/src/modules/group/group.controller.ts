@@ -23,19 +23,21 @@ import { IdentifyId } from '@app/types';
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
-import { ACCESS_OBJECT } from '@app/constants';
 
-@Controller('group')
+// Constants
+import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+
+@Controller(ROUTES.GROUP)
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
-  @RequiresPermission('VIEW', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Get(`:${ACCESS_OBJECT.BOARD}`)
   getAllGroups(@Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId) {
     return this.groupService.findAll(board_id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
   update(
     @Body() group: { id: IdentifyId; groupUpdated: Partial<GroupEntity> },
@@ -43,7 +45,7 @@ export class GroupController {
     return this.groupService.updateGroup(group.id, group.groupUpdated);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Post(`:${ACCESS_OBJECT.BOARD}`)
   createGroup(
     @Body() newGroup: Omit<GroupEntity, 'id' | 'owner_id'>,
@@ -55,19 +57,17 @@ export class GroupController {
     });
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Delete(`:${ACCESS_OBJECT.BOARD}`)
   deleteGroup(@Body('id') id: IdentifyId) {
     return this.groupService.deleteGroup(id);
   }
 
-  @RequiresPermission('EDIT', ACCESS_OBJECT.BOARD)
-  @Patch(`:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
+  @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
   async updateGroupPositions(
-    @Param('board_id') board_id: IdentifyId,
     @Body() groupPositions: { id: string; position: number }[],
-    @User() user: UserEntity,
   ) {
-    return this.groupService.reorderGroup(board_id, user.id, groupPositions);
+    return this.groupService.reorderGroup(groupPositions);
   }
 }

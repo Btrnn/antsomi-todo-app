@@ -1,6 +1,6 @@
 // Libraries
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Cookies } from 'react-cookie';
 import { useDispatch } from 'react-redux';
 
@@ -36,6 +36,8 @@ export const Login: React.FC = () => {
 
   // Hooks
   const { isAuthenticated, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirectPage = searchParams.get('redirect') || '/dashboard/home';
 
   // States
   const [state, setState] = useState<TState>({
@@ -59,15 +61,14 @@ export const Login: React.FC = () => {
           type: 'success',
           content: <div className="z-10">Login successfully!</div>,
         });
-        cookies.set('authToken', result.data, { path: '/', maxAge: 3600 });
-
+        cookies.set('authToken', result.data, { path: '/', maxAge: 3600 * 8 });
         const currentUser = await getUserInfo();
         dispatch(setUser(currentUser.data));
 
         setState(prev => ({ ...prev, error: '' }));
 
         setTimeout(() => {
-          navigate('/dashboard/home');
+          navigate(redirectPage, { replace: true });
         }, 1000);
       } catch (error) {
         setState(prev => ({ ...prev, error: error as string }));

@@ -18,7 +18,7 @@ import { BoardRepository } from './board.repository';
 import { AccessService } from '../share_access/share_access.service';
 import { AuthService } from '../auth/auth.service';
 import { GroupService } from '../group/group.service';
-import { ACCESS_OBJECT, OBJECT_TYPE } from '@app/constants';
+import { OBJECT_TYPE, PERMISSION, ROLE } from '@app/constants';
 import { UserEntity } from '../user/user.entity';
 
 @Injectable()
@@ -66,6 +66,17 @@ export class BoardService {
     return { data: entities, meta: { page: 1 } };
   }
 
+  async findAll(
+    userID: IdentifyId,
+  ): Promise<ServiceResponse<{ shared: BoardEntity[]; owned: BoardEntity[] }>> {
+    const owned = await this.findOwned(userID);
+    const shared = await this.findShared(userID);
+    return {
+      data: { owned: owned.data, shared: shared.data },
+      meta: { page: 1 },
+    };
+  }
+
   async findPermission(
     userID: IdentifyId,
     boardID: IdentifyId,
@@ -76,11 +87,7 @@ export class BoardService {
     if (currentBoard.owner_id === (userID as string)) {
       return { data: 'owner', meta: {} };
     }
-    const result = await this.accessService.findUserPermission(
-      userID,
-      boardID,
-      OBJECT_TYPE.BOARD,
-    );
+    const result = await this.accessService.findUserPermission(userID, boardID);
     return { data: result.data, meta: {} };
   }
 
@@ -100,8 +107,42 @@ export class BoardService {
   async shareBoard(
     board_id: IdentifyId,
     user_permission: { user_id: IdentifyId; permission: string }[],
+    user_id: IdentifyId,
   ): Promise<ServiceResponse<boolean>> {
+    const current_board = await this.boardRepository.findOneBy({
+      id: board_id as string,
+    });
+
+    let current_permission;
+    if (current_board.owner_id === user_id) {
+      current_permission = ROLE.OWNER;
+    } else {
+      current_permission = await this.accessService.findUserPermission(
+        user_id,
+        board_id,
+      );
+      current_permission = current_permission.data;
+    }
+
     for (const permission of user_permission) {
+      if (current_board.owner_id === permission.user_id) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            statusMessage: 'Cannot share board with owner',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+      if (!PERMISSION[permission.permission].includes(current_permission)) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.UNAUTHORIZED,
+            statusMessage: 'Cannot share access with higher permission',
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       await this.accessService.createAccess({
         object_id: board_id as string,
         user_id: permission.user_id as string,
@@ -115,13 +156,40 @@ export class BoardService {
   async updateAccessBoard(
     board_id: IdentifyId,
     accessList: { user_id: IdentifyId; permission: string }[],
+    user_id: IdentifyId,
   ): Promise<ServiceResponse<boolean>> {
     const entity = await this.accessService.updateAccess(
       board_id,
       OBJECT_TYPE.BOARD,
       accessList,
+      user_id,
     );
     return { data: entity.data, meta: {} };
+  }
+
+  async changeBoardOwner(
+    board_id: IdentifyId,
+    new_owner_id: IdentifyId,
+    current_owner_id: IdentifyId,
+  ): Promise<ServiceResponse<boolean>> {
+    const entity = await this.boardRepository
+      .createQueryBuilder()
+      .update(BoardEntity)
+      .set({ owner_id: new_owner_id as string })
+      .where('id = :id', { id: board_id })
+      .returning('*')
+      .execute();
+
+    if (entity.affected !== 0) {
+      await this.accessService.deleteAccess(board_id, new_owner_id);
+      await this.accessService.createAccess({
+        object_id: board_id as string,
+        user_id: current_owner_id as string,
+        permission: ROLE.EDITOR,
+        object_type: OBJECT_TYPE.BOARD,
+      });
+    }
+    return { data: entity.affected > 0, meta: {} };
   }
 
   async findUserAccessList(
@@ -131,6 +199,12 @@ export class BoardService {
       { id: string; name: string; email: string; permission: string }[]
     >
   > {
+    const currentBoard = await this.boardRepository.findOneBy({
+      id: board_id as string,
+    });
+    const board_owner = await this.dataSource.manager.findOneBy(UserEntity, {
+      id: currentBoard.owner_id,
+    });
     const userAccessList =
       await this.accessService.findUserAccessListByObjectId(
         board_id,
@@ -150,8 +224,14 @@ export class BoardService {
         id: user.id,
         name: user.name,
         email: user.email,
-        permission,
+        permission: permission,
       };
+    });
+    userDetails.unshift({
+      id: board_owner.id,
+      name: board_owner.name,
+      email: board_owner.email,
+      permission: ROLE.OWNER,
     });
     return { data: userDetails, meta: {} };
   }

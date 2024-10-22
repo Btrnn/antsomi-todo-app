@@ -2200,6 +2200,11 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
+"@tailwindcss/line-clamp@^0.4.4":
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/line-clamp/-/line-clamp-0.4.4.tgz#767cf8e5d528a5d90c9740ca66eb079f5e87d423"
+  integrity sha512-5U6SY5z8N42VtrCrKlsTAA35gy2VSyYtHWCsg1H87NU1SXnEfekTVlrga9fzUDrrHcGi2Lb5KenUWb4lRQT5/g==
+
 "@tanstack/query-core@5.59.13":
   version "5.59.13"
   resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.59.13.tgz#8c962980af174bbd446b7e9b9999f7432897df80"
@@ -9321,6 +9326,11 @@ react-beautiful-dnd@^13.1.1:
     react-redux "^7.2.0"
     redux "^4.0.4"
     use-memo-one "^1.1.1"
+
+react-click-outside-hook@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/react-click-outside-hook/-/react-click-outside-hook-1.1.1.tgz#e64d354aee463ff7c5c8dca4c5e2fd947b16df5f"
+  integrity sha512-wIPef9ik68f/Tz/0uvuOZI7hE7XLOc2moKUGWu9c68LqYS8b0D9LnR7J9i0Uc0DiXZaJENlRqZpmaYJFhjADMA==
 
 react-cookie@^7.2.0:
   version "7.2.0"

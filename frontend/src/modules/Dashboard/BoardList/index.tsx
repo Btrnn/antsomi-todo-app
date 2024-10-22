@@ -34,20 +34,19 @@ import {
   type MenuProps,
 } from 'components/ui';
 import { MENU_KEY } from 'constants/tasks';
+import { useBoardList } from 'hooks/useBoardList';
 
 export const BoardList: React.FC = () => {
   //   const params = useParams();
 
-  // Store
-  const dispatch: AppDispatch = useDispatch();
-  const ownedBoardList = useSelector((state: RootState) => state.board.ownedList);
-  const sharedBoardList = useSelector((state: RootState) => state.board.sharedList);
+  // Hooks
+  const { owned: ownedBoardList, shared: sharedBoardList } = useBoardList();
 
   return (
     <div className="flex flex-col w-full h-full">
       {/* <div className="flex text-xl">Your boards</div> */}
       <List
-        header="Your Boards"
+        header={<span className="font-bold text-lg">Your Boards</span>}
         itemLayout="horizontal"
         dataSource={ownedBoardList}
         renderItem={(item, index) => (
@@ -60,7 +59,7 @@ export const BoardList: React.FC = () => {
         )}
       />
       <List
-        header="Shared with you"
+        header={<span className="font-bold text-lg mt-4">Shared with you</span>}
         className="overflow-auto"
         itemLayout="horizontal"
         dataSource={sharedBoardList}

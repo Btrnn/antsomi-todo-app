@@ -24,22 +24,32 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: UserRepository,
   ) {}
-  async findAll(): Promise<ServiceResponse<UserEntity[]>> {
+
+  async findAll(): Promise<
+    ServiceResponse<Pick<UserEntity, 'id' | 'email' | 'name'>[]>
+  > {
     const entities = await this.userRepository.find();
+    const result = entities.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    }));
+
     return {
-      data: entities,
+      data: result,
       meta: { page: 1 },
     };
   }
 
   async findOne(
-    id: string,
-  ): Promise<ServiceResponse<Omit<UserEntity, 'id' | 'password'>>> {
+    id: IdentifyId,
+  ): Promise<ServiceResponse<Omit<UserEntity, 'password'>>> {
     const entity = await this.userRepository.findOneBy({
-      id: id,
+      id: id as string,
     });
     return {
       data: {
+        id: id as string,
         name: entity.name,
         phone_number: entity.phone_number,
         email: entity.email,

@@ -74,22 +74,6 @@ export class TaskService {
     id: IdentifyId,
     userID: IdentifyId,
   ): Promise<ServiceResponse<boolean>> {
-    const checkAuthor = await this.authService.isAcceptedPermission(
-      userID as string,
-      boardID as string,
-      PERMISSION.MANAGE,
-    );
-    if (!checkAuthor.data) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.FORBIDDEN,
-          statusMessage:
-            'Action failed: You do not have permission to perform this action.',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
     const result = await this.taskRepository
       .createQueryBuilder()
       .delete()

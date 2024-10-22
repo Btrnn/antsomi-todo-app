@@ -9,7 +9,7 @@ import { RootState } from 'store';
 import {} from 'components/icons';
 
 // Components
-import { Form, Drawer, Tabs, type TabsProps } from 'components/ui';
+import { Form, Drawer, Tabs, type TabsProps, message } from 'components/ui';
 import { TaskDetail } from './TaskDetail';
 import { SubTasks } from './SubTasks';
 import { Comments } from './Comments';
@@ -32,12 +32,31 @@ interface TaskDrawerProp {
 
 export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
   const { task, isOpen, isClose, permission } = props;
+  const [messageCreate, contextHolder] = message.useMessage();
+
+  // Stores
+  const groupList = useSelector((state: RootState) => state.group.groupList);
+
+  // Hooks
+  const [form] = Form.useForm();
+
+  // Handlers
+  const onClose = (message: string) => {
+    form.resetFields();
+    if (message !== '') {
+      messageCreate.open({
+        type: 'success',
+        content: message,
+      });
+    }
+    isClose();
+  };
 
   const items: TabsProps['items'] = [
     {
       key: MENU_KEY.KEY1,
       label: 'Overview',
-      children: <TaskDetail task={task} onClose={isClose} permission={permission} />,
+      children: <TaskDetail task={task} onClose={onClose} permission={permission} />,
     },
     {
       key: MENU_KEY.KEY2,
@@ -51,29 +70,20 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
     },
   ];
 
-  // Stores
-  const groupList = useSelector((state: RootState) => state.group.groupList);
-
-  // Hooks
-  const [form] = Form.useForm();
-
-  // Handlers
-  const onClose = () => {
-    form.resetFields();
-    isClose();
-  };
-
   return (
-    <Drawer
-      title={<div className="p-3">{task.name}</div>}
-      placement="right"
-      size={'large'}
-      onClose={onClose}
-      open={isOpen}
-      footer={<></>}
-      closeIcon={false}
-    >
-      <Tabs defaultActiveKey={MENU_KEY.KEY1} items={items} />
-    </Drawer>
+    <>
+      {contextHolder}
+      <Drawer
+        title={<div className="p-3">{task.name}</div>}
+        placement="right"
+        size={'large'}
+        onClose={isClose}
+        open={isOpen}
+        footer={<></>}
+        closeIcon={false}
+      >
+        <Tabs defaultActiveKey={MENU_KEY.KEY1} items={items} />
+      </Drawer>
+    </>
   );
 };

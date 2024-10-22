@@ -6,7 +6,9 @@ import { IdentifyId, ServiceResponse } from 'types';
 // Models
 import { User } from 'models';
 
-export const getAllUsers = async (): Promise<ServiceResponse<User[]>> => {
+export const getAllUsers = async (): Promise<
+  ServiceResponse<Pick<User, 'id' | 'email' | 'name'>[]>
+> => {
   try {
     const response = await axiosInstance.get('user');
     return response.data;
@@ -15,7 +17,7 @@ export const getAllUsers = async (): Promise<ServiceResponse<User[]>> => {
   }
 };
 
-export const getUserInfo = async (): Promise<ServiceResponse<Omit<User, 'id' | 'password'>>> => {
+export const getUserInfo = async (): Promise<ServiceResponse<Omit<User, 'password'>>> => {
   try {
     const response = await axiosInstance.get('user/info');
     return response.data;
