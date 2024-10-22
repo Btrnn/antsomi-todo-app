@@ -691,14 +691,11 @@ export const Dashboard: React.FC = () => {
 
   const onOpenChange: MenuProps["onOpenChange"] = (openKeys) => {
     const currentOpenKey = openKeys.find((key) => openList.indexOf(key) === -1);
-    console.log("🚀 ~ currentOpenKey:", currentOpenKey)
-    
 
     if (currentOpenKey !== undefined) {
       const repeatIndex = openKeys
       .filter((key) => key !== currentOpenKey)
       .findIndex((key) => levelKeys[key] === levelKeys[currentOpenKey]);
-      console.log("🚀 ~ repeatIndex:", repeatIndex);
 
       setState((prev) => ({
         ...prev,
