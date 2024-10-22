@@ -350,7 +350,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       }));
       if (updateList.length !== 0) {
         try {
-          const response = await updateAccessBoard(boardID, updateList);
+          await updateAccessBoard(boardID, updateList);
           messageCreate.open({
             type: 'success',
             content: 'Board updated',
