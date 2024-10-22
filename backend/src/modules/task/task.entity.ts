@@ -18,11 +18,11 @@ export class TaskEntity {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  start_date: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  start_date: Date | null;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  end_date: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  end_date: Date | null;
 
   @Column()
   status_id: string;

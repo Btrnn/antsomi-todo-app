@@ -6,7 +6,7 @@ import { DataSource, In } from 'typeorm';
 // Types
 import { IdentifyId, ServiceResponse } from '@app/types';
 
-// Models
+// Entities
 import { TaskEntity } from './task.entity';
 import { GroupEntity } from '../group/group.entity';
 
