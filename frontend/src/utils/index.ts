@@ -66,3 +66,24 @@ export const getDashBoardLevelKeys = (items: LevelKeysProps[]) => {
   getLevelKeyList(items);
   return key;
 };
+
+export function getParentKeys(
+  items: LevelKeysProps[],
+  parentKeys: string[] = [],
+): { key: string | undefined; path: string[] }[] {
+  let result: { key: string | undefined; path: string[] }[] = [];
+
+  for (const item of items) {
+    const currentPath = [...parentKeys, item.key ?? ''];
+    result.push({
+      key: item.key,
+      path: currentPath.filter(Boolean),
+    });
+
+    if (item.children && item.children.length > 0) {
+      result = result.concat(getParentKeys(item.children, currentPath));
+    }
+  }
+
+  return result;
+}

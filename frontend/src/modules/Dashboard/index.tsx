@@ -77,6 +77,7 @@ import {
   updateAccessBoard,
   getPermission,
 } from "services/board";
+import { getInfo } from "services";
 
 // Stores
 import {
@@ -89,11 +90,14 @@ import {
   deleteBoard,
   setPermission,
 } from "store";
-import { getInfo } from "services";
+
 import { IdentifyId } from "types";
 import { ShareAccessModal } from "components/common";
-import { checkAuthority, getDashBoardLevelKeys } from "utils";
-import { useBoardList } from "hooks/useBoardList";
+import { checkAuthority, getDashBoardLevelKeys, getParentKeys } from "utils";
+
+// Hooks
+import { useBoardList } from "hooks";
+
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
@@ -106,7 +110,7 @@ type TState = {
   inputBoardName: string;
   isRename: boolean;
   boardNewName: string | undefined;
-  boardSelected: string;
+  objectSelected: string;
   isAdding: boolean;
   isSharing: boolean;
   boardSharedName: string;
@@ -125,14 +129,16 @@ type TState = {
   userPermission: string;
   selectedPath: { title: string }[];
   isLoading: boolean;
+  openList: string[];
 };
 
-const { Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 export const Dashboard: React.FC = () => {
   const [messageCreate, contextHolder] = message.useMessage();
   const navigate = useNavigate();
+
+  
 
   // State
   const [state, setState] = useState<TState>({
@@ -142,7 +148,7 @@ export const Dashboard: React.FC = () => {
     inputBoardName: "",
     isRename: false,
     boardNewName: "",
-    boardSelected: "",
+    objectSelected: "",
     isAdding: false,
     isSharing: false,
     boardSharedName: "",
@@ -156,6 +162,7 @@ export const Dashboard: React.FC = () => {
     userPermission: "",
     selectedPath: [],
     isLoading: true,
+    openList: [],
   });
   const {
     isOpenSetting,
@@ -164,7 +171,7 @@ export const Dashboard: React.FC = () => {
     inputBoardName,
     boardNewName,
     isRename,
-    boardSelected,
+    objectSelected,
     isAdding,
     isSharing,
     boardSharedName,
@@ -178,16 +185,11 @@ export const Dashboard: React.FC = () => {
     userPermission,
     selectedPath,
     isLoading,
+    openList,
   } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  // const ownedBoardList = useSelector(
-  //   (state: RootState) => state.board.ownedList
-  // );
-  // const sharedBoardList = useSelector(
-  //   (state: RootState) => state.board.sharedList
-  // );
 
   //List
   const boardActionItems: MenuItem[] = [
@@ -256,12 +258,17 @@ export const Dashboard: React.FC = () => {
     let currentTitle = "Home";
     let currentKey = "";
     let isSubMenu = true;
+    let openList: string[] = [];
 
     if (pathname.includes("/home")) {
       currentTitle = DASHBOARD_NAME[DASHBOARD_KEY.HOME];
       currentKey = DASHBOARD_KEY.HOME;
       isSubMenu = false;
     } else if (pathname.includes("/board")) {
+      openList.push(DASHBOARD_KEY.BOARD)
+      if(params.boardId){
+        openList = pathList.find((path) => path.key === params.boardId)?.path || []
+      }
       currentKey = DASHBOARD_KEY.BOARD;
       currentTitle =
         [...ownedBoardList, ...sharedBoardList].find(
@@ -272,18 +279,19 @@ export const Dashboard: React.FC = () => {
     setState((prevState) => ({
       ...prevState,
       title: currentTitle,
-      selectedKey: currentKey,
-      boardSelected: params?.boardId ?? "",
+      selectedKey: params.boardId ?? currentKey,
+      objectSelected: params?.boardId ?? currentKey,
       selectedPath: isSubMenu ? [{ title: currentTitle }] : [],
+      openList: openList,
     }));
   }, [location, boardLoading]);
 
   // Handles
-  const onClickSelectBoard = async (boardID: IdentifyId) => {
+  const onClickSelectBoard = async (objectID: IdentifyId) => {
     try {
-      const userPermission = await getPermission(boardID);
+      const userPermission = await getPermission(objectID);
       dispatch(setPermission(userPermission.data));
-      navigate(`/dashboard/board/${boardID}`);
+      navigate(`/dashboard/board/${objectID}`);
       setState((prev) => ({
         ...prev,
         userPermission: userPermission.data,
@@ -296,11 +304,11 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const onClickShowBoardMenu = async (boardID: IdentifyId) => {
+  const onClickShowBoardMenu = async (objectID: IdentifyId) => {
     setState((prev) => ({
       ...prev,
       isOpenBoardMenu: true,
-      boardSelected: boardID as string,
+      objectSelected: objectID as string,
     }));
   };
 
@@ -406,7 +414,7 @@ export const Dashboard: React.FC = () => {
         setState((prev) => ({
           ...prev,
           isSharing: true,
-          boardSelected: boardID as string,
+          objectSelected: boardID as string,
           boardSharedName: boardName,
           alreadySharedList: accessList.data,
         }));
@@ -423,7 +431,7 @@ export const Dashboard: React.FC = () => {
   const onCloseShareAccessModal = async () => {
     setState((prev) => ({
       ...prev,
-      boardSelected: "",
+      objectSelected: "",
       boardSharedName: "",
       isSharing: false,
       alreadySharedList: [],
@@ -432,7 +440,7 @@ export const Dashboard: React.FC = () => {
 
   const onShareComplete = async () => {
     try {
-      const accessList = await getAccessList(boardSelected);
+      const accessList = await getAccessList(objectSelected);
       setState((prev) => ({
         ...prev,
         alreadySharedList: accessList.data,
@@ -446,12 +454,12 @@ export const Dashboard: React.FC = () => {
   };
 
   // Handle "RENAME"
-  const onClickBeginRenaming = (boardID: React.Key, boardName: string) => {
+  const onClickBeginRenaming = (objectID: React.Key, objectName: string) => {
     setState((prev) => ({
       ...prev,
       isRename: true,
-      boardSelected: boardID as string,
-      boardNewName: boardName,
+      objectSelected: objectID as string,
+      boardNewName: objectName,
     }));
   };
 
@@ -514,7 +522,7 @@ export const Dashboard: React.FC = () => {
             ...ownedBoardList.map((board) => ({
               label: (
                 <div onClick={() => onClickSelectBoard(board.id)}>
-                  {isRename && boardSelected === (board.id as string) ? (
+                  {isRename && objectSelected === (board.id as string) ? (
                     <Input
                       className="w-full h-full p-0"
                       style={{
@@ -550,7 +558,7 @@ export const Dashboard: React.FC = () => {
                         placement="bottomLeft"
                         open={
                           isOpenBoardMenu &&
-                          (board.id as string) === boardSelected
+                          (board.id as string) === objectSelected
                         }
                         trigger={["click"]}
                         onOpenChange={(visible) => {
@@ -612,7 +620,7 @@ export const Dashboard: React.FC = () => {
           children: sharedBoardList.map((board) => ({
             label: (
               <div onClick={() => onClickSelectBoard(board.id)}>
-                {isRename && boardSelected === (board.id as string) ? (
+                {isRename && objectSelected === (board.id as string) ? (
                   <Input
                     className="w-full h-full p-0 border-none"
                     style={{
@@ -648,7 +656,7 @@ export const Dashboard: React.FC = () => {
                       placement="bottomLeft"
                       open={
                         isOpenBoardMenu &&
-                        (board.id as string) === boardSelected
+                        (board.id as string) === objectSelected
                       }
                       trigger={["click"]}
                       onOpenChange={(visible) => {
@@ -679,6 +687,30 @@ export const Dashboard: React.FC = () => {
 
   // Utils
   const levelKeys = getDashBoardLevelKeys(dashBoardItems as LevelKeysProps[]);
+  const pathList = getParentKeys(dashBoardItems as LevelKeysProps[]);
+
+  const onOpenChange: MenuProps["onOpenChange"] = (openKeys) => {
+    const currentOpenKey = openKeys.find((key) => openList.indexOf(key) === -1);
+    console.log("🚀 ~ currentOpenKey:", currentOpenKey)
+    
+
+    if (currentOpenKey !== undefined) {
+      const repeatIndex = openKeys
+      .filter((key) => key !== currentOpenKey)
+      .findIndex((key) => levelKeys[key] === levelKeys[currentOpenKey]);
+      console.log("🚀 ~ repeatIndex:", repeatIndex);
+
+      setState((prev) => ({
+        ...prev,
+        openList: openKeys
+          .filter((_, index) => index !== repeatIndex)
+          .filter((key) => levelKeys[key] <= levelKeys[currentOpenKey]),
+      }));
+    } else {
+      setState((prev) => ({ ...prev, openList: openKeys }));
+    }
+  };
+
   return (
     <Layout className="h-screen">
       {contextHolder}
@@ -689,6 +721,7 @@ export const Dashboard: React.FC = () => {
         width={"15vw"}
         style={{
           boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)",
+          zIndex: 1000,
         }}
         className="h-screen"
       >
@@ -703,11 +736,13 @@ export const Dashboard: React.FC = () => {
               <Menu
                 mode="inline"
                 defaultSelectedKeys={[DASHBOARD_KEY.HOME]}
-                defaultOpenKeys={[DASHBOARD_KEY.HOME]}
-                selectedKeys={[boardSelected]}
+                //defaultOpenKeys={[DASHBOARD_KEY.HOME]}
+                selectedKeys={[objectSelected]}
                 // onClick={onClick}
+                openKeys={openList}
+                onOpenChange={onOpenChange}
                 items={dashBoardItems}
-                onSelect={(e) => console.log(e)}
+                //onSelect={(e) => console.log(e)}
                 style={{ borderInlineEnd: "0px" }}
               />
             </div>
@@ -720,7 +755,7 @@ export const Dashboard: React.FC = () => {
         onClose={onCloseShareAccessModal}
         object={"board"}
         objectName={boardSharedName}
-        objectID={boardSelected}
+        objectID={objectSelected}
         accessList={alreadySharedList}
         onShare={onShareComplete}
         permission={userPermission}

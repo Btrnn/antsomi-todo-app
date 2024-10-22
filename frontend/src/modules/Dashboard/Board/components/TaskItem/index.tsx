@@ -162,6 +162,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
           disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
         >
           <Card
+            key={task.id}
             className="flex justify-between overflow-hidden mb-3 p-[5px] w-full"
             onClick={() => onClickShowDetail(task.id)}
             id={String(task.id)}
@@ -192,6 +193,11 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
                 {task.assignee_id !== '' && (
                   <Tag bordered={false} className="justify-center">
                     {userList.find(user => user.id === task.assignee_id)?.name}
+                  </Tag>
+                )}
+                {task.est_time !== '' && (
+                  <Tag bordered={false} className="justify-center bg-transparent">
+                    {task.est_time}
                   </Tag>
                 )}
               </div>

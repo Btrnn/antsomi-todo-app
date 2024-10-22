@@ -1,38 +1,9 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-
-// Icons
-import {
-  AddFilledIcon,
-  AddIcon,
-  ClearIcon,
-  ColorIcon,
-  DeleteIcon,
-  DragIcon,
-  EditIcon,
-  MoreIcon,
-} from 'components/icons';
-
-// Stores
-import { AppDispatch, RootState } from 'store';
 
 // Components
-import {
-  Button,
-  Card,
-  Color,
-  ColorPicker,
-  Dropdown,
-  Input,
-  message,
-  Modal,
-  Result,
-  Tag,
-  type MenuInfo,
-  type MenuProps,
-} from 'components/ui';
+import { Button, Result } from 'components/ui';
 import { GroupList } from './components/GroupList';
 
 // Services

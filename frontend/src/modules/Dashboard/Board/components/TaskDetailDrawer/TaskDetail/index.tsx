@@ -59,8 +59,8 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
   useEffect(() => {
     form.setFieldsValue({
       ...task,
-      start_date: dayjs(task.start_date),
-      end_date: dayjs(task.end_date),
+      start_date: task.start_date ? dayjs(task.start_date) : undefined,
+      end_date: task.end_date ? dayjs(task.end_date) : undefined,
       created_at: dayjs(task.created_at),
     });
   }, [task, form]);
@@ -134,10 +134,10 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
           />
         </Form.Item>
         <Form.Item<FormType> label="Start Date:" name="start_date">
-          <DatePicker />
+          <DatePicker placeholder="Start Date" />
         </Form.Item>
         <Form.Item<FormType> label="End Date:" name="end_date">
-          <DatePicker />
+          <DatePicker placeholder="End Date" />
         </Form.Item>
         <Flex gap={10} justify="right">
           <Form.Item>
