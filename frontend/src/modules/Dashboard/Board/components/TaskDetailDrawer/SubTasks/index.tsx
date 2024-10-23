@@ -18,14 +18,17 @@ import { Task } from 'models';
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
 
+// Types
+import { IdentifyId } from 'types';
+
 interface SubTaskProp {
-  task: Task;
+  taskID: IdentifyId;
 }
 
 type FormType = Task;
 
 export const SubTasks: React.FC<SubTaskProp> = props => {
-  const { task } = props;
+  const { taskID } = props;
 
   // Store
   const dispatch: AppDispatch = useDispatch();

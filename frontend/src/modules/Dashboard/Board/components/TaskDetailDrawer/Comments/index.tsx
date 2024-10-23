@@ -18,14 +18,17 @@ import { Task } from 'models';
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
 
+// Types
+import { IdentifyId } from 'types';
+
 interface CommentProp {
-  task: Task;
+  taskID: IdentifyId;
 }
 
 type FormType = Task;
 
 export const Comments: React.FC<CommentProp> = props => {
-  const { task } = props;
+  const { taskID } = props;
 
   // Store
   const dispatch: AppDispatch = useDispatch();

@@ -2,33 +2,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
-import { Modal, Input, List, Select, message, Tag, AutoComplete, Typography } from '../../ui';
-import { AddIcon, CloseIcon, DeleteIcon, SwitchUserIcon } from '../../icons';
+import { Select, Typography } from '../../ui';
+import { DeleteIcon, SwitchUserIcon } from '../../icons';
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
 
-// Services
-import {
-  changeBoardOwner,
-  deleteAccessBoard,
-  getAllUsers,
-  getInfo,
-  shareBoard,
-  updateAccessBoard,
-} from 'services';
-
 // Utils
 import { checkAuthority } from 'utils';
-
-// Hooks
-import { useLoggedUser, useUserList } from 'hooks';
 
 interface AccessDropDownProp {
   onSelect: (role: string) => void;
   permission: string;
   currentRole: string;
   disable: boolean;
+  isAbleToChangeOwnerAndDelete: boolean;
+  onEnter: () => void;
 }
 
 const { Text } = Typography;
@@ -38,7 +27,8 @@ type TState = {
 };
 
 export const AccessDropDown: React.FC<AccessDropDownProp> = props => {
-  const { onSelect, permission, currentRole, disable } = props;
+  const { onSelect, permission, currentRole, disable, isAbleToChangeOwnerAndDelete, onEnter } =
+    props;
 
   // States
   const [state, setState] = useState<TState>({
@@ -72,6 +62,12 @@ export const AccessDropDown: React.FC<AccessDropDownProp> = props => {
   // Handles
   const onChangeRole = (value: string) => {
     onSelect(value);
+  };
+
+  const onPressKey = (event: React.KeyboardEvent<HTMLDivElement> | undefined) => {
+    if (event?.key === 'Enter') {
+      onEnter();
+    }
   };
 
   //   const onChangeRoleExistedList = (value: string, index: number) => {
@@ -122,34 +118,38 @@ export const AccessDropDown: React.FC<AccessDropDownProp> = props => {
 
   return (
     <Select
-      className="w-[120px]"
+      onKeyDown={onPressKey}
+      className="w-[110px] shrink-0"
       value={selectedRole}
-      virtual={false}
+      //virtual={false}
       disabled={disable}
       onChange={onChangeRole}
       options={[
         ...roleOptions,
-        ...(checkAuthority(permission, PERMISSION.owner)
+        ...(isAbleToChangeOwnerAndDelete
           ? [
+              ...(checkAuthority(permission, PERMISSION.owner)
+                ? [
+                    {
+                      value: 'change owner',
+                      Icon: SwitchUserIcon,
+                      label: 'Change owner',
+                    },
+                  ]
+                : []),
               {
-                value: 'change owner',
-                Icon: SwitchUserIcon,
-                label: 'Change owner',
+                value: 'delete',
+                Icon: DeleteIcon,
+                className: 'text-red-500',
+                label: 'Delete Access',
               },
             ]
           : []),
-        {
-          value: 'delete',
-          Icon: DeleteIcon,
-          className: 'text-red-500',
-          label: 'Delete Access',
-        },
       ]}
       optionRender={option => {
         const { Icon, label, className } = (option.data as any) || {};
-
         return (
-          <Text ellipsis={{ tooltip: true }} className={`${className} w-full`}>
+          <Text ellipsis={{ tooltip: { placement: 'left' } }} className={`${className} w-full`}>
             {Icon ? <Icon className="mr-2 my-2 shrink-0" /> : null}
             {label}
           </Text>

@@ -8,6 +8,7 @@ import { GroupList } from './components/GroupList';
 
 // Services
 import { getPermission } from 'services';
+import { TaskDrawer } from './components/TaskDetailDrawer';
 
 export const Board: React.FC = () => {
   const [permission, setPermission] = useState<string | null>(null);
@@ -39,6 +40,10 @@ export const Board: React.FC = () => {
       }
     />
   ) : (
-    <GroupList boardId={params?.boardId ?? ''} type={'status'} permission={permission ?? ''} />
+    <>
+      {' '}
+      <GroupList boardId={params?.boardId ?? ''} type={'status'} permission={permission ?? ''} />
+      <TaskDrawer permission={permission ?? ''} />
+    </>
   );
 };

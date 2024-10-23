@@ -1,8 +1,9 @@
 // Libraries
 import { useSelector, useDispatch } from 'react-redux';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
-//Providers
+// Stores
 import { RootState } from 'store';
 
 // Icons
@@ -22,34 +23,55 @@ import { updateTask as updatedTaskAPI } from 'services/task';
 
 // Constants
 import { MENU_KEY } from 'constants/tasks';
+import { useTaskList } from 'hooks/useTaskList';
 
 interface TaskDrawerProp {
-  task: Task;
-  isOpen: boolean;
-  isClose: () => void;
   permission: string;
 }
 
+interface TState {
+  task: Task | undefined;
+  isDrawerOpen: boolean;
+}
+
 export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
-  const { task, isOpen, isClose, permission } = props;
+  const { permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
-  // Stores
-  const groupList = useSelector((state: RootState) => state.group.groupList);
+  // States
+  const [state, setState] = useState<TState>({
+    task: undefined,
+    isDrawerOpen: false,
+  });
+
+  const { task, isDrawerOpen } = state;
 
   // Hooks
-  const [form] = Form.useForm();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  //const { taskList, isLoading } = useTaskList(params.boardId || '');
+
+  // Stores
+  const taskList = useSelector((state: RootState) => state.task.taskList);
+
+  // Effects
+  useEffect(() => {
+    // if (!isLoading) {
+    //   const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
+    //   if (taskInfo) {
+    //     setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
+    //   }
+    // }
+    const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
+      if (taskInfo) {
+        setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
+      }
+  }, [searchParams]);
 
   // Handlers
-  const onClose = (message: string) => {
-    form.resetFields();
-    if (message !== '') {
-      messageCreate.open({
-        type: 'success',
-        content: message,
-      });
-    }
-    isClose();
+  const onClose = () => {
+    setSearchParams({});
+    setState(prev => ({ ...prev, isDrawerOpen: false }));
   };
 
   const items: TabsProps['items'] = [
@@ -61,29 +83,26 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
     {
       key: MENU_KEY.KEY2,
       label: 'Subtasks',
-      children: <SubTasks task={task} />,
+      children: <SubTasks taskID={searchParams.get('taskId') || ''} />,
     },
     {
       key: MENU_KEY.KEY3,
       label: 'Comments',
-      children: <Comments task={task} />,
+      children: <Comments taskID={searchParams.get('taskId') || ''} />,
     },
   ];
 
   return (
-    <>
-      {contextHolder}
-      <Drawer
-        title={<div className="p-3">{task.name}</div>}
-        placement="right"
-        size={'large'}
-        onClose={isClose}
-        open={isOpen}
-        footer={<></>}
-        closeIcon={false}
-      >
-        <Tabs defaultActiveKey={MENU_KEY.KEY1} items={items} />
-      </Drawer>
-    </>
+    <Drawer
+      title={<div className="p-3">{task ? task.name : ''}</div>}
+      placement="right"
+      size={'large'}
+      onClose={onClose}
+      open={isDrawerOpen}
+      footer={<></>}
+      closeIcon={false}
+    >
+      <Tabs defaultActiveKey={MENU_KEY.KEY1} items={items} />
+    </Drawer>
   );
 };
