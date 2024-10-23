@@ -49,24 +49,24 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
   // Hooks
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  //const { taskList, isLoading } = useTaskList(params.boardId || '');
+  const { taskList, isLoading } = useTaskList(params.boardId || '');
 
   // Stores
-  const taskList = useSelector((state: RootState) => state.task.taskList);
+  //const taskList = useSelector((state: RootState) => state.task.taskList);
 
   // Effects
   useEffect(() => {
-    // if (!isLoading) {
-    //   const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
-    //   if (taskInfo) {
-    //     setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
-    //   }
-    // }
-    const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
+    if (!isLoading) {
+      const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
       if (taskInfo) {
         setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
       }
-  }, [searchParams]);
+    }
+    // const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
+    //   if (taskInfo) {
+    //     setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
+    //   }
+  }, [searchParams, isLoading]);
 
   // Handlers
   const onClose = () => {

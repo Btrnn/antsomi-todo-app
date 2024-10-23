@@ -40,11 +40,6 @@ export class TaskController {
     return this.taskService.findAll(user.id, boardID);
   }
 
-  // @Get(':id')
-  // getTaskById(@Param('id') id: IdentifyId) {
-  //   return this.taskService.findOne(id);
-  // }
-
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
   update(@Body() task: Partial<TaskEntity>) {
