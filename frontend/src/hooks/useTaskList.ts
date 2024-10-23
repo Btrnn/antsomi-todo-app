@@ -7,7 +7,7 @@ export const useTaskList = (boardId: IdentifyId) => {
 
   useEffect(() => {
     refetch();
-  }, [boardId]);
+  }, [boardId, refetch]);
 
   return {
     taskList: taskList?.data || [],
