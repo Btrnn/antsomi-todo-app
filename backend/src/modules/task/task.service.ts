@@ -25,6 +25,7 @@ export class TaskService {
     private readonly dataSource: DataSource,
     private readonly authService: AuthService,
   ) {}
+
   async findAll(
     userID: IdentifyId,
     boardID: IdentifyId,
@@ -124,17 +125,6 @@ export class TaskService {
     const currentTask = await this.taskRepository.findOneBy({
       id: tasksPosition[0].id,
     });
-
-    // if (currentTask.owner_id !== (userId as string)) {
-    //   throw new HttpException(
-    //     {
-    //       statusCode: HttpStatus.FORBIDDEN,
-    //       statusMessage:
-    //         'Update failed: You do not have permission to perform this action.',
-    //     },
-    //     HttpStatus.FORBIDDEN,
-    //   );
-    // }
     for (const { id, position } of tasksPosition) {
       await this.taskRepository.update({ id }, { position });
     }

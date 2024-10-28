@@ -429,28 +429,16 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                     onClick={onClickStartSearchInputUser}
                   />
                 </AutoComplete>
-
-                {/* <Input
-                  className="p-2 outline-none shadow-none"
-                  placeholder="Enter users email to share access"
-                  value={inputUser}
-                  onChange={onChangeInputUser}
-                  onPressEnter={onClickAddUser}
-                /> */}
-                <Select
-                  className="w-[120px] shrink-0"
-                  value={selectedRole}
-                  onChange={onChangeRole}
-                  options={roleOptions}
-                  optionRender={option => {
-                    const { Icon, label, className } = (option.data as any) || {};
-
-                    return (
-                      <Text ellipsis={{ tooltip: true }} className={`${className} w-full`}>
-                        {Icon ? <Icon className="mr-2 my-2 shrink-0" /> : null}
-                        {label}
-                      </Text>
-                    );
+                <AccessDropDown
+                  onSelect={role => {
+                    onChangeRole(role);
+                  }}
+                  permission={permission}
+                  currentRole={selectedRole}
+                  disable={false}
+                  isAbleToChangeOwnerAndDelete={false}
+                  onEnter={() => {
+                    onClickAddUser();
                   }}
                 />
               </div>
@@ -470,13 +458,17 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                 renderItem={(user, index) => (
                   <List.Item className="h-full overflow-auto p-2">
                     <List.Item.Meta title={user.name} description={user.email} />
-                    <Select
-                      value={user.role}
-                      className="w-[120px] h-full mr-3"
-                      onChange={value => onChangeRoleAddingList(value, index)}
-                      options={roleOptions}
+                    <AccessDropDown
+                      onSelect={role => {
+                        onChangeRoleAddingList(role, index);
+                      }}
+                      permission={permission}
+                      currentRole={user.role}
+                      disable={false}
+                      isAbleToChangeOwnerAndDelete={false}
+                      onEnter={() => {}}
                     />
-                    <CloseIcon onClick={() => onClickRemoveUser(user.id)} />
+                    <CloseIcon className="ml-2" onClick={() => onClickRemoveUser(user.id)} />
                   </List.Item>
                 )}
               />
@@ -510,6 +502,8 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
                       permission={permission}
                       currentRole={user.permission}
                       disable={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
+                      isAbleToChangeOwnerAndDelete={true}
+                      onEnter={() => {}}
                     />
                   )}
                 </List.Item>

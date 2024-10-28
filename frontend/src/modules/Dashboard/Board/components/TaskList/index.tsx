@@ -6,7 +6,6 @@ import { useDispatch } from 'react-redux';
 // Components
 import { message } from 'components/ui';
 import { TaskItem } from '../TaskItem';
-import { TaskDrawer } from '../TaskDetailDrawer';
 
 // Models
 import { Task } from 'models';
@@ -27,40 +26,14 @@ interface TaskListProps {
   permission: string;
 }
 
-type TState = {
-  error: string;
-  isOpen: boolean;
-  selectedTask: Task | undefined;
-};
-
 export const TaskList: React.FC<TaskListProps> = props => {
   const { group, taskList, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
-
-  // State
-  const [state, setState] = useState<TState>({
-    error: '',
-    isOpen: false,
-    selectedTask: undefined,
-  });
-  const { error, isOpen, selectedTask } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
 
   // Handlers
-  const onClickShowTaskDetail = (taskID: React.Key) => {
-    setState(prev => ({
-      ...prev,
-      isOpen: true,
-      selectedTask: taskList.find(task => task.id === taskID),
-    }));
-  };
-
-  const onCloseTaskDetail = () => {
-    setState(prev => ({ ...prev, isOpen: false, selectedTask: undefined }));
-  };
-
   const onDeleteTask = async (id: React.Key) => {
     try {
       deleteTask(group.board_id, id);
@@ -84,7 +57,6 @@ export const TaskList: React.FC<TaskListProps> = props => {
           <TaskItem
             key={task.id}
             task={task}
-            onClickShowDetail={() => onClickShowTaskDetail(task.id)}
             groupInfo={{
               groupID: group.id,
               groupName: group.name,
@@ -112,15 +84,6 @@ export const TaskList: React.FC<TaskListProps> = props => {
         <div key={group.id} className="items-center w-full">
           {renderTasks(taskList)}
         </div>
-        <div className="text-red-400">{error}</div>
-        {selectedTask && (
-          <TaskDrawer
-            task={selectedTask}
-            isOpen={isOpen}
-            isClose={onCloseTaskDetail}
-            permission={permission}
-          />
-        )}
       </SortableContext>
     </div>
   );

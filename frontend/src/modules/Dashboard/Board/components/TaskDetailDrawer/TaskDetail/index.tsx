@@ -1,7 +1,9 @@
 // Libraries
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { debounce } from 'lodash';
 
 //Providers
 import { RootState, AppDispatch, updateTask } from 'store';
@@ -27,16 +29,19 @@ import { Task } from 'models';
 
 // Services
 import { updateTask as updatedTaskAPI } from 'services/task';
+
+// Utils
 import { checkAuthority } from 'utils';
+
+// Constants
 import { PERMISSION, ROLE_KEY } from 'constants/role';
-import { useParams } from 'react-router-dom';
-import TextArea from 'antd/es/input/TextArea';
-import { getAllUsers } from 'services';
+
+// Hooks
 import { useUserList } from 'hooks/useUserList';
 
 interface TaskDetailProp {
-  task: Task;
-  onClose: (message: string) => void;
+  task: Task | undefined;
+  onClose: () => void;
   permission: string;
 }
 
@@ -48,29 +53,36 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const groupList = useSelector((state: RootState) => state.group.groupList);
 
   // Hooks
   const [form] = Form.useForm();
   const params = useParams();
   const { list: userList } = useUserList();
+  const debounceUpdateTask = useCallback(
+    debounce(() => form.submit(), 1000),
+    [form],
+  );
 
   // Effects
   useEffect(() => {
-    form.setFieldsValue({
-      ...task,
-      start_date: task.start_date ? dayjs(task.start_date) : undefined,
-      end_date: task.end_date ? dayjs(task.end_date) : undefined,
-      created_at: dayjs(task.created_at),
-    });
+    if (task) {
+      form.setFieldsValue({
+        ...task,
+        assignee: task.assignee_id !== '' ? task.assignee_id : null,
+        start_date: task.start_date ? dayjs(task.start_date) : undefined,
+        end_date: task.end_date ? dayjs(task.end_date) : undefined,
+        created_at: dayjs(task.created_at),
+      });
+    }
   }, [task, form]);
 
   // Handlers
   const onFinishForm = (values: FormType) => {
     const boardId = params?.boardId ?? '';
-    dispatch(updateTask({ id: String(task.id), updatedTask: values }));
-    updatedTaskAPI(boardId, { ...values, id: task.id });
-    onClose('Task updated!');
+    if (task) {
+      dispatch(updateTask({ id: String(task.id), updatedTask: values }));
+      updatedTaskAPI(boardId, { ...values, id: task.id });
+    }
   };
 
   return (
@@ -88,8 +100,8 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         layout="horizontal"
         labelAlign="left"
         form={form}
+        onValuesChange={debounceUpdateTask}
         onFinish={onFinishForm}
-        onBlur={() => onFinishForm}
         disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}
       >
         <Form.Item<FormType>
@@ -100,7 +112,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
           <Input placeholder="Enter a brief, clear title for the task" />
         </Form.Item>
         <Form.Item<FormType> label="Description:" name="description">
-          <TextArea
+          <Input.TextArea
             placeholder="Provide a detailed explanation of the task"
             autoSize={{ minRows: 2, maxRows: 8 }}
           />
@@ -139,16 +151,6 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         <Form.Item<FormType> label="End Date:" name="end_date">
           <DatePicker placeholder="End Date" />
         </Form.Item>
-        <Flex gap={10} justify="right">
-          <Form.Item>
-            <Button onClick={() => onClose('')}>Cancel</Button>
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={() => form.submit()}>
-              Save
-            </Button>
-          </Form.Item>
-        </Flex>
       </Form>
     </>
   );

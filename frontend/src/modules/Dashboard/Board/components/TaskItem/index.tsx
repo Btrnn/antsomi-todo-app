@@ -3,9 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useSearchParams } from 'react-router-dom';
 
-//Providers
-import { RootState, AppDispatch, deleteTask } from 'store';
+// Stores
+import { AppDispatch, deleteTask } from 'store';
 
 // Icons
 import { DeleteIcon, EditIcon } from 'components/icons';
@@ -26,8 +27,12 @@ import { Task } from 'models';
 
 // Constants
 import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
-import { checkAuthority } from 'utils';
 import { PERMISSION, ROLE_KEY } from 'constants/role';
+
+// Utils
+import { checkAuthority } from 'utils';
+
+// Hooks
 import { useUserList } from 'hooks/useUserList';
 
 interface TaskItemProp {
@@ -38,7 +43,6 @@ interface TaskItemProp {
     textColor: string;
   };
   task: Task | undefined;
-  onClickShowDetail: (taskIndex: React.Key) => void;
   isOverlay: boolean;
   onDelete: (id: React.Key) => Promise<void>;
   permission: string;
@@ -49,7 +53,7 @@ type TState = {
 };
 
 export const TaskItem: React.FC<TaskItemProp> = props => {
-  const { groupInfo, task, onClickShowDetail, isOverlay, onDelete, permission } = props;
+  const { groupInfo, task, isOverlay, onDelete, permission } = props;
 
   // Hooks
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -57,6 +61,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     data: { groupID: groupInfo.groupID, type: SORTABLE_TYPE.TASK },
   });
   const { list: userList } = useUserList();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -70,7 +75,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
 
   const onClickAction = (event: MenuInfo, taskID: React.Key) => {
     if (event.key === MENU_KEY.KEY2) {
-      onClickShowDetail(taskID);
+      setSearchParams({ taskId: taskID as string });
     }
   };
 
@@ -79,6 +84,10 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
       dispatch(deleteTask({ id: task?.id }));
       onDelete(task.id);
     }
+  };
+
+  const onClickShowDetail = (taskID: React.Key) => {
+    setSearchParams({ taskId: taskID as string });
   };
 
   const onMouseDown: React.MouseEventHandler<HTMLDivElement> = event => {
@@ -99,7 +108,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     if (timeoutId && task) {
       clearTimeout(timeoutId);
       setState(prev => ({ ...prev, timeoutId: null }));
-      onClickShowDetail(task.id);
+      setSearchParams({ taskId: task.id as string });
     }
   };
 

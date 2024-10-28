@@ -1,4 +1,4 @@
-import { useGetBoardList } from 'queries/Board';
+import { useGetBoardList } from 'queries';
 
 export const useBoardList = () => {
   const { data: boardList, isLoading, error } = useGetBoardList();

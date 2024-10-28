@@ -1,6 +1,6 @@
 // Libraries
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   DndContext,
   DragOverlay,
@@ -13,20 +13,17 @@ import {
   DragStartEvent,
   DropAnimation,
   defaultDropAnimationSideEffects,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { useOutletContext } from "react-router-dom";
+} from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { useOutletContext } from 'react-router-dom';
 
 // Icons
-import { AddIcon } from "components/icons";
+import { AddIcon } from 'components/icons';
 
 // Components
-import { Button, Input, Flex, message } from "components/ui";
-import { TaskItem } from "../TaskItem";
-import { GroupItem } from "../GroupItem";
+import { Button, Input, Flex, message } from 'components/ui';
+import { TaskItem } from '../TaskItem';
+import { GroupItem } from '../GroupItem';
 
 // Providers
 import {
@@ -39,32 +36,32 @@ import {
   setTaskList,
   reorderTaskAsync,
   reorderGroupAsync,
-} from "store";
+} from 'store';
 
 // Constants
-import { SORTABLE_TYPE } from "constants/tasks";
-import { PERMISSION, ROLE_KEY } from "constants/role";
+import { SORTABLE_TYPE } from 'constants/tasks';
+import { PERMISSION, ROLE_KEY } from 'constants/role';
 
 // Services
 import {
   createGroup,
   deleteGroup as deleteGroupAPI,
   getGroupList as getGroupListAPI,
-} from "services/group";
-import { getAllTasks, updateTask as updatedTaskAPI } from "services/task";
+} from 'services/group';
+import { getAllTasks, updateTask as updatedTaskAPI } from 'services/task';
 
 // Models
-import { Group } from "models";
-import { Task } from "models";
+import { Group } from 'models';
+import { Task } from 'models';
 
 // Utils
-import { checkAuthority, getContrastTextColor } from "utils";
+import { checkAuthority, getContrastTextColor } from 'utils';
+import { useTaskList } from 'hooks/useTaskList';
 
 interface GroupsProps {
   type: string;
   permission: string;
   boardId: React.Key;
-  
 }
 
 type TState = {
@@ -84,13 +81,13 @@ const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
       active: {
-        opacity: "0.5",
+        opacity: '0.5',
       },
     },
   }),
 };
 
-export const GroupList: React.FC<GroupsProps> = (props) => {
+export const GroupList: React.FC<GroupsProps> = props => {
   const { type, boardId, permission } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
@@ -98,21 +95,23 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
 
   // State
   const [state, setState] = useState<TState>({
-    error: "",
-    inputGroupName: "",
+    error: '',
+    inputGroupName: '',
     activeID: null,
     activeType: null,
     tempTaskList: [],
     activeInfo: undefined,
   });
 
-  const { activeID, activeType, inputGroupName, tempTaskList, activeInfo } =
-    state;
+  const { activeID, activeType, inputGroupName, tempTaskList, activeInfo } = state;
 
   // Store
   const dispatch: AppDispatch = useDispatch();
   const groupList = useSelector((state: RootState) => state.group.groupList);
   const taskList = useSelector((state: RootState) => state.task.taskList);
+
+  // Hooks
+  //const { taskList } = useTaskList(boardId);
 
   // Use Effect
   useEffect(() => {
@@ -127,14 +126,14 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       dispatch(setGroupList(fetchedGroups?.data));
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
   };
 
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({ ...prev, inputGroupName: event.target.value }));
+    setState(prev => ({ ...prev, inputGroupName: event.target.value }));
   };
 
   const onClickAddGroup = async () => {
@@ -143,32 +142,30 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         name: inputGroupName,
         position: groupList.length,
         type: type,
-        color: "#597ef7",
+        color: '#597ef7',
         board_id: boardId,
       };
       const createdGroup = await createGroup(boardId, newGroup);
       messageCreate.open({
-        type: "success",
+        type: 'success',
         content: <div className="z-10">New group added!</div>,
       });
       getGroupList();
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
-    setState((prev) => ({ ...prev, inputGroupName: "" }));
+    setState(prev => ({ ...prev, inputGroupName: '' }));
   };
 
   const onDragStart = (event: DragStartEvent) => {
     let currentInfo;
     if (event.active.data.current?.type === SORTABLE_TYPE.TASK) {
-      currentInfo = groupList.find(
-        (group) => group.id === event.active.data.current?.groupID
-      );
+      currentInfo = groupList.find(group => group.id === event.active.data.current?.groupID);
     }
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
@@ -178,7 +175,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
   };
 
   const onDragCancel = () => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       activeID: null,
       activeType: null,
@@ -221,7 +218,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         dispatch(reorderTaskAsync(boardId));
       } catch (error) {
         messageCreate.open({
-          type: "error",
+          type: 'error',
           content: error as string,
         });
       }
@@ -231,12 +228,12 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
         dispatch(reorderGroupAsync(boardId));
       } catch (error) {
         messageCreate.open({
-          type: "error",
+          type: 'error',
           content: error as string,
         });
       }
     }
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       activeID: null,
       activeType: null,
@@ -252,12 +249,12 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       dispatch(deleteGroup({ id }));
       dispatch(reorderGroupAsync(boardId));
       messageCreate.open({
-        type: "success",
+        type: 'success',
         content: <div className="z-10">Group deleted!</div>,
       });
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
@@ -269,7 +266,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       dispatch(setTaskList(fetchedTasks.data));
     } catch (error) {
       messageCreate.open({
-        type: "error",
+        type: 'error',
         content: error as string,
       });
     }
@@ -285,16 +282,12 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
       onDragOver={onDragOver}
     >
       {contextHolder}
-      <Flex
-        justify="flex-start"
-        align={"flex-start"}
-        className="gap-5 w-full h-full"
-      >
+      <Flex justify="flex-start" align={'flex-start'} className="gap-5 w-full h-full">
         <SortableContext
-          items={groupList.map((group) => String(group.id))}
+          items={groupList.map(group => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map((group) => (
+          {groupList?.map(group => (
             <GroupItem
               key={group.id}
               group={group}
@@ -312,8 +305,8 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
             <Input
               className="p-2"
               style={{
-                outline: "none",
-                boxShadow: "none",
+                outline: 'none',
+                boxShadow: 'none',
               }}
               placeholder="Add new group"
               value={inputGroupName}
@@ -331,8 +324,7 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
           activeType === SORTABLE_TYPE.TASK ? (
             activeInfo && (
               <TaskItem
-                task={taskList.find((task) => task.id === activeID)}
-                onClickShowDetail={() => {}}
+                task={taskList.find(task => task.id === activeID)}
                 groupInfo={{
                   groupColor: activeInfo.color,
                   groupID: activeInfo.id,
@@ -346,12 +338,12 @@ export const GroupList: React.FC<GroupsProps> = (props) => {
             )
           ) : (
             <GroupItem
-              group={groupList.find((group) => group.id === activeID)}
+              group={groupList.find(group => group.id === activeID)}
               allTasks={taskList}
               onDelete={async () => {}}
               isOverlay={true}
               isRearrange={false}
-              boardId={""}
+              boardId={''}
               permission={permission}
             />
           )

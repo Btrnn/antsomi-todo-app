@@ -17,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!loading) {
     if (!isAuthenticated) {
-      return <Navigate to={`/login?redirect=${location.pathname}`} replace />;
+      return <Navigate to={`/login?redirect=${location.pathname}${location.search}`} replace />;
     }
     return <>{children}</>;
   }
