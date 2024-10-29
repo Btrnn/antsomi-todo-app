@@ -58,6 +58,8 @@ interface GroupsProps {
   type: string;
   permission: string;
   boardId: React.Key;
+  groupList: Group[];
+  taskList: Task[];
 }
 
 type TState = {
@@ -79,7 +81,7 @@ const dropAnimation: DropAnimation = {
 };
 
 export const GroupList: React.FC<GroupsProps> = props => {
-  const { type, boardId, permission } = props;
+  const { type, boardId, permission, groupList, taskList } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
   const [messageCreate, contextHolder] = message.useMessage();
@@ -93,7 +95,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const { mutateAsync: reorderGroup, isError: isReorderGroupError } = useReorderGroup({ boardId });
   const { mutateAsync: reorderTask, isError: isReorderTaskError } = useReorderTask({ boardId });
   const { mutateAsync: deleteGroup, isError: isDeleteGroupError } = useDeleteGroup({ boardId });
-  const { mutateAsync: updateTask } = useUpdateTask({
+  const { mutateAsync: updateTask, isError: isUpdateTaskError } = useUpdateTask({
     boardId: boardId,
   });
 
@@ -112,16 +114,15 @@ export const GroupList: React.FC<GroupsProps> = props => {
   //const dispatch: AppDispatch = useDispatch();
 
   // Hooks
-  const { taskList } = useTaskList(boardId);
-  const { groupList } = useGroupList(boardId);
+
+  // console.log('groupList: ', { groupList });
 
   // Use Effect
   useEffect(() => {
-    //console.log({ groupList });
+    // console.log({ groupList });
   }, [groupList]);
 
   // Handlers
-
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
     setState(prev => ({ ...prev, inputGroupName: event.target.value }));
   };
@@ -178,13 +179,19 @@ export const GroupList: React.FC<GroupsProps> = props => {
       .map(task => ({ id: task.id, position: task.position }));
 
     reorderTask(positionList);
+    if (isReorderTaskError) {
+      messageCreate.open({
+        type: 'error',
+        content: 'Reorder task failed!',
+      });
+    }
     // console.log('🚀 ~ reorderTask ~ reorderedList:', positionList);
   };
 
   const onDragOverChangeTaskGroup = (source: Active, destination: Over) => {
     // Find source's information
     const sourceList = taskList.filter(task => task.status_id === source.data.current?.groupID);
-    const sourceIndex = sourceList.find(task => task.id === source.id)?.position ?? -1;
+    const sourceIndex = sourceList.findIndex(task => task.id === source.id);
 
     // Find destination's information
     let destinationList, destinationIndex;
@@ -203,9 +210,15 @@ export const GroupList: React.FC<GroupsProps> = props => {
     } else {
       updateTask({ id: source.id, status_id: destination?.id });
     }
+    if (isUpdateTaskError) {
+      messageCreate.open({
+        type: 'error',
+        content: 'Reorder task failed!',
+      });
+    }
 
     if (sourceIndex === -1) {
-      console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
+      //console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
       return;
     }
 
@@ -236,6 +249,12 @@ export const GroupList: React.FC<GroupsProps> = props => {
     }));
 
     reorderTask([...reorderedSourceList, ...reorderedDestinationList]);
+    if (isReorderTaskError) {
+      messageCreate.open({
+        type: 'error',
+        content: 'Reorder task failed!',
+      });
+    }
   };
 
   const onDragStart = (event: DragStartEvent) => {
@@ -294,34 +313,11 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    // console.log('🚀 ~ onDragEnd ~ over:', over);
-    // console.log('🚀 ~ onDragEnd ~ active:', active);
     const sourceType = active.data.current?.type;
 
     if (!over) {
       return;
     }
-
-    // if (sourceType === SORTABLE_TYPE.TASK) {
-    //   reorderTask(active, over);
-    //   // dispatch(reorderTask({ source: active, destination: over }));
-    //   // try {
-    //   //   if (over.data.current?.type === SORTABLE_TYPE.GROUP) {
-    //   //     updatedTaskAPI(boardId, { id: active.id, status_id: over.id });
-    //   //   } else {
-    //   //     updatedTaskAPI(boardId, {
-    //   //       id: active.id,
-    //   //       status_id: over.data.current?.groupID,
-    //   //     });
-    //   //   }
-    //   //   dispatch(reorderTaskAsync(boardId));
-    //   // } catch (error) {
-    //   //   messageCreate.open({
-    //   //     type: 'error',
-    //   //     content: error as string,
-    //   //   });
-    //   // }
-    // }
 
     if (sourceType === SORTABLE_TYPE.GROUP) {
       const destinationIndex = groupList.findIndex(group => group.id === over.id);
@@ -381,8 +377,6 @@ export const GroupList: React.FC<GroupsProps> = props => {
       });
     }
   };
-
-  //console.log('group 2:: ', groupList);
 
   return (
     <DndContext

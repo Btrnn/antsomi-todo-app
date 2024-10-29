@@ -126,12 +126,12 @@ export const useDeleteAccess = ({ objectId, objectType, options }: UseDeleteAcce
       queryClient.setQueryData(
         [QUERY_KEYS.GET_ACCESS_LIST, objectId],
         (
-          oldList: ServiceResponse<
+          oldData: ServiceResponse<
             { id: string; name: string; email: string; permission: string }[]
           >,
         ) => {
           return {
-            data: oldList.data.filter(access => access.id !== userId),
+            data: oldData.data.filter(access => access.id !== userId),
             meta: {},
           };
         },

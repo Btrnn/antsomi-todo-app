@@ -7,10 +7,9 @@ import { Button, Result } from 'components/ui';
 import { GroupList } from './components/GroupList';
 
 // Services
-import { getPermission } from 'services';
 import { TaskDrawer } from './components/TaskDetailDrawer';
 import { OBJECT_TYPE } from 'constants/common';
-import { usePermission } from 'hooks';
+import { useGroupList, usePermission, useTaskList } from 'hooks';
 
 export const Board: React.FC = () => {
   //const [permission, setPermission] = useState<string | null>(null);
@@ -20,18 +19,10 @@ export const Board: React.FC = () => {
   // Hooks
   const { permission, isError } = usePermission(params?.boardId ?? '', OBJECT_TYPE.BOARD);
 
-  // useEffect(() => {
-  //   const boardId = params?.boardId ?? '';
-  //   if (boardId) {
-  //     getPermission(boardId, OBJECT_TYPE.BOARD)
-  //       .then(response => {
-  //         setPermission(response.data);
-  //       })
-  //       .catch(error => {
-  //         setIsError(true);
-  //       });
-  //   }
-  // }, [params?.boardId]);
+  const { taskList } = useTaskList(params.boardId ?? '');
+  const { groupList } = useGroupList(params.boardId ?? '');
+  // console.log('🚀 ~ taskList:', taskList);
+  // console.log('🚀 ~ groupList:', groupList);
 
   return isError ? (
     <Result
@@ -46,8 +37,13 @@ export const Board: React.FC = () => {
     />
   ) : (
     <>
-      {' '}
-      <GroupList boardId={params?.boardId ?? ''} type={'status'} permission={permission ?? ''} />
+      <GroupList
+        boardId={params?.boardId ?? ''}
+        type={'status'}
+        permission={permission ?? ''}
+        taskList={taskList}
+        groupList={groupList}
+      />
       <TaskDrawer permission={permission ?? ''} />
     </>
   );

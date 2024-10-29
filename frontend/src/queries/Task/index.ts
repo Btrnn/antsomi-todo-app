@@ -216,9 +216,9 @@ export const useReorderTask = ({ boardId, options }: UseReorderTaskProps) => {
       const previousTaskList = queryClient.getQueryData([QUERY_KEYS.GET_TASK_LIST, boardId]);
       queryClient.setQueryData(
         [QUERY_KEYS.GET_TASK_LIST, boardId],
-        (oldList: ServiceResponse<Task[]>) => {
+        (oldData: ServiceResponse<Task[]>) => {
           return persistTaskMutate({
-            oldData: oldList,
+            oldData,
             positions: taskPositions,
           });
         },

@@ -150,10 +150,10 @@ export const useUpdateGroup = ({ boardId, options }: UseUpdateGroupProps) => {
       const previousGroupList = queryClient.getQueryData([QUERY_KEYS.GET_GROUP_LIST, boardId]);
       queryClient.setQueryData(
         [QUERY_KEYS.GET_GROUP_LIST, boardId],
-        (oldList: ServiceResponse<Group[]>) => {
+        (oldData: ServiceResponse<Group[]>) => {
           return persistGroupMutate({
             group: updatedGroup,
-            oldData: oldList,
+            oldData,
             groupId: updatedGroup.id,
           });
         },
@@ -181,11 +181,14 @@ export const useReorderGroup = ({ boardId, options }: UseReorderGroupProps) => {
       const previousGroupList = queryClient.getQueryData([QUERY_KEYS.GET_GROUP_LIST, boardId]);
       queryClient.setQueryData(
         [QUERY_KEYS.GET_GROUP_LIST, boardId],
-        (oldList: ServiceResponse<Group[]>) => {
-          return persistGroupMutate({
-            oldData: oldList,
+        (oldData: ServiceResponse<Group[]>) => {
+          const newData = persistGroupMutate({
+            oldData,
             positions: groupPositions,
           });
+          //console.log('🚀 ~ useReorderGroup ~ newData:', newData);
+
+          return newData;
         },
       );
       return { previousGroupList: previousGroupList as Group[] };
