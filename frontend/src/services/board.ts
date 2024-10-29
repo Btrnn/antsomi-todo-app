@@ -30,9 +30,12 @@ export const createBoard = async (board: Partial<Board>): Promise<ServiceRespons
   }
 };
 
-export const getPermission = async (boardID: IdentifyId): Promise<ServiceResponse<string>> => {
+export const getPermission = async (
+  objectID: IdentifyId,
+  objectType: string,
+): Promise<ServiceResponse<string>> => {
   try {
-    const response = await axiosInstance.get(`board/permission/${boardID}`);
+    const response = await axiosInstance.get(`${objectType}/permission/${objectID}`);
     return response.data;
   } catch (error) {
     return Promise.reject(error);
@@ -61,12 +64,13 @@ export const deleteBoard = async (boardID: IdentifyId): Promise<ServiceResponse<
   }
 };
 
-export const shareBoard = async (
-  boardID: IdentifyId,
+export const shareAccess = async (
+  objectID: IdentifyId,
+  objectType: string,
   userPermission: { user_id: IdentifyId; permission: string }[],
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.post(`board/share/${boardID}`, userPermission);
+    const response = await axiosInstance.post(`${objectType}/share/${objectID}`, userPermission);
     return response.data;
   } catch (error) {
     return Promise.reject(error);
@@ -74,23 +78,28 @@ export const shareBoard = async (
 };
 
 export const updateAccessBoard = async (
-  boardID: IdentifyId,
+  objectID: IdentifyId,
+  objectType: string,
   userPermission: { user_id: IdentifyId; permission: string }[],
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.put(`board/updateAccess/${boardID}`, userPermission);
+    const response = await axiosInstance.put(
+      `${objectType}/updateAccess/${objectID}`,
+      userPermission,
+    );
     return response.data;
   } catch (error) {
     return Promise.reject(error);
   }
 };
 
-export const changeBoardOwner = async (
-  boardID: IdentifyId,
+export const changeObjectOwner = async (
+  objectID: IdentifyId,
   newOwnerID: IdentifyId,
+  objectType: string,
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.put(`board/changeOwner/${boardID}`, {
+    const response = await axiosInstance.put(`${objectType}/changeOwner/${objectID}`, {
       new_owner: newOwnerID,
     });
     return response.data;
@@ -99,12 +108,13 @@ export const changeBoardOwner = async (
   }
 };
 
-export const deleteAccessBoard = async (
+export const deleteAccess = async (
   boardID: IdentifyId,
   userID: IdentifyId,
+  objectType: string,
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.delete(`board/deleteAccess/${boardID}`, {
+    const response = await axiosInstance.delete(`${objectType}/deleteAccess/${boardID}`, {
       data: { userID },
     });
     return response.data;
@@ -114,10 +124,11 @@ export const deleteAccessBoard = async (
 };
 
 export const getAccessList = async (
-  boardID: IdentifyId,
+  objectID: IdentifyId,
+  objectType: string,
 ): Promise<ServiceResponse<{ id: string; name: string; email: string; permission: string }[]>> => {
   try {
-    const response = await axiosInstance.get(`board/accessList/${boardID}`);
+    const response = await axiosInstance.get(`${objectType}/accessList/${objectID}`);
     return response.data;
   } catch (error) {
     return Promise.reject(error);

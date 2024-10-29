@@ -190,7 +190,7 @@ export const useReorderGroup = ({ boardId, options }: UseReorderGroupProps) => {
       );
       return { previousGroupList: previousGroupList as Group[] };
     },
-    onError: (err, updatedGroup, context) => {
+    onError: (err, groupPositions, context) => {
       queryClient.setQueryData([QUERY_KEYS.GET_GROUP_LIST, boardId], context?.previousGroupList);
     },
     onSettled: () => {

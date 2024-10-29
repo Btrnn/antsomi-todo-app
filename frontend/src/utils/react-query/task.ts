@@ -30,12 +30,12 @@ export const persistTaskMutate = ({
 
   // Case reorder, positions is exists
   if (positions) {
-    // cloneOldData.data = cloneOldData.data
-    //   .map(task => {
-    //     const updatedPosition = positions.find(pos => pos.id === task.id);
-    //     return updatedPosition ? { ...task, position: updatedPosition.position } : task;
-    //   })
-    //   .sort((a, b) => a.position - b.position);
+    cloneOldData.data = cloneOldData.data
+      .map(task => {
+        const updatedPosition = positions.find(pos => pos.id === task.id);
+        return updatedPosition ? { ...task, position: updatedPosition.position } : task;
+      })
+      .sort((a, b) => a.position - b.position);
   } else if (groupId) {
     // Case delete by groupId, groupId is exists
     cloneOldData.data = cloneOldData.data.filter(b => b.status_id !== groupId);

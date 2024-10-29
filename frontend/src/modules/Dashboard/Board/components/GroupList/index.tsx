@@ -14,7 +14,7 @@ import {
 } from '@dnd-kit/core';
 import type { Active, Over } from '@dnd-kit/core/dist/store/index';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 // Icons
@@ -40,8 +40,19 @@ import { Group, Task } from 'models';
 
 // Utils
 import { useGroupList, useTaskList } from 'hooks';
-import { useCreateGroup, useDeleteGroup, useReorderGroup, useUpdateTask } from 'queries';
-import { checkAuthority, getContrastTextColor, reorderSingleArray } from 'utils';
+import {
+  useCreateGroup,
+  useDeleteGroup,
+  useReorderGroup,
+  useReorderTask,
+  useUpdateTask,
+} from 'queries';
+import {
+  checkAuthority,
+  getContrastTextColor,
+  reorderDoubleArrays,
+  reorderSingleArray,
+} from 'utils';
 
 interface GroupsProps {
   type: string;
@@ -54,7 +65,6 @@ type TState = {
   inputGroupName: string;
   activeID: React.Key | null | undefined;
   activeType: string | null | undefined;
-  tempTaskList: Task[];
   activeInfo: Group | undefined;
 };
 
@@ -80,12 +90,8 @@ export const GroupList: React.FC<GroupsProps> = props => {
     isError: isCreateGroupError,
     error: createGroupError,
   } = useCreateGroup({ boardId });
-  //const { mutateAsync: updateTask } = useUpdateTask({ boardId });
-  const {
-    mutateAsync: reorderGroup,
-    isError: isReorderGroupError,
-    //error: reorderGroupError,
-  } = useReorderGroup({ boardId });
+  const { mutateAsync: reorderGroup, isError: isReorderGroupError } = useReorderGroup({ boardId });
+  const { mutateAsync: reorderTask, isError: isReorderTaskError } = useReorderTask({ boardId });
   const { mutateAsync: deleteGroup, isError: isDeleteGroupError } = useDeleteGroup({ boardId });
   const { mutateAsync: updateTask } = useUpdateTask({
     boardId: boardId,
@@ -97,24 +103,21 @@ export const GroupList: React.FC<GroupsProps> = props => {
     inputGroupName: '',
     activeID: null,
     activeType: null,
-    tempTaskList: [],
     activeInfo: undefined,
   });
 
-  const { activeID, activeType, inputGroupName, tempTaskList, activeInfo } = state;
+  const { activeID, activeType, inputGroupName, activeInfo } = state;
 
   // Store
-  const dispatch: AppDispatch = useDispatch();
+  //const dispatch: AppDispatch = useDispatch();
 
   // Hooks
   const { taskList } = useTaskList(boardId);
   const { groupList } = useGroupList(boardId);
 
   // Use Effect
-  useEffect(() => {}, [boardId]);
-
   useEffect(() => {
-    // console.log({ groupList });
+    //console.log({ groupList });
   }, [groupList]);
 
   // Handlers
@@ -147,9 +150,92 @@ export const GroupList: React.FC<GroupsProps> = props => {
     setState(prev => ({ ...prev, inputGroupName: '' }));
   };
 
-  const reorderTask = (source: Active, destination: Over) => {
-    // console.log('🚀 ~ reorderTask ~ destination:', destination);
-    // console.log('🚀 ~ reorderTask ~ source:', source);
+  const onDragEndReorderTask = (source: Active, destination: Over) => {
+    // Find reordered group information
+    const reorderedGroup = taskList.filter(task => task.status_id === source.data.current?.groupID);
+
+    // Find source's information
+    const sourceIndex = reorderedGroup.findIndex(task => task.id === source.id);
+
+    // Find destination's information
+    let destinationIndex;
+    if (destination.data.current?.type === SORTABLE_TYPE.GROUP) {
+      return;
+    } else {
+      destinationIndex = reorderedGroup.findIndex(task => task.id === destination.id);
+    }
+
+    const reorderedList = reorderSingleArray(reorderedGroup, sourceIndex, destinationIndex);
+    for (
+      let i = Math.min(sourceIndex, destinationIndex);
+      i <= Math.max(sourceIndex, destinationIndex);
+      i++
+    ) {
+      reorderedList[i].position = i;
+    }
+    const positionList = reorderedList
+      .slice(Math.min(sourceIndex, destinationIndex), Math.max(sourceIndex, destinationIndex) + 1)
+      .map(task => ({ id: task.id, position: task.position }));
+
+    reorderTask(positionList);
+    // console.log('🚀 ~ reorderTask ~ reorderedList:', positionList);
+  };
+
+  const onDragOverChangeTaskGroup = (source: Active, destination: Over) => {
+    // Find source's information
+    const sourceList = taskList.filter(task => task.status_id === source.data.current?.groupID);
+    const sourceIndex = sourceList.find(task => task.id === source.id)?.position ?? -1;
+
+    // Find destination's information
+    let destinationList, destinationIndex;
+    if (destination.data.current?.type === SORTABLE_TYPE.GROUP) {
+      destinationList = taskList.filter(task => task.status_id === destination.id);
+      destinationIndex = 0;
+    } else {
+      destinationList = taskList.filter(
+        task => task.status_id === destination.data.current?.groupID,
+      );
+      destinationIndex = destinationList.findIndex(task => task.id === destination.id);
+    }
+
+    if (destination.data.current?.type === SORTABLE_TYPE.TASK) {
+      updateTask({ id: source.id, status_id: destination.data.current?.groupID });
+    } else {
+      updateTask({ id: source.id, status_id: destination?.id });
+    }
+
+    if (sourceIndex === -1) {
+      console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
+      return;
+    }
+
+    // Reorder 2 lists
+    let [reorderedSourceList, reorderedDestinationList] = reorderDoubleArrays(
+      sourceList,
+      destinationList,
+      sourceIndex,
+      destinationIndex,
+    );
+    for (let i = sourceIndex; i < reorderedSourceList.length; i++) {
+      reorderedSourceList[i].position = i;
+    }
+
+    for (let i = destinationIndex; i < reorderedDestinationList.length; i++) {
+      reorderedDestinationList[i].position = i;
+    }
+
+    // Get the list of positions to be changed.
+    reorderedSourceList = reorderedSourceList.slice(sourceIndex).map(task => ({
+      id: task.id,
+      position: task.position,
+    }));
+
+    reorderedDestinationList = reorderedDestinationList.slice(destinationIndex).map(task => ({
+      id: task.id,
+      position: task.position,
+    }));
+
+    reorderTask([...reorderedSourceList, ...reorderedDestinationList]);
   };
 
   const onDragStart = (event: DragStartEvent) => {
@@ -177,26 +263,31 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    // console.log('🚀 ~ onDragOver ~ over:', over);
-    // console.log('🚀 ~ onDragOver ~ active:', active);
     if (!over) {
       return;
     }
 
-    const source = active.data.current;
-    const destination = over.data.current;
+    let destinationGroup;
 
-    if (source?.type === SORTABLE_TYPE.TASK) {
-      if (destination?.type === SORTABLE_TYPE.TASK) {
-        // console.log('task');
+    if (active.data.current?.type === SORTABLE_TYPE.TASK) {
+      // if (destination?.type === SORTABLE_TYPE.TASK) {
+      //   if (destination?.groupID !== source?.groupID) {
+      //     updateTask({ id: active.id, status_id: destination?.groupID });
+      //   }
+      // } else {
+      //   updateTask({ id: active.id, status_id: over?.id });
+      // }
 
-        if (destination?.groupID !== source?.groupID) {
-          updateTask({ id: active.id, status_id: destination?.groupID });
-        }
+      if (over.data.current?.type === SORTABLE_TYPE.GROUP) {
+        destinationGroup = over.id;
       } else {
-        // console.log('group');
-        updateTask({ id: active.id, status_id: over?.id });
+        destinationGroup = over.data.current?.groupID;
       }
+
+      if (active.data.current?.groupID !== destinationGroup) {
+        onDragOverChangeTaskGroup(active, over);
+      }
+
       //dispatch(reorderTask({ source: active, destination: over }));
     }
   };
@@ -250,7 +341,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
       }
       reorderGroup(positionList);
     } else {
-      reorderTask(active, over);
+      onDragEndReorderTask(active, over);
     }
     setState(prev => ({
       ...prev,
@@ -291,7 +382,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
     }
   };
 
-  // console.log('group 2:: ', groupList);
+  //console.log('group 2:: ', groupList);
 
   return (
     <DndContext

@@ -15,7 +15,7 @@ import { reorderSingleArray } from 'utils';
 import { reorderGroup as reorderGroupAPI } from 'services';
 import { useParams } from 'react-router-dom';
 import { Identifier } from 'typescript';
-import { useReorderGroup } from 'queries';
+import { useReorderTask } from 'queries';
 
 interface GroupState {
   groupList: Group[];

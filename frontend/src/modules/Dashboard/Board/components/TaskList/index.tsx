@@ -84,9 +84,9 @@ export const TaskList: React.FC<TaskListProps> = props => {
         items={taskList.filter(task => task.status_id === group.id).map(task => String(task.id))}
         strategy={verticalListSortingStrategy}
       >
-        <div key={group.id} className="items-center w-full">
-          {renderTasks(taskList)}
-        </div>
+        {/* <div key={group.id} className="items-center w-full"> */}
+        {renderTasks(taskList)}
+        {/* </div> */}
       </SortableContext>
     </div>
   );

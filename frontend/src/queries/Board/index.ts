@@ -11,21 +11,13 @@ import {
 import { MUTATION_KEYS, QUERY_KEYS } from 'constants/query';
 
 // Services
-import {
-  createBoard,
-  deleteBoard,
-  getAllBoards,
-  shareBoard,
-  updateBoard,
-  UpdateBoardArgs,
-} from 'services';
+import { createBoard, deleteBoard, getAllBoards, updateBoard, UpdateBoardArgs } from 'services';
 
 // Types
 import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Board } from 'models';
-import { nanoid } from 'nanoid';
 import { persistBoardMutate } from 'utils';
 
 type UseGetBoardListProps = {

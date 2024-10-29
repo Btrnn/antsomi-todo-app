@@ -11,7 +11,14 @@ import {
 import { MUTATION_KEYS, QUERY_KEYS } from 'constants/query';
 
 // Services
-import { createTask, deleteTask, deleteTaskByGroupID, getAllTasks, updateTask } from 'services';
+import {
+  createTask,
+  deleteTask,
+  deleteTaskByGroupID,
+  getAllTasks,
+  reorderTask,
+  updateTask,
+} from 'services';
 
 // Types
 import { IdentifyId, ServiceResponse } from 'types';
@@ -51,6 +58,16 @@ type UseUpdateTaskProps = {
     ServiceResponse<boolean>,
     Error,
     Partial<Task>,
+    { previousTaskList: Task[] }
+  >;
+};
+
+type UseReorderTaskProps = {
+  boardId: IdentifyId;
+  options?: UseMutationOptions<
+    ServiceResponse<boolean>,
+    Error,
+    { id: IdentifyId; position: number }[],
     { previousTaskList: Task[] }
   >;
 };
@@ -168,16 +185,47 @@ export const useUpdateTask = ({ boardId, options }: UseUpdateTaskProps) => {
       queryClient.setQueryData(
         [QUERY_KEYS.GET_TASK_LIST, boardId],
         (oldData: ServiceResponse<Task[]>) => {
-          return persistTaskMutate({
+          const newData = persistTaskMutate({
             task: updatedTask,
             oldData: oldData,
             taskId: updatedTask.id,
           });
+          return newData;
         },
       );
       return { previousTaskList: previousTaskList as Task[] };
     },
     onError: (err, updatedTask, context) => {
+      queryClient.setQueryData([QUERY_KEYS.GET_TASK_LIST, boardId], context?.previousTaskList);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_TASK_LIST, boardId] });
+    },
+    ...options,
+  });
+};
+
+export const useReorderTask = ({ boardId, options }: UseReorderTaskProps) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [MUTATION_KEYS.REORDER_TASK],
+    mutationFn: taskPositions => reorderTask(boardId, taskPositions),
+    onMutate: async taskPositions => {
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_TASK_LIST, boardId] });
+      const previousTaskList = queryClient.getQueryData([QUERY_KEYS.GET_TASK_LIST, boardId]);
+      queryClient.setQueryData(
+        [QUERY_KEYS.GET_TASK_LIST, boardId],
+        (oldList: ServiceResponse<Task[]>) => {
+          return persistTaskMutate({
+            oldData: oldList,
+            positions: taskPositions,
+          });
+        },
+      );
+      return { previousTaskList: previousTaskList as Task[] };
+    },
+    onError: (err, taskPositions, context) => {
       queryClient.setQueryData([QUERY_KEYS.GET_TASK_LIST, boardId], context?.previousTaskList);
     },
     onSettled: () => {

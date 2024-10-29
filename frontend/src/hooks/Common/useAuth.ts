@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 // Services
-import { checkAuthority } from 'services/authentication';
+import { authenticationServices } from 'services/authentication';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,7 +10,7 @@ export const useAuth = () => {
 
   const checkAuthentication = async () => {
     try {
-      const isChecked = await checkAuthority();
+      const isChecked = await authenticationServices.checkToken();
 
       if (isChecked.data) {
         setIsAuthenticated(true);

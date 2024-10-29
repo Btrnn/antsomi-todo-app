@@ -26,13 +26,6 @@ type UseGetUserByEmailProps = {
   options?: UseQueryOptions<ServiceResponse<Partial<User>>>;
 };
 
-/**
- * Get the current user's info using the `getUserInfo` service.
- *
- * @param {UseGetUserInfoProps} [props] The options for the `useQuery` hook.
- *
- * @returns {UseQueryResult<ServiceResponse<Omit<User, 'password'>>>} The result of the query.
- */
 export const useGetUserInfo = (props?: UseGetUserInfoProps) => {
   return useQuery({
     queryKey: [QUERY_KEYS.GET_USER_INFO],

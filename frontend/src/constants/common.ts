@@ -37,3 +37,7 @@ export const DASHBOARD_NAME = {
   [DASHBOARD_KEY.SHARED]: 'Shared board',
   [DASHBOARD_KEY.USER]: 'User',
 } as const;
+
+export const OBJECT_TYPE = {
+  BOARD: 'board',
+} as const;

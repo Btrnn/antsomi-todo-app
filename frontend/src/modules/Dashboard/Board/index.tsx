@@ -9,24 +9,29 @@ import { GroupList } from './components/GroupList';
 // Services
 import { getPermission } from 'services';
 import { TaskDrawer } from './components/TaskDetailDrawer';
+import { OBJECT_TYPE } from 'constants/common';
+import { usePermission } from 'hooks';
 
 export const Board: React.FC = () => {
-  const [permission, setPermission] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
+  //const [permission, setPermission] = useState<string | null>(null);
+  //const [isError, setIsError] = useState(false);
   const params = useParams();
 
-  useEffect(() => {
-    const boardId = params?.boardId ?? '';
-    if (boardId) {
-      getPermission(boardId)
-        .then(response => {
-          setPermission(response.data);
-        })
-        .catch(error => {
-          setIsError(true);
-        });
-    }
-  }, [params?.boardId]);
+  // Hooks
+  const { permission, isError } = usePermission(params?.boardId ?? '', OBJECT_TYPE.BOARD);
+
+  // useEffect(() => {
+  //   const boardId = params?.boardId ?? '';
+  //   if (boardId) {
+  //     getPermission(boardId, OBJECT_TYPE.BOARD)
+  //       .then(response => {
+  //         setPermission(response.data);
+  //       })
+  //       .catch(error => {
+  //         setIsError(true);
+  //       });
+  //   }
+  // }, [params?.boardId]);
 
   return isError ? (
     <Result

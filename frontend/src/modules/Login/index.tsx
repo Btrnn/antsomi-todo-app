@@ -11,7 +11,7 @@ import { Button, Input, Checkbox, Form, type FormProps, Col, Row, message } from
 import image from 'assets/images/background.jpg';
 
 // Services
-import { checkAuthentication } from 'services/authentication';
+import { authenticationServices } from 'services/authentication';
 import { getUserInfo } from 'services/user';
 
 // Cookies
@@ -56,7 +56,10 @@ export const Login: React.FC = () => {
   const onFinish: FormProps<FieldType>['onFinish'] = async values => {
     if (values.username && values.password) {
       try {
-        const result = await checkAuthentication(values.username, values.password);
+        const result = await authenticationServices.checkAuthentication(
+          values.username,
+          values.password,
+        );
         messageCreate.open({
           type: 'success',
           content: <div className="z-10">Login successfully!</div>,

@@ -7,13 +7,7 @@ import { AutoComplete, Input, List, message, Modal, Tag, Typography } from '../.
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
-import {
-  changeBoardOwner,
-  deleteAccessBoard,
-  getInfo,
-  shareBoard,
-  updateAccessBoard,
-} from 'services';
+import { getInfo, shareAccess, updateAccessBoard } from 'services';
 
 // Utils
 import { checkAuthority } from 'utils';
@@ -21,12 +15,13 @@ import { checkAuthority } from 'utils';
 // Hooks
 import { useLoggedUser, useUserList } from 'hooks';
 import { AccessDropDown } from '../AccessDropdown';
+import { useChangeOwner, useDeleteAccess, useShareAccess, useUpdateAccess } from 'queries';
 
 interface ShareAccessProp {
   isOpen: boolean;
   onClose: () => void;
-  onShare: () => void;
-  object: string;
+  // onShare: () => void;
+  objectType: string;
   objectName: string;
   objectID: React.Key;
   accessList: {
@@ -37,8 +32,6 @@ interface ShareAccessProp {
   }[];
   permission: string;
 }
-
-const { Text } = Typography;
 
 type TState = {
   shareUsers: { id: React.Key; name: string; email: string; role: string }[];
@@ -60,11 +53,11 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   const {
     isOpen,
     onClose: onClose,
-    object,
     objectName,
     objectID,
     accessList,
-    onShare,
+    objectType,
+    // onShare,
     permission,
   } = props;
   const [messageCreate, contextHolder] = message.useMessage();
@@ -72,6 +65,24 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   // Hooks
   const { user: currentUser } = useLoggedUser();
   const { list: userList } = useUserList();
+
+  // Queries
+  const { mutateAsync: changeOwner, isError: isChangeOwnerError } = useChangeOwner({
+    objectId: objectID,
+    objectType,
+  });
+  const { mutateAsync: deleteAccess, isError: isDeleteAccessError } = useDeleteAccess({
+    objectId: objectID,
+    objectType,
+  });
+  const { mutateAsync: shareAccess, isError: isShareAccessError } = useShareAccess({
+    objectId: objectID,
+    objectType,
+  });
+  const { mutateAsync: updateAccess, isError: isUpdateAccessError } = useUpdateAccess({
+    objectId: objectID,
+    objectType,
+  });
 
   // States
   const [state, setState] = useState<TState>({
@@ -104,21 +115,6 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       alreadySharedList: accessList,
     }));
   }, [accessList]);
-
-  // Memo
-  const roleOptions = useMemo(() => {
-    return Object.values(ROLE_OPTIONS)
-      .map(({ value, label, Icon }) => {
-        return PERMISSION[value as string]?.includes(permission)
-          ? {
-              value,
-              Icon,
-              label,
-            }
-          : {};
-      })
-      .filter(option => Object.keys(option).length > 0);
-  }, [permission]);
 
   // Handles
   const onClickBeginSharing = () => {
@@ -210,24 +206,20 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   };
 
   const onConfirmDeleteAccess = async (userID: React.Key) => {
-    try {
-      const deletedAccess = await deleteAccessBoard(objectID as string, userID);
-      setState(prev => ({
-        ...prev,
-        alreadySharedList: alreadySharedList.filter(user => user.id !== userID),
-      }));
+    deleteAccess(userID);
+    if (!isDeleteAccessError) {
       messageCreate.open({
         type: 'success',
         content: "User's access removed.",
       });
-      if (currentUser?.id === userID) {
-        onClose();
-      }
-    } catch (error) {
+    } else {
       messageCreate.open({
         type: 'error',
-        content: error as string,
+        content: "Cannot delete this user's access",
       });
+    }
+    if (currentUser?.id === userID) {
+      onClose();
     }
   };
 
@@ -236,14 +228,13 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
   };
 
   const onConfirmChangeOwner = async (userID: React.Key) => {
-    try {
-      const changeOwner = await changeBoardOwner(objectID as string, userID);
-      onShare();
+    changeOwner(userID);
+    if (!isChangeOwnerError) {
       messageCreate.open({
         type: 'success',
         content: "Board's owner changed.",
       });
-    } catch (error) {
+    } else {
       messageCreate.open({
         type: 'error',
         content: error as string,
@@ -304,17 +295,16 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         permission: user.role,
       }));
       if (listUser.length !== 0) {
-        try {
-          const response = await shareBoard(boardID, listUser);
+        shareAccess(listUser);
+        if (!isShareAccessError) {
           messageCreate.open({
             type: 'success',
             content: 'Board shared',
           });
-          onShare();
-        } catch (error) {
+        } else {
           messageCreate.open({
             type: 'error',
-            content: error as string,
+            content: 'Share access failed',
           });
         }
       }
@@ -332,17 +322,16 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
         permission: user.permission,
       }));
       if (updateList.length !== 0) {
-        try {
-          const response = await updateAccessBoard(boardID, updateList);
+        updateAccess(updateList);
+        if (!isUpdateAccessError) {
           messageCreate.open({
             type: 'success',
-            content: 'Board updated',
+            content: 'Access updated',
           });
-          onShare();
-        } catch (error) {
+        } else {
           messageCreate.open({
             type: 'error',
-            content: error as string,
+            content: 'Update access failed',
           });
         }
       }
