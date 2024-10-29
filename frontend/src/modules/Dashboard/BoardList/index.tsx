@@ -1,40 +1,14 @@
 // Libraries
-import React, { useState } from 'react';
-import { NavLink, useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 
 // Icons
-import {
-  AddFilledIcon,
-  AddIcon,
-  ClearIcon,
-  ColorIcon,
-  DeleteIcon,
-  DragIcon,
-  EditIcon,
-  MoreIcon,
-} from 'components/icons';
 
 // Stores
-import { AppDispatch, RootState } from 'store';
 
 // Components
-import {
-  Button,
-  Card,
-  Color,
-  ColorPicker,
-  Dropdown,
-  Input,
-  List,
-  message,
-  Modal,
-  Tag,
-  type MenuInfo,
-  type MenuProps,
-} from 'components/ui';
-import { MENU_KEY } from 'constants/tasks';
-import { useBoardList } from 'hooks/useBoardList';
+import { List } from 'components/ui';
+import { useBoardList } from 'hooks';
 
 export const BoardList: React.FC = () => {
   //   const params = useParams();

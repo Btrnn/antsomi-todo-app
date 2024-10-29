@@ -8,7 +8,6 @@ import { useDispatch } from "react-redux";
 // Icons
 import {
   AddFilledIcon,
-  AddIcon,
   ClearIcon,
   ColorIcon,
   DeleteIcon,
@@ -19,7 +18,6 @@ import {
 
 // Components
 import {
-  Button,
   Card,
   Color,
   ColorPicker,
@@ -36,9 +34,7 @@ import { TaskList } from "../TaskList";
 // Providers
 import {
   AppDispatch,
-  deleteTaskByGroupID,
-  setTaskList,
-  updateGroup,
+  setTaskList
 } from "store";
 
 // Models
@@ -48,16 +44,14 @@ import { Group, Task } from "models";
 import { MENU_KEY, SORTABLE_TYPE } from "constants/tasks";
 
 // Services
-import { updateGroup as updateGroupAPI } from "services/group";
 import {
-  createTask,
-  deleteTaskByGroupID as deleteTaskByGroupIDAPI,
-  getAllTasks,
+  getAllTasks
 } from "services/task";
 
 // Utils
-import { checkAuthority, getContrastTextColor } from "utils";
 import { PERMISSION, ROLE_KEY } from "constants/role";
+import { useCreateTask, useDeleteTaskByGroupID, useUpdateGroup } from "queries";
+import { checkAuthority, getContrastTextColor } from "utils";
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -87,6 +81,17 @@ type TState = {
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
   const { group, allTasks, onDelete, isOverlay, boardId, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
+
+  // Queries
+  const { mutateAsync: createTask, isError: isCreateTaskError } = useCreateTask(
+    { boardId }
+  );
+  const {
+    mutateAsync: deleteTaskByGroupID,
+    isError: isDeleteTaskByGroupIDError,
+  } = useDeleteTaskByGroupID({ boardId });
+  const { mutateAsync: updateGroup, isError: isUpdateGroupError } =
+    useUpdateGroup({ boardId });
 
   // Hooks
   const {
@@ -163,35 +168,48 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
 
   const onConfirmDelete = () => {
     if (group) {
-      dispatch(deleteTaskByGroupID({ groupID: group?.id }));
+      //dispatch(deleteTaskByGroupID({ groupID: group?.id }));
       onDelete(group.id);
     }
   };
 
   const onConfirmClear = () => {
-    try {
-      if (group) {
-        dispatch(deleteTaskByGroupID({ groupID: group?.id }));
-        deleteTaskByGroupIDAPI(group.board_id, group.id);
+    if (group) {
+      //dispatch(deleteTaskByGroupID({ groupID: group?.id }));
+      // deleteTaskByGroupIDAPI(group.board_id, group.id);
+      deleteTaskByGroupID(group.id);
+      if (!isDeleteTaskByGroupIDError) {
         messageCreate.open({
           type: "success",
-          content: <div className="text-orange-400">Group cleared!</div>,
+          content: <div>Group cleared!</div>,
+        });
+      } else {
+        messageCreate.open({
+          type: "error",
+          content: "Cannot clear tasks!",
         });
       }
-    } catch (error) {
-      messageCreate.open({
-        type: "error",
-        content: error as string,
-      });
     }
   };
 
   const onEnterRenameGroup = (groupID: React.Key) => {
     if (groupNewName !== "") {
-      dispatch(
-        updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
-      );
-      updateGroupAPI(boardId, groupID, { name: groupNewName });
+      // dispatch(
+      //   updateGroup({ id: groupID, updatedGroup: { name: groupNewName } })
+      // );
+      updateGroup({ id: groupID, name: groupNewName });
+      if (!isUpdateGroupError) {
+        messageCreate.open({
+          type: "success",
+          content: "Group updated!",
+        });
+      } else {
+        messageCreate.open({
+          type: "error",
+          content: "Cannot update group!",
+        });
+      }
+      // updateGroupAPI(boardId, {  id: groupID, name: groupNewName });
     }
     if (!isChangeColor)
       setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
@@ -224,17 +242,19 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
 
   const onChangeSetColor = (value: Color, groupID: React.Key) => {
     if (typeof value === "string") {
-      dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
-      updateGroupAPI(boardId, groupID, { color: value });
+      // dispatch(updateGroup({ id: groupID, updatedGroup: { color: value } }));
+      // updateGroupAPI(boardId,{ id: groupID, color: value });
+      updateGroup({ id: groupID, color: value });
       setState((prev) => ({ ...prev, textColor: getContrastTextColor(value) }));
     } else if (value && "toHexString" in value) {
-      dispatch(
-        updateGroup({
-          id: groupID,
-          updatedGroup: { color: value.toHexString() },
-        })
-      );
-      updateGroupAPI(boardId, groupID, { color: value.toHexString() });
+      // dispatch(
+      //   updateGroup({
+      //     id: groupID,
+      //     updatedGroup: { color: value.toHexString() },
+      //   })
+      // );
+      // updateGroupAPI(boardId, {  id: groupID, color: value.toHexString() });
+      updateGroup({ id: groupID, color: value.toHexString() });
       setState((prev) => ({
         ...prev,
         textColor: getContrastTextColor(value.toHexString()),
@@ -272,21 +292,20 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         status_id: group.id,
         position: taskList.length,
       };
-      try {
-        const createdTask = await createTask(boardId, newTask);
+
+      createTask(newTask);
+      if (!isCreateTaskError) {
         messageCreate.open({
           type: "success",
           content: <div>New task added!</div>,
         });
-        getTaskList();
-      } catch (error) {
+      } else {
         messageCreate.open({
           type: "error",
-          content: error as string,
+          content: "Cannot add task!",
         });
       }
       isAdd = false;
-      //dispatch(addTask(newTask));
     }
 
     setState((prev) => ({
@@ -347,13 +366,13 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
   };
 
   const onClickCloseColorPicker = (open: boolean) => {
-    if(!open){
+    if (!open) {
       setState((prev) => ({
-      ...prev,
-      isChangeColor: false,
-      isRename: false,
-      groupSelected: "",
-    }));
+        ...prev,
+        isChangeColor: false,
+        isRename: false,
+        groupSelected: "",
+      }));
     }
   };
 
@@ -491,8 +510,9 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
                               onChangeSetColor(value, group.id)
                             }
                             defaultValue={group.color}
-                            onOpenChange={open => onClickCloseColorPicker(open)}
-
+                            onOpenChange={(open) =>
+                              onClickCloseColorPicker(open)
+                            }
                           >
                             <ColorIcon
                               style={{

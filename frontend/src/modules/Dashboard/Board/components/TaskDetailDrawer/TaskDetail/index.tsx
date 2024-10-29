@@ -1,34 +1,19 @@
 // Libraries
-import { useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { debounce } from 'lodash';
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 //Providers
-import { RootState, AppDispatch, updateTask } from 'store';
 
 // Icons
 import {} from 'components/icons';
 
 // Components
-import {
-  Tag,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  InputNumber,
-  Flex,
-  Button,
-  message,
-} from 'components/ui';
+import { DatePicker, Form, Input, InputNumber, message, Select } from 'components/ui';
 
 // Models
 import { Task } from 'models';
-
-// Services
-import { updateTask as updatedTaskAPI } from 'services/task';
 
 // Utils
 import { checkAuthority } from 'utils';
@@ -37,7 +22,8 @@ import { checkAuthority } from 'utils';
 import { PERMISSION, ROLE_KEY } from 'constants/role';
 
 // Hooks
-import { useUserList } from 'hooks/useUserList';
+import { useUserList } from 'hooks';
+import { useUpdateTask } from 'queries';
 
 interface TaskDetailProp {
   task: Task | undefined;
@@ -51,17 +37,15 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
   const { task, onClose, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
-  // Store
-  const dispatch: AppDispatch = useDispatch();
-
   // Hooks
   const [form] = Form.useForm();
   const params = useParams();
   const { list: userList } = useUserList();
-  const debounceUpdateTask = useCallback(
-    debounce(() => form.submit(), 1000),
-    [form],
-  );
+
+  // Queries
+  const { mutateAsync: updateTask, isError: isUpdateTaskError } = useUpdateTask({
+    boardId: params?.boardId ?? '',
+  });
 
   // Effects
   useEffect(() => {
@@ -77,11 +61,18 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
   }, [task, form]);
 
   // Handlers
+  const debounceUpdateTask = debounce(() => {
+    form.submit();
+  }, 2000);
+
   const onFinishForm = (values: FormType) => {
-    const boardId = params?.boardId ?? '';
     if (task) {
-      dispatch(updateTask({ id: String(task.id), updatedTask: values }));
-      updatedTaskAPI(boardId, { ...values, id: task.id });
+      updateTask({ ...values, id: task.id });
+      if (!isUpdateTaskError) {
+        messageCreate.success('Update task successfully!');
+      } else {
+        messageCreate.error('Cannot update task!');
+      }
     }
   };
 

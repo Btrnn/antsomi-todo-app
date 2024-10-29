@@ -36,9 +36,9 @@ export const updateTask = async (boardId: IdentifyId, task: Partial<Task>) => {
   }
 };
 
-export const deleteTask = async (boardID: IdentifyId, id: IdentifyId) => {
+export const deleteTask = async (boardID: IdentifyId, taskID: IdentifyId) => {
   try {
-    const response = await axiosInstance.delete(`task/${boardID}`, { data: { id } });
+    const response = await axiosInstance.delete(`task/${boardID}`, { data: { id: taskID } });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

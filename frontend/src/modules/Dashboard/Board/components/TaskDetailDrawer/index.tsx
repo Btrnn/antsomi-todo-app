@@ -1,29 +1,26 @@
 // Libraries
-import { useSelector, useDispatch } from 'react-redux';
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 // Stores
-import { RootState } from 'store';
 
 // Icons
-import {} from 'components/icons';
+import { } from 'components/icons';
 
 // Components
-import { Form, Drawer, Tabs, type TabsProps, message } from 'components/ui';
-import { TaskDetail } from './TaskDetail';
-import { SubTasks } from './SubTasks';
+import { Drawer, Tabs, type TabsProps, message } from 'components/ui';
 import { Comments } from './Comments';
+import { SubTasks } from './SubTasks';
+import { TaskDetail } from './TaskDetail';
 
 // Models
 import { Task } from 'models';
 
 // Services
-import { updateTask as updatedTaskAPI } from 'services/task';
 
 // Constants
 import { MENU_KEY } from 'constants/tasks';
-import { useTaskList } from 'hooks/useTaskList';
+import { useTaskList } from 'hooks';
 
 interface TaskDrawerProp {
   permission: string;

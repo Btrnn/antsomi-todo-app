@@ -49,13 +49,6 @@ export const useGetUserList = (props?: useGetUserListProps) => {
   });
 };
 
-/**
- * Get a user by their email address using the `getInfo` service.
- *
- * @param {UseGetUserByEmailProps} [props] The options for the `useQuery` hook.
- *
- * @returns {UseQueryResult<ServiceResponse<Partial<User>>>} The result of the query.
- */
 export const useGetUserByEmail = (props?: UseGetUserByEmailProps) => {
   const { email, options } = props || {};
 

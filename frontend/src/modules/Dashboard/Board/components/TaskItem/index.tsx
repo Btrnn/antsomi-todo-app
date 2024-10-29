@@ -1,8 +1,8 @@
 // Libraries
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
 // Stores
@@ -13,27 +13,27 @@ import { DeleteIcon, EditIcon } from 'components/icons';
 
 // Components
 import {
-  Tag,
-  Dropdown,
-  type MenuProps,
-  type MenuInfo,
   Card,
+  Dropdown,
   Modal,
+  Tag,
   Typography,
+  type MenuInfo,
+  type MenuProps,
 } from 'components/ui';
 
 // Models
 import { Task } from 'models';
 
 // Constants
-import { SORTABLE_TYPE, MENU_KEY } from 'constants/tasks';
 import { PERMISSION, ROLE_KEY } from 'constants/role';
+import { MENU_KEY, SORTABLE_TYPE } from 'constants/tasks';
 
 // Utils
 import { checkAuthority } from 'utils';
 
 // Hooks
-import { useUserList } from 'hooks/useUserList';
+import { useUserList } from 'hooks';
 
 interface TaskItemProp {
   groupInfo: {
@@ -186,7 +186,10 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
             <div key={task.id} className="w-full p-0 h-full">
               <div key={task.id} className="flex flex-col w-full overflow-hidden">
                 <div className="flex font-bold mb-2 whitespace-normal">{task.name}</div>
-                <Typography.Paragraph ellipsis={{ rows: 3 }} className="font-light mb-2">
+                <Typography.Paragraph
+                  ellipsis={{ rows: 3 }}
+                  className="font-light mb-2 whitespace-break-spaces"
+                >
                   {task.description}
                 </Typography.Paragraph>
               </div>

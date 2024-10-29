@@ -1,6 +1,6 @@
 // Libraries
-import React, { useState } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import React from 'react';
 import { useDispatch } from 'react-redux';
 
 // Components
@@ -14,10 +14,8 @@ import { Group } from 'models/Group';
 // Utils
 import { getContrastTextColor } from 'utils';
 
-// Services
-import { deleteTask } from 'services';
-
 // Stores
+import { useDeleteTask } from 'queries';
 import { AppDispatch, reorderTaskAsync } from 'store';
 
 interface TaskListProps {
@@ -30,22 +28,27 @@ export const TaskList: React.FC<TaskListProps> = props => {
   const { group, taskList, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
+  // Queries
+  const { mutateAsync: deleteTask, isError: isDeleteTaskError } = useDeleteTask({
+    boardId: group.board_id,
+  });
+
   // Store
   const dispatch: AppDispatch = useDispatch();
 
   // Handlers
   const onDeleteTask = async (id: React.Key) => {
-    try {
-      deleteTask(group.board_id, id);
-      dispatch(reorderTaskAsync(group.board_id));
+    deleteTask(id);
+    dispatch(reorderTaskAsync(group.board_id));
+    if (!isDeleteTaskError) {
       messageCreate.open({
         type: 'success',
         content: <div>Task deleted!</div>,
       });
-    } catch (error) {
+    } else {
       messageCreate.open({
         type: 'error',
-        content: error as string,
+        content: 'Cannot delete this task',
       });
     }
   };

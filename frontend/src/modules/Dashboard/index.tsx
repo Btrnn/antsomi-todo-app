@@ -1,54 +1,45 @@
 // Libraries
-import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation, useParams } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 // Images
 import logo from "../../assets/images/logo.png";
 
 // Icons
 import {
-  UserIcon,
-  SettingIcon,
-  HomeIcon,
-  DataIcon,
-  DownIcon,
   AddIcon,
-  EditIcon,
+  DataIcon,
   DeleteIcon,
-  ShareIcon,
-  ViewerIcon,
-  CommenterIcon,
-  EditorIcon,
-  ManagerIcon,
-  ColorIcon,
-  CloseIcon,
+  EditIcon,
+  HomeIcon,
   MoreIcon,
+  SettingIcon,
+  ShareIcon,
+  UserIcon,
 } from "components/icons";
 
 // Components
 import {
-  Layout,
-  Menu,
   Avatar,
-  type MenuInfo,
   Breadcrumb,
-  type MenuProps,
-  TreeDataNode,
-  Input,
   Button,
-  message,
   Dropdown,
-  Modal,
-  Tag,
-  Select,
-  Divider,
-  Tooltip,
-  Card,
-  List,
-  Typography,
+  Input,
+  Layout,
   LevelKeysProps,
+  Menu,
+  type MenuInfo,
+  type MenuProps,
+  message,
+  Modal,
+  Typography,
 } from "components/ui";
 import { UserDrawer } from "../../components/common";
 
@@ -60,44 +51,24 @@ import {
   MENU_KEY,
   PERMISSION,
   ROLE_KEY,
-  ROLE_OPTIONS,
 } from "../../constants";
 
 // Models
 import { Board } from "models";
 
 // Services
-import {
-  createBoard,
-  getAllBoards,
-  updateBoard as updateBoardAPI,
-  deleteBoard as deleteBoardAPI,
-  shareBoard,
-  getAccessList,
-  updateAccessBoard,
-  getPermission,
-} from "services/board";
-import { getInfo } from "services";
+import { getAccessList, getPermission } from "services/board";
 
 // Stores
-import {
-  setOwnedList,
-  RootState,
-  AppDispatch,
-  setSharedList,
-  updateBoard,
-  reorderBoardAsync,
-  deleteBoard,
-  setPermission,
-} from "store";
+import { AppDispatch, setPermission } from "store";
 
-import { IdentifyId } from "types";
 import { ShareAccessModal } from "components/common";
+import { IdentifyId } from "types";
 import { checkAuthority, getDashBoardLevelKeys, getParentKeys } from "utils";
 
 // Hooks
-import { useBoardList } from "hooks";
-
+import { useBoardList, useLoggedUser } from "hooks";
+import { useCreateBoard, useDeleteBoard, useUpdateBoard } from "queries";
 
 const { Sider, Header, Content } = Layout;
 const { colorBgContainer } = globalToken;
@@ -138,7 +109,15 @@ export const Dashboard: React.FC = () => {
   const [messageCreate, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
-  
+  // Queries
+  const { mutateAsync: updatedBoard, isError: isUpdateBoardError } =
+    useUpdateBoard();
+  const { mutateAsync: createBoard, isError: isCreateBoardError } =
+    useCreateBoard();
+  const {
+    mutateAsync: deleteBoard,
+    isError: isDeleteBoardError,
+  } = useDeleteBoard();
 
   // State
   const [state, setState] = useState<TState>({
@@ -237,22 +216,17 @@ export const Dashboard: React.FC = () => {
     owned: ownedBoardList,
     shared: sharedBoardList,
     isLoading: boardLoading,
+    error: boardError,
+    refetch: refetchBoard,
   } = useBoardList();
-
-  // Memo
-  const roleOptions = useMemo(() => {
-    return Object.values(ROLE_OPTIONS).map(({ value, label, Icon }) => ({
-      value,
-      label: (
-        <>
-          <Icon className="mr-2 my-2" />
-          {label}
-        </>
-      ),
-    }));
-  }, []);
+  const { refetch: refetchUserInfo } = useLoggedUser();
 
   // Effects
+  useEffect(() => {
+    refetchBoard();
+    refetchUserInfo();
+  }, []);
+
   useEffect(() => {
     const { pathname } = location;
     let currentTitle = "Home";
@@ -265,15 +239,16 @@ export const Dashboard: React.FC = () => {
       currentKey = DASHBOARD_KEY.HOME;
       isSubMenu = false;
     } else if (pathname.includes("/board")) {
-      openList.push(DASHBOARD_KEY.BOARD)
-      if(params.boardId){
-        openList = pathList.find((path) => path.key === params.boardId)?.path || []
+      openList.push(DASHBOARD_KEY.BOARD);
+      if (params.boardId) {
+        openList =
+          pathList.find((path) => path.key === params.boardId)?.path || [];
       }
       currentKey = DASHBOARD_KEY.BOARD;
       currentTitle =
         [...ownedBoardList, ...sharedBoardList].find(
           (board) => board.id === params?.boardId
-        )?.name || "Board List";
+        )?.name ?? "Board List";
     }
 
     setState((prevState) => ({
@@ -284,7 +259,7 @@ export const Dashboard: React.FC = () => {
       selectedPath: isSubMenu ? [{ title: currentTitle }] : [],
       openList: openList,
     }));
-  }, [location, boardLoading]);
+  }, [location, boardLoading, ownedBoardList, sharedBoardList]);
 
   // Handles
   const onClickSelectBoard = async (objectID: IdentifyId) => {
@@ -365,17 +340,19 @@ export const Dashboard: React.FC = () => {
             name: inputBoardName,
             position: ownedBoardList.length,
           };
-          const createdBoard = await createBoard(newBoard);
-          messageCreate.open({
-            type: "success",
-            content: <div>New board added!</div>,
-          });
-        } catch (error) {
-          messageCreate.open({
-            type: "error",
-            content: error as string,
-          });
-        }
+          createBoard(newBoard);
+          if (!isCreateBoardError) {
+            messageCreate.open({
+              type: "success",
+              content: <div>New board added!</div>,
+            });
+          } else {
+            messageCreate.open({
+              type: "error",
+              content: "Cannot add board",
+            });
+          }
+        } catch (error) {}
         setState((prev) => ({ ...prev, inputBoardName: "", isAdding: false }));
       }
     } else {
@@ -471,25 +448,48 @@ export const Dashboard: React.FC = () => {
 
   const onEnterRenameBoard = (boardID: React.Key) => {
     if (boardNewName !== "") {
-      dispatch(
-        updateBoard({ id: boardID, updatedBoard: { name: boardNewName } })
+      const boardExists = ownedBoardList.some(
+        (board) => board.name === boardNewName && board.id !== boardID
       );
-      updateBoardAPI(boardID, { name: boardNewName });
+      if (boardExists) {
+        messageCreate.open({
+          type: "error",
+          content: "This board's name already exists!",
+        });
+      } else {
+        updatedBoard({ board: { id: boardID, name: boardNewName } });
+        if (!isUpdateBoardError) {
+          messageCreate.open({
+            type: "success",
+            content: "Board updated",
+          });
+          setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
+        } else {
+          messageCreate.open({
+            type: "error",
+            content: "Cannot update board",
+          });
+        }
+      }
     }
-    setState((prev) => ({ ...prev, isRename: false, groupNewName: "" }));
   };
 
   // Handle "DELETE"
   const onConfirmDeleteBoard = async (boardID: React.Key) => {
     try {
-      const deletedBoard = await deleteBoardAPI(boardID as string);
-      dispatch(deleteBoard({ id: boardID }));
-      dispatch(reorderBoardAsync());
-      messageCreate.open({
-        type: "success",
-        content: "Board deleted!",
-      });
-      navigate("/dashboard/board");
+      deleteBoard(boardID);
+      if (!isDeleteBoardError) {
+        messageCreate.open({
+          type: "success",
+          content: "Board deleted!",
+        });
+        navigate("/dashboard/board");
+      } else {
+        messageCreate.open({
+          type: "error",
+          content: "Cannot delete board",
+        });
+      }
     } catch (error) {
       messageCreate.open({
         type: "error",
@@ -694,8 +694,8 @@ export const Dashboard: React.FC = () => {
 
     if (currentOpenKey !== undefined) {
       const repeatIndex = openKeys
-      .filter((key) => key !== currentOpenKey)
-      .findIndex((key) => levelKeys[key] === levelKeys[currentOpenKey]);
+        .filter((key) => key !== currentOpenKey)
+        .findIndex((key) => levelKeys[key] === levelKeys[currentOpenKey]);
 
       setState((prev) => ({
         ...prev,

@@ -29,11 +29,10 @@ export const createGroup = async (
 
 export const updateGroup = async (
   boardID: IdentifyId,
-  id: IdentifyId,
   group: Partial<Group>,
 ): Promise<ServiceResponse<Group>> => {
   try {
-    const response = await axiosInstance.put(`group/${boardID}`, { id: id, groupUpdated: group });
+    const response = await axiosInstance.put(`group/${boardID}`, group);
     return response.data;
   } catch (error) {
     return Promise.reject(error);

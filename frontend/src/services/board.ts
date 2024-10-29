@@ -6,11 +6,15 @@ import { IdentifyId, ServiceResponse } from 'types';
 // Models
 import { Board } from 'models';
 
+export type UpdateBoardArgs = {
+  board: Partial<Board> & { id: IdentifyId };
+};
+
 export const getAllBoards = async (): Promise<
   ServiceResponse<{ owned: Board[]; shared: Board[] }>
 > => {
   try {
-    const response = await axiosInstance.get('board');
+    const response = await axiosInstance.get('board/accessed-board');
     return response.data;
   } catch (error) {
     return Promise.reject(error);
@@ -35,12 +39,13 @@ export const getPermission = async (boardID: IdentifyId): Promise<ServiceRespons
   }
 };
 
-export const updateBoard = async (
-  boardID: IdentifyId,
-  board: Partial<Board>,
-): Promise<ServiceResponse<boolean>> => {
+export const updateBoard = async ({
+  board,
+}: UpdateBoardArgs): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.put(`board/${boardID}`, board);
+    const { id, ...restOfBoard } = board || {};
+
+    const response = await axiosInstance.put(`board/${id}`, restOfBoard);
     return response.data;
   } catch (error) {
     return Promise.reject(error);

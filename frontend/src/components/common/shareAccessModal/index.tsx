@@ -2,15 +2,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
-import { Modal, Input, List, Select, message, Tag, AutoComplete, Typography } from '../../ui';
-import { AddIcon, CloseIcon, DeleteIcon, SwitchUserIcon } from '../../icons';
+import { AddIcon, CloseIcon } from '../../icons';
+import { AutoComplete, Input, List, message, Modal, Tag, Typography } from '../../ui';
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
 import {
   changeBoardOwner,
   deleteAccessBoard,
-  getAllUsers,
   getInfo,
   shareBoard,
   updateAccessBoard,

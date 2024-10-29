@@ -32,8 +32,8 @@ export const SubTasks: React.FC<SubTaskProp> = props => {
 
   // Store
   const dispatch: AppDispatch = useDispatch();
-  const userList = useSelector((state: RootState) => state.user.userList);
-  const groupList = useSelector((state: RootState) => state.group.groupList);
+  // const userList = useSelector((state: RootState) => state.user.userList);
+  // const groupList = useSelector((state: RootState) => state.group.groupList);
 
   // Effects
 
