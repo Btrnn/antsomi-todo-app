@@ -35,16 +35,17 @@ export class BoardController {
     private readonly accessService: AccessService,
   ) {}
 
-  @Get('/owned')
-  getOwnedBoards(@User() user: UserEntity) {
-    return this.boardService.findOwned(user.id);
+  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
+  @Get('/accessed-board')
+  getAccessedBoards(@User() user: UserEntity) {
+    return this.boardService.findOwnedAndShare(user.id);
   }
 
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Get()
-  getAllBoards(@User() user: UserEntity) {
-    return this.boardService.findAll(user.id);
-  }
+  // @RequiresPermission(ROLE.OWNER, ACCESS_OBJECT.BOARD)
+  // @Get()
+  // getAllBoards() {
+  //   return this.boardService.findAll();
+  // }
 
   @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
   @Get(`/permission/:${ACCESS_OBJECT.BOARD}`)

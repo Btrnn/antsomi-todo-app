@@ -39,10 +39,8 @@ export class GroupController {
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
-  update(
-    @Body() group: { id: IdentifyId; groupUpdated: Partial<GroupEntity> },
-  ) {
-    return this.groupService.updateGroup(group.id, group.groupUpdated);
+  update(@Body() group: Partial<GroupEntity>) {
+    return this.groupService.updateGroup(group.id, group);
   }
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)

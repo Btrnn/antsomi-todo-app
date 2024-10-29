@@ -32,6 +32,14 @@ export class BoardService {
     private readonly dataSource: DataSource,
   ) {}
 
+  // async findAll(): Promise<ServiceResponse<BoardEntity[]>> {
+  //   const entities = await this.boardRepository.find();
+  //   return {
+  //     data: entities,
+  //     meta: { page: 1 },
+  //   };
+  // }
+
   async findOwned(userID: IdentifyId): Promise<ServiceResponse<BoardEntity[]>> {
     const entities = await this.boardRepository.find({
       where: {
@@ -66,7 +74,7 @@ export class BoardService {
     return { data: entities, meta: { page: 1 } };
   }
 
-  async findAll(
+  async findOwnedAndShare(
     userID: IdentifyId,
   ): Promise<ServiceResponse<{ shared: BoardEntity[]; owned: BoardEntity[] }>> {
     const owned = await this.findOwned(userID);
