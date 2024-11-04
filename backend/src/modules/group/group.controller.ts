@@ -26,6 +26,12 @@ import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
 // Constants
 import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+import {
+  GroupCreateDto,
+  GroupDeleteDto,
+  GroupReorderDto,
+  GroupUpdateDto,
+} from './dto';
 
 @Controller(ROUTES.GROUP)
 export class GroupController {
@@ -39,33 +45,34 @@ export class GroupController {
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Put(`:${ACCESS_OBJECT.BOARD}`)
-  update(@Body() group: Partial<GroupEntity>) {
-    return this.groupService.updateGroup(group.id, group);
+  updateGroup(@Body() updateData: GroupUpdateDto) {
+    const { id, ...restOfData } = updateData;
+    return this.groupService.updateGroup(id, restOfData);
   }
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Post(`:${ACCESS_OBJECT.BOARD}`)
   createGroup(
-    @Body() newGroup: Omit<GroupEntity, 'id' | 'owner_id'>,
+    @Param(ACCESS_OBJECT.BOARD) board: IdentifyId,
+    @Body() createData: GroupCreateDto,
     @User() user: UserEntity,
   ) {
-    return this.groupService.createGroup(user.id, {
-      ...newGroup,
+    return this.groupService.createGroup({
+      ...createData,
       owner_id: user.id,
+      board_id: board as string,
     });
   }
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Delete(`:${ACCESS_OBJECT.BOARD}`)
-  deleteGroup(@Body('id') id: IdentifyId) {
-    return this.groupService.deleteGroup(id);
+  deleteGroup(@Body() deleteData: GroupDeleteDto) {
+    return this.groupService.deleteGroup(deleteData.id);
   }
 
   @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
   @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
-  async updateGroupPositions(
-    @Body() groupPositions: { id: string; position: number }[],
-  ) {
-    return this.groupService.reorderGroup(groupPositions);
+  async updateGroupPositions(@Body() reorderData: GroupReorderDto) {
+    return this.groupService.reorderGroup(reorderData.positionList);
   }
 }

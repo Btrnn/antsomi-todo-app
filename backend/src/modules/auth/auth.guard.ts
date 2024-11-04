@@ -23,6 +23,8 @@ import {
 // Services
 import { AuthService } from './auth.service';
 
+import { isUUID } from 'class-validator';
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -78,6 +80,18 @@ export class AuthGuard implements CanActivate {
     );
 
     if (!requiredPermission) return true;
+
+    const objectID = request.params[objectType];
+
+    if (!isUUID(objectID) && objectID) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          statusMessage: `Action failed: Invalid ${objectType}`,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const hasAccess = await this.authService.isAcceptedPermission(
       request['user'].id,

@@ -60,7 +60,7 @@ export class UserService {
     };
   }
 
-  async findInfoByEmail(
+  async findByEmail(
     email: string,
   ): Promise<ServiceResponse<Partial<UserEntity>>> {
     const entity = await this.userRepository.findOne({

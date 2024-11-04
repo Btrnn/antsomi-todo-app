@@ -104,7 +104,7 @@ export class AccessService {
     };
   }
 
-  async findBoardsByUser(
+  async findObjectsByUser(
     userID: IdentifyId,
   ): Promise<ServiceResponse<string[]>> {
     const entities = await this.accessRepository.find({
@@ -125,7 +125,7 @@ export class AccessService {
         object_id: objectID as string,
       },
     });
-    return { data: entity.permission, meta: {} };
+    return { data: entity?.permission, meta: {} };
   }
 
   async findUserAccessListByObjectId(
@@ -143,3 +143,7 @@ export class AccessService {
     return { data: userList, meta: {} };
   }
 }
+
+// function checkArray<T>(values: {id: "" , name: ""}[]) {
+
+// }

@@ -1,5 +1,5 @@
 // Libraries
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
 
@@ -13,23 +13,15 @@ import { GroupEntity } from '../group/group.entity';
 // Repositories
 import { TaskRepository } from './task.repository';
 
-// Services
-import { AuthService } from '../auth/auth.service';
-import { PERMISSION } from '@app/constants';
-
 @Injectable()
 export class TaskService {
   constructor(
     @InjectRepository(TaskEntity)
     private readonly taskRepository: TaskRepository,
     private readonly dataSource: DataSource,
-    private readonly authService: AuthService,
   ) {}
 
-  async findAll(
-    userID: IdentifyId,
-    boardID: IdentifyId,
-  ): Promise<ServiceResponse<TaskEntity[]>> {
+  async findAll(boardID: IdentifyId): Promise<ServiceResponse<TaskEntity[]>> {
     const groupList = await this.dataSource.manager.find(GroupEntity, {
       where: {
         board_id: boardID as string,
@@ -54,6 +46,7 @@ export class TaskService {
         },
       },
     });
+
     return {
       data: entities,
       meta: { page: 1 },
@@ -64,23 +57,15 @@ export class TaskService {
     task: Omit<TaskEntity, 'id'>,
   ): Promise<ServiceResponse<TaskEntity>> {
     const entity = await this.taskRepository.save(task);
+
     return {
       data: entity,
       meta: {},
     };
   }
 
-  async deleteTask(
-    boardID: IdentifyId,
-    id: IdentifyId,
-    userID: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
-    const result = await this.taskRepository
-      .createQueryBuilder()
-      .delete()
-      .from(TaskEntity)
-      .where('id = :id', { id })
-      .execute();
+  async deleteTask(id: IdentifyId): Promise<ServiceResponse<boolean>> {
+    const result = await this.taskRepository.delete(id);
     return {
       data: result.affected > 0,
       meta: {},
@@ -88,12 +73,9 @@ export class TaskService {
   }
 
   async deleteTaskByGroupID(id: IdentifyId): Promise<ServiceResponse<boolean>> {
-    const result = await this.taskRepository
-      .createQueryBuilder()
-      .delete()
-      .from(TaskEntity)
-      .where('status_id = :id', { id })
-      .execute();
+    const result = await this.taskRepository.delete({
+      status_id: id as string,
+    });
     return {
       data: result.affected > 0,
       meta: {},
@@ -103,33 +85,31 @@ export class TaskService {
   async updateTask(
     id: IdentifyId,
     updateData: Partial<TaskEntity>,
-  ): Promise<ServiceResponse<TaskEntity>> {
-    const result = await this.taskRepository
-      .createQueryBuilder()
-      .update(TaskEntity)
-      .set(updateData)
-      .where('id = :id', { id })
-      .returning('*')
-      .execute();
+  ): Promise<ServiceResponse<boolean>> {
+    const result = await this.taskRepository.update(
+      { id: id as string },
+      updateData,
+    );
 
     return {
-      data: result.raw,
+      data: result.affected > 0,
       meta: {},
     };
   }
 
   async reorderTask(
     tasksPosition: { id: string; position: number }[],
-    userId: IdentifyId,
   ): Promise<ServiceResponse<boolean>> {
-    const currentTask = await this.taskRepository.findOneBy({
-      id: tasksPosition[0].id,
-    });
+    let allUpdated = true;
     for (const { id, position } of tasksPosition) {
-      await this.taskRepository.update({ id }, { position });
+      const result = await this.taskRepository.update({ id }, { position });
+      if (result.affected === 0) {
+        allUpdated = false;
+        break;
+      }
     }
     return {
-      data: true,
+      data: allUpdated,
       meta: {},
     };
   }

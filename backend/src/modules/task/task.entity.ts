@@ -30,11 +30,11 @@ export class TaskEntity {
   @Column()
   position: number;
 
-  @Column()
-  assignee_id: string;
+  @Column({ nullable: true })
+  assignee_id: string | null;
 
   @Column({ nullable: true })
-  est_time: string | null;
+  est_time: number | null;
 
   @Column()
   owner_id: string;

@@ -32,7 +32,7 @@ export class UserController {
 
   @Get(':email')
   getInfoByEmail(@Param('email') email: string) {
-    return this.userService.findInfoByEmail(email);
+    return this.userService.findByEmail(email);
   }
 
   @Public()

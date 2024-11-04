@@ -8,7 +8,6 @@ import { IdentifyId, ServiceResponse } from '@app/types';
 
 // Entities
 import { GroupEntity } from '../group/group.entity';
-import { TaskEntity } from '../task/task.entity';
 import { BoardEntity } from './board.entity';
 
 // Repository
@@ -16,7 +15,6 @@ import { BoardRepository } from './board.repository';
 
 // Services
 import { AccessService } from '../share_access/share_access.service';
-import { AuthService } from '../auth/auth.service';
 import { GroupService } from '../group/group.service';
 import { OBJECT_TYPE, PERMISSION, ROLE } from '@app/constants';
 import { UserEntity } from '../user/user.entity';
@@ -27,7 +25,6 @@ export class BoardService {
     @InjectRepository(BoardEntity)
     private readonly boardRepository: BoardRepository,
     private readonly accessService: AccessService,
-    private readonly authService: AuthService,
     private readonly groupService: GroupService,
     private readonly dataSource: DataSource,
   ) {}
@@ -57,7 +54,7 @@ export class BoardService {
   async findShared(
     userID: IdentifyId,
   ): Promise<ServiceResponse<BoardEntity[]>> {
-    const boardIDs = await this.accessService.findBoardsByUser(userID);
+    const boardIDs = await this.accessService.findObjectsByUser(userID);
     const entities = await this.boardRepository.find({
       where: {
         id: In(boardIDs.data),
@@ -201,21 +198,21 @@ export class BoardService {
   }
 
   async findUserAccessList(
-    board_id: IdentifyId,
+    object_id: IdentifyId,
   ): Promise<
     ServiceResponse<
       { id: string; name: string; email: string; permission: string }[]
     >
   > {
     const currentBoard = await this.boardRepository.findOneBy({
-      id: board_id as string,
+      id: object_id as string,
     });
-    const board_owner = await this.dataSource.manager.findOneBy(UserEntity, {
+    const object_owner = await this.dataSource.manager.findOneBy(UserEntity, {
       id: currentBoard.owner_id,
     });
     const userAccessList =
       await this.accessService.findUserAccessListByObjectId(
-        board_id,
+        object_id,
         OBJECT_TYPE.BOARD,
       );
     const userIDs = userAccessList.data.map((user) => user.id);
@@ -236,18 +233,15 @@ export class BoardService {
       };
     });
     userDetails.unshift({
-      id: board_owner.id,
-      name: board_owner.name,
-      email: board_owner.email,
+      id: object_owner.id,
+      name: object_owner.name,
+      email: object_owner.email,
       permission: ROLE.OWNER,
     });
     return { data: userDetails, meta: {} };
   }
 
-  async deleteBoard(
-    board_id: IdentifyId,
-    user_id: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
+  async deleteBoard(board_id: IdentifyId): Promise<ServiceResponse<boolean>> {
     await this.dataSource.transaction(async (manager) => {
       const group_list = await manager.find(GroupEntity, {
         select: ['id'],

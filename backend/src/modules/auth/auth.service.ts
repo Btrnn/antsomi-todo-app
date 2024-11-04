@@ -9,14 +9,13 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { AccessService } from '../share_access/share_access.service';
 import { BoardEntity } from '../board/board.entity';
-import { ACCESS_OBJECT, OBJECT_TYPE, PERMISSION } from '@app/constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly boardUserService: AccessService,
+    private readonly accessService: AccessService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -60,14 +59,19 @@ export class AuthService {
     const currentBoard = await this.dataSource.manager.findOneBy(BoardEntity, {
       id: objectID as string,
     });
+
+    if (!currentBoard) {
+      return { data: false, meta: {} };
+    }
+
     if (currentBoard.owner_id === (userID as string)) {
       return { data: true, meta: {} };
     }
-    const permission = await this.boardUserService.findUserPermission(
+    const permission = await this.accessService.findUserPermission(
       userID,
       objectID,
     );
-    if (permissionActions.includes(permission.data)) {
+    if (permission && permissionActions.includes(permission.data)) {
       return { data: true, meta: {} };
     }
     return { data: false, meta: {} };
