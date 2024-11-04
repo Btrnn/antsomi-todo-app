@@ -73,6 +73,7 @@ import {
   useLoggedUser,
   useAccessList,
   usePermission,
+  useDeepCompareEffect,
 } from "hooks";
 import { useCreateBoard, useDeleteBoard, useUpdateBoard } from "queries";
 
@@ -237,7 +238,7 @@ export const Dashboard: React.FC = () => {
     refetchUserInfo();
   }, []);
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     const { pathname } = location;
     let currentTitle = "Home";
     let currentKey = "";
