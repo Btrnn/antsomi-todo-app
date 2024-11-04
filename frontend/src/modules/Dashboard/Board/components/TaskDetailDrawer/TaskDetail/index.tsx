@@ -52,7 +52,6 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
     if (task) {
       form.setFieldsValue({
         ...task,
-        assignee: task.assignee_id !== '' ? task.assignee_id : null,
         start_date: task.start_date ? dayjs(task.start_date) : undefined,
         end_date: task.end_date ? dayjs(task.end_date) : undefined,
         created_at: dayjs(task.created_at),
@@ -67,10 +66,12 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
 
   const onFinishForm = (values: FormType) => {
     if (task) {
-      updateTask({ ...values, id: task.id });
-      if (!isUpdateTaskError) {
-        messageCreate.success('Update task successfully!');
-      } else {
+      updateTask({
+        ...values,
+        id: task.id,
+        assignee_id: values.assignee_id ? values.assignee_id : null,
+      });
+      if (isUpdateTaskError) {
         messageCreate.error('Cannot update task!');
       }
     }

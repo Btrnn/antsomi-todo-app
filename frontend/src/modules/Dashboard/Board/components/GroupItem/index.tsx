@@ -287,8 +287,8 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
       > = {
         name: inputTask,
         description: "",
-        est_time: "",
-        assignee_id: "",
+        est_time: null,
+        assignee_id: null,
         status_id: group.id,
         position: taskList.length,
       };

@@ -14,7 +14,7 @@ import {
 } from '@dnd-kit/core';
 import type { Active, Over } from '@dnd-kit/core/dist/store/index';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 // Icons
@@ -39,7 +39,6 @@ import { updateTask as updatedTaskAPI } from 'services/task';
 import { Group, Task } from 'models';
 
 // Utils
-import { useGroupList, useTaskList } from 'hooks';
 import {
   useCreateGroup,
   useDeleteGroup,
@@ -53,13 +52,12 @@ import {
   reorderDoubleArrays,
   reorderSingleArray,
 } from 'utils';
+import { useGroupList, useTaskList } from 'hooks';
 
 interface GroupsProps {
   type: string;
   permission: string;
   boardId: React.Key;
-  groupList: Group[];
-  taskList: Task[];
 }
 
 type TState = {
@@ -81,7 +79,7 @@ const dropAnimation: DropAnimation = {
 };
 
 export const GroupList: React.FC<GroupsProps> = props => {
-  const { type, boardId, permission, groupList, taskList } = props;
+  const { type, boardId, permission } = props;
   const sensors = useSensors(useSensor(MouseSensor));
 
   const [messageCreate, contextHolder] = message.useMessage();
@@ -110,17 +108,19 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const { activeID, activeType, inputGroupName, activeInfo } = state;
 
-  // Store
-  //const dispatch: AppDispatch = useDispatch();
-
   // Hooks
+  const { taskList } = useTaskList(boardId);
+  const { groupList, isLoading } = useGroupList(boardId);
+  console.log('🚀 ~ isLoading:', isLoading);
+  console.log('🚀 ~ taskList:', taskList);
+  console.log('🚀 ~ groupList:', groupList);
 
-  // console.log('groupList: ', { groupList });
+  //console.log({ type, permission, boardId });
 
   // Use Effect
-  useEffect(() => {
-    // console.log({ groupList });
-  }, [groupList]);
+  // useEffect(() => {
+  //   // console.log({ groupList });
+  // }, [groupList]);
 
   // Handlers
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +133,6 @@ export const GroupList: React.FC<GroupsProps> = props => {
       position: groupList.length,
       type: type,
       color: '#597ef7',
-      board_id: boardId,
     };
     createGroup(newGroup);
     if (!isCreateGroupError) {
@@ -323,7 +322,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
       const destinationIndex = groupList.findIndex(group => group.id === over.id);
       const sourceIndex = groupList.findIndex(group => group.id === active.id);
       const reorderedList = reorderSingleArray(groupList, sourceIndex, destinationIndex);
-      const positionList = reorderedList.map(group => ({
+      let positionList = reorderedList.map(group => ({
         id: group.id,
         position: group.position,
       }));
@@ -335,17 +334,22 @@ export const GroupList: React.FC<GroupsProps> = props => {
       ) {
         positionList[i].position = i;
       }
+
+      positionList = positionList.slice(
+        Math.min(sourceIndex, destinationIndex),
+        Math.max(sourceIndex, destinationIndex) + 1,
+      );
       reorderGroup(positionList);
     } else {
       onDragEndReorderTask(active, over);
     }
-    setState(prev => ({
-      ...prev,
-      activeID: null,
-      activeType: null,
-      tempTaskList: [],
-      activeInfo: undefined,
-    }));
+    // setState(prev => ({
+    //   ...prev,
+    //   activeID: null,
+    //   activeType: null,
+    //   tempTaskList: [],
+    //   activeInfo: undefined,
+    // }));
   };
 
   const onDeleteGroup = async (id: React.Key) => {
@@ -365,7 +369,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
     const updatePositionList = positionList.slice(updatePosition);
     reorderGroup(updatePositionList);
 
-    if (!isDeleteGroupError && !isReorderGroupError) {
+    if (!isDeleteGroupError) {
       messageCreate.open({
         type: 'success',
         content: <div>Group deleted!</div>,

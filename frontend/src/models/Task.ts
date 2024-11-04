@@ -5,8 +5,8 @@ export interface Task {
   name: string;
   description: string;
   status_id: React.Key;
-  assignee_id: React.Key | undefined;
-  est_time: string;
+  assignee_id: React.Key | null;
+  est_time: number | null;
   position: number;
   start_date: string | null;
   end_date: string | null;

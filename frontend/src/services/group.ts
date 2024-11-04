@@ -56,7 +56,9 @@ export const reorderGroup = async (
   groupPositions: { id: IdentifyId; position: number }[],
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.patch(`group/reorder/${boardID}`, groupPositions);
+    const response = await axiosInstance.patch(`group/reorder/${boardID}`, {
+      positionList: groupPositions,
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

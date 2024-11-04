@@ -5,6 +5,7 @@ import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Task } from 'models';
+import { dataTagSymbol } from '@tanstack/react-query';
 
 export const getAllTasks = async (boardID: IdentifyId): Promise<ServiceResponse<Task[]>> => {
   try {
@@ -59,7 +60,9 @@ export const reorderTask = async (
   taskPositions: { id: IdentifyId; position: number }[],
 ) => {
   try {
-    const response = await axiosInstance.patch(`task/reorder/${boardID}`, taskPositions);
+    const response = await axiosInstance.patch(`task/reorder/${boardID}`, {
+      positionList: taskPositions,
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

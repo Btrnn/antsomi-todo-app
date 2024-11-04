@@ -182,13 +182,10 @@ export const useReorderGroup = ({ boardId, options }: UseReorderGroupProps) => {
       queryClient.setQueryData(
         [QUERY_KEYS.GET_GROUP_LIST, boardId],
         (oldData: ServiceResponse<Group[]>) => {
-          const newData = persistGroupMutate({
+          return persistGroupMutate({
             oldData,
             positions: groupPositions,
           });
-          //console.log('🚀 ~ useReorderGroup ~ newData:', newData);
-
-          return newData;
         },
       );
       return { previousGroupList: previousGroupList as Group[] };

@@ -202,12 +202,12 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
                 >
                   {groupInfo.groupName}
                 </Tag>
-                {task.assignee_id !== '' && (
+                {task.assignee_id ? (
                   <Tag bordered={false} className="justify-center">
                     {userList.find(user => user.id === task.assignee_id)?.name}
                   </Tag>
-                )}
-                {task.est_time !== '' && (
+                ) : null}
+                {task.est_time && (
                   <Tag bordered={false} className="justify-center bg-transparent">
                     {task.est_time}
                   </Tag>
