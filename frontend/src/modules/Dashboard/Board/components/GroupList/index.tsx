@@ -66,6 +66,7 @@ type TState = {
   activeID: React.Key | null | undefined;
   activeType: string | null | undefined;
   activeInfo: Group | undefined;
+  tempGroupList: Group[];
 };
 
 const dropAnimation: DropAnimation = {
@@ -104,6 +105,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
     activeID: null,
     activeType: null,
     activeInfo: undefined,
+    tempGroupList: [],
   });
 
   const { activeID, activeType, inputGroupName, activeInfo } = state;
@@ -111,9 +113,16 @@ export const GroupList: React.FC<GroupsProps> = props => {
   // Hooks
   const { taskList } = useTaskList(boardId);
   const { groupList, isLoading } = useGroupList(boardId);
-  console.log('🚀 ~ isLoading:', isLoading);
-  console.log('🚀 ~ taskList:', taskList);
-  console.log('🚀 ~ groupList:', groupList);
+
+  // Effects
+  useEffect(() => {
+    if (groupList) {
+      setState(prev => ({
+        ...prev,
+        tempGroupList: groupList,
+      }));
+    }
+  }, [groupList]);
 
   //console.log({ type, permission, boardId });
 
@@ -130,7 +139,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const onClickAddGroup = async () => {
     const newGroup: Partial<Group> = {
       name: inputGroupName,
-      position: groupList.length,
+      position: state.tempGroupList.length,
       type: type,
       color: '#597ef7',
     };
@@ -259,7 +268,9 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const onDragStart = (event: DragStartEvent) => {
     let currentInfo;
     if (event.active.data.current?.type === SORTABLE_TYPE.TASK) {
-      currentInfo = groupList.find(group => group.id === event.active.data.current?.groupID);
+      currentInfo = state.tempGroupList.find(
+        group => group.id === event.active.data.current?.groupID,
+      );
     }
     setState(prev => ({
       ...prev,
@@ -319,9 +330,9 @@ export const GroupList: React.FC<GroupsProps> = props => {
     }
 
     if (sourceType === SORTABLE_TYPE.GROUP) {
-      const destinationIndex = groupList.findIndex(group => group.id === over.id);
-      const sourceIndex = groupList.findIndex(group => group.id === active.id);
-      const reorderedList = reorderSingleArray(groupList, sourceIndex, destinationIndex);
+      const destinationIndex = state.tempGroupList.findIndex(group => group.id === over.id);
+      const sourceIndex = state.tempGroupList.findIndex(group => group.id === active.id);
+      const reorderedList = reorderSingleArray(state.tempGroupList, sourceIndex, destinationIndex);
       let positionList = reorderedList.map(group => ({
         id: group.id,
         position: group.position,
@@ -339,6 +350,12 @@ export const GroupList: React.FC<GroupsProps> = props => {
         Math.min(sourceIndex, destinationIndex),
         Math.max(sourceIndex, destinationIndex) + 1,
       );
+
+      setState(prev => ({
+        ...prev,
+        tempGroupList: reorderedList,
+      }));
+
       reorderGroup(positionList);
     } else {
       onDragEndReorderTask(active, over);
@@ -354,8 +371,8 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDeleteGroup = async (id: React.Key) => {
     deleteGroup(id);
-    const updatePosition = groupList.find(group => group.id === id)?.position;
-    const positionList = groupList
+    const updatePosition = state.tempGroupList.find(group => group.id === id)?.position;
+    const positionList = state.tempGroupList
       .filter(group => group.id !== id)
       .map(group => ({
         id: group.id,
@@ -394,10 +411,10 @@ export const GroupList: React.FC<GroupsProps> = props => {
       {contextHolder}
       <Flex justify="flex-start" align={'flex-start'} className="gap-5 w-full h-full">
         <SortableContext
-          items={groupList.map(group => String(group.id))}
+          items={state.tempGroupList.map(group => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {groupList?.map(group => (
+          {state.tempGroupList?.map(group => (
             <GroupItem
               key={group.id}
               group={group}
@@ -448,7 +465,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
             )
           ) : (
             <GroupItem
-              group={groupList.find(group => group.id === activeID)}
+              group={state.tempGroupList.find(group => group.id === activeID)}
               allTasks={taskList}
               onDelete={async () => {}}
               isOverlay={true}
