@@ -5,7 +5,7 @@ import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Task } from 'models';
-import { dataTagSymbol } from '@tanstack/react-query';
+import { OBJECT_TYPE } from 'constants/common';
 
 export const getAllTasks = async (boardID: IdentifyId): Promise<ServiceResponse<Task[]>> => {
   try {
@@ -39,7 +39,9 @@ export const updateTask = async (boardId: IdentifyId, task: Partial<Task>) => {
 
 export const deleteTask = async (boardID: IdentifyId, taskID: IdentifyId) => {
   try {
-    const response = await axiosInstance.delete(`task/${boardID}`, { data: { id: taskID } });
+    const response = await axiosInstance.delete(`task/${boardID}`, {
+      data: { id: taskID },
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);
@@ -48,7 +50,9 @@ export const deleteTask = async (boardID: IdentifyId, taskID: IdentifyId) => {
 
 export const deleteTaskByGroupID = async (boardID: IdentifyId, id: IdentifyId) => {
   try {
-    const response = await axiosInstance.delete(`task/clear/${boardID}`, { data: { id } });
+    const response = await axiosInstance.delete(`task/clear/${boardID}`, {
+      data: { id },
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

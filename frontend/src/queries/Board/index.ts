@@ -28,7 +28,7 @@ type UseCreateBoardProps = {
   options?: UseMutationOptions<
     ServiceResponse<Board>,
     Error,
-    Partial<Board>,
+    Omit<Board, 'id' | 'created_at' | 'owner_id'>,
     { previousBoardList: Board[] }
   >;
 };

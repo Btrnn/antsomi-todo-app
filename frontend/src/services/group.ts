@@ -44,7 +44,9 @@ export const deleteGroup = async (
   id: IdentifyId,
 ): Promise<ServiceResponse<boolean>> => {
   try {
-    const response = await axiosInstance.delete(`group/${boardID}`, { data: { id } });
+    const response = await axiosInstance.delete(`group/${boardID}`, {
+      data: { id },
+    });
     return response.data;
   } catch (error) {
     return Promise.reject(error);

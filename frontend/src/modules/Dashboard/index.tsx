@@ -41,7 +41,7 @@ import {
   Modal,
   Typography,
 } from "components/ui";
-import { UserDrawer } from "../../components/common";
+import { UserDrawer, ShareAccessModal } from "components/common";
 
 // Constants
 import {
@@ -57,14 +57,13 @@ import {
 // Models
 import { Board } from "models";
 
-// Services
-import { getAccessList, getPermission } from "services/board";
-
 // Stores
-import { AppDispatch, setPermission } from "store";
+import { AppDispatch } from "store";
 
-import { ShareAccessModal } from "components/common";
+// Types
 import { IdentifyId } from "types";
+
+// Utils
 import { checkAuthority, getDashBoardLevelKeys, getParentKeys } from "utils";
 
 // Hooks
@@ -346,7 +345,7 @@ export const Dashboard: React.FC = () => {
         }
       } else {
         try {
-          const newBoard: Partial<Board> = {
+          const newBoard: Omit<Board, 'id' | 'created_at' | 'owner_id'> = {
             name: inputBoardName,
             position: ownedBoardList.length,
           };

@@ -135,8 +135,6 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     isOpen,
     taskList,
     textColor,
-    isClicked,
-    isChanged,
     isChangeColor,
   } = state;
 

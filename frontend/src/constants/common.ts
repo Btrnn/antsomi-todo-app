@@ -41,3 +41,7 @@ export const DASHBOARD_NAME = {
 export const OBJECT_TYPE = {
   BOARD: 'board',
 } as const;
+
+export const API_QUERY_KEY = {
+  OBJECT_TYPE: 'objectType',
+};

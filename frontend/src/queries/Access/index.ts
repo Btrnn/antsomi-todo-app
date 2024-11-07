@@ -17,7 +17,7 @@ import {
   getAccessList,
   getPermission,
   shareAccess,
-  updateAccessBoard,
+  updateAccess,
 } from 'services';
 
 // Types
@@ -180,7 +180,7 @@ export const useUpdateAccess = ({ objectId, objectType, options }: UseUpdateAcce
 
   return useMutation({
     mutationKey: [MUTATION_KEYS.UPDATE_ACCESS],
-    mutationFn: accessList => updateAccessBoard(objectId, objectType, accessList),
+    mutationFn: accessList => updateAccess(objectId, objectType, accessList),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_ACCESS_LIST, objectId],

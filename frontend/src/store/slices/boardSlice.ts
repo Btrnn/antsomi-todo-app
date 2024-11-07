@@ -8,7 +8,6 @@ import dayjs from 'dayjs';
 import { Board } from 'models/Board';
 
 // Services
-import { reorderBoard as reorderBoardAPI } from 'services';
 import { useParams } from 'react-router-dom';
 
 interface BoardState {
@@ -26,16 +25,6 @@ const initialState: BoardState = {
   error: '',
   updateList: [],
 };
-
-export const reorderBoardAsync = createAsyncThunk('board/reorder', async (_, { getState }) => {
-  const state = getState() as { board: BoardState };
-  const boardPositions = state.board.updateList.map(board => ({
-    id: board.id,
-    position: board.position,
-  }));
-  const response = await reorderBoardAPI(boardPositions);
-  return response.data;
-});
 
 const boardSlice = createSlice({
   name: 'board',
@@ -83,21 +72,6 @@ const boardSlice = createSlice({
     // deleteUser(state, action: PayloadAction<number>) {
     //   state.userList = state.userList.filter(user => user.id !== action.payload);
     // },
-  },
-  extraReducers: builder => {
-    builder
-      .addCase(reorderBoardAsync.pending, state => {
-        state.loading = true;
-        state.error = '';
-      })
-      .addCase(reorderBoardAsync.fulfilled, state => {
-        state.loading = false;
-        state.updateList = [];
-      })
-      .addCase(reorderBoardAsync.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error as string;
-      });
   },
 });
 

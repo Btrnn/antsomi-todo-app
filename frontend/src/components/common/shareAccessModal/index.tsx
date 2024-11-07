@@ -7,7 +7,7 @@ import { AutoComplete, Input, List, message, Modal, Tag, Typography } from '../.
 
 // Constants
 import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
-import { getInfo, shareAccess, updateAccessBoard } from 'services';
+import { getInfo, shareAccess, updateAccess } from 'services';
 
 // Utils
 import { checkAuthority } from 'utils';
@@ -137,6 +137,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
     if (inputUser) {
       try {
         const userInfo = await getInfo(inputUser);
+        console.log(userInfo);
         const isExisted = [...shareUsers, ...alreadySharedList].find(
           user => user.id === userInfo.data.id,
         );

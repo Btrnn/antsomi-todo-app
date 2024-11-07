@@ -25,9 +25,6 @@ import { Button, Flex, Input, message } from 'components/ui';
 import { GroupItem } from '../GroupItem';
 import { TaskItem } from '../TaskItem';
 
-// Providers
-import { AppDispatch, reorderTask, reorderTaskAsync, setGroupList } from 'store';
-
 // Constants
 import { PERMISSION, ROLE_KEY } from 'constants/role';
 import { SORTABLE_TYPE } from 'constants/tasks';
@@ -67,6 +64,7 @@ type TState = {
   activeType: string | null | undefined;
   activeInfo: Group | undefined;
   tempGroupList: Group[];
+  tempTaskList: Task[];
 };
 
 const dropAnimation: DropAnimation = {
@@ -106,13 +104,14 @@ export const GroupList: React.FC<GroupsProps> = props => {
     activeType: null,
     activeInfo: undefined,
     tempGroupList: [],
+    tempTaskList: [],
   });
 
-  const { activeID, activeType, inputGroupName, activeInfo } = state;
+  const { activeID, activeType, inputGroupName, activeInfo, tempTaskList, tempGroupList } = state;
 
   // Hooks
   const { taskList } = useTaskList(boardId);
-  const { groupList, isLoading } = useGroupList(boardId);
+  const { groupList } = useGroupList(boardId);
 
   // Effects
   useEffect(() => {
@@ -124,12 +123,14 @@ export const GroupList: React.FC<GroupsProps> = props => {
     }
   }, [groupList]);
 
-  //console.log({ type, permission, boardId });
-
-  // Use Effect
-  // useEffect(() => {
-  //   // console.log({ groupList });
-  // }, [groupList]);
+  useEffect(() => {
+    if (taskList) {
+      setState(prev => ({
+        ...prev,
+        tempTaskList: taskList,
+      }));
+    }
+  }, [taskList]);
 
   // Handlers
   const onChangeInputGroup = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +140,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const onClickAddGroup = async () => {
     const newGroup: Partial<Group> = {
       name: inputGroupName,
-      position: state.tempGroupList.length,
+      position: tempGroupList.length,
       type: type,
       color: '#597ef7',
     };
@@ -161,7 +162,9 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDragEndReorderTask = (source: Active, destination: Over) => {
     // Find reordered group information
-    const reorderedGroup = taskList.filter(task => task.status_id === source.data.current?.groupID);
+    const reorderedGroup = tempTaskList.filter(
+      task => task.status_id === source.data.current?.groupID,
+    );
 
     // Find source's information
     const sourceIndex = reorderedGroup.findIndex(task => task.id === source.id);
@@ -198,85 +201,114 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDragOverChangeTaskGroup = (source: Active, destination: Over) => {
     // Find source's information
-    const sourceList = taskList.filter(task => task.status_id === source.data.current?.groupID);
+    const sourceList = tempTaskList.filter(task => task.status_id === source.data.current?.groupID);
     const sourceIndex = sourceList.findIndex(task => task.id === source.id);
 
     // Find destination's information
-    let destinationList, destinationIndex;
+    let destinationList, destinationIndex, destinationGroup;
     if (destination.data.current?.type === SORTABLE_TYPE.GROUP) {
-      destinationList = taskList.filter(task => task.status_id === destination.id);
+      destinationList = tempTaskList.filter(task => task.status_id === destination.id);
       destinationIndex = 0;
     } else {
-      destinationList = taskList.filter(
+      destinationList = tempTaskList.filter(
         task => task.status_id === destination.data.current?.groupID,
       );
       destinationIndex = destinationList.findIndex(task => task.id === destination.id);
     }
 
     if (destination.data.current?.type === SORTABLE_TYPE.TASK) {
-      updateTask({ id: source.id, status_id: destination.data.current?.groupID });
+      destinationGroup = destination.data.current?.groupID;
+      //updateTask({ id: source.id, status_id: destination.data.current?.groupID });
     } else {
-      updateTask({ id: source.id, status_id: destination?.id });
-    }
-    if (isUpdateTaskError) {
-      messageCreate.open({
-        type: 'error',
-        content: 'Reorder task failed!',
-      });
+      destinationGroup = destination?.id;
+      //updateTask({ id: source.id, status_id: destination?.id });
     }
 
-    if (sourceIndex === -1) {
-      //console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
-      return;
-    }
+    const remainingList = tempTaskList.filter(
+      task =>
+        task.status_id !== source.data.current?.groupID && task.status_id !== destinationGroup,
+    );
+
+    // setState(prev => {
+    //   const updateTaskIndex = tempTaskList.findIndex(task => task.id === source.id);
+    //   const updatedTaskList = [...prev.tempTaskList];
+
+    //   updatedTaskList[updateTaskIndex] = {
+    //     ...updatedTaskList[updateTaskIndex],
+    //     status_id: destinationGroup,
+    //   };
+
+    //   return {
+    //     ...prev,
+    //     tempTaskList: updatedTaskList,
+    //   };
+    // });
+
+    // if (sourceIndex === -1) {
+    //   //console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
+    //   return;
+    // }
 
     // Reorder 2 lists
-    let [reorderedSourceList, reorderedDestinationList] = reorderDoubleArrays(
+    const [reorderedSourceList, reorderedDestinationList] = reorderDoubleArrays(
       sourceList,
       destinationList,
       sourceIndex,
       destinationIndex,
     );
+
     for (let i = sourceIndex; i < reorderedSourceList.length; i++) {
       reorderedSourceList[i].position = i;
     }
 
     for (let i = destinationIndex; i < reorderedDestinationList.length; i++) {
       reorderedDestinationList[i].position = i;
+      if (reorderedDestinationList[i].id === source.id) {
+        reorderedDestinationList[i].status_id = destinationGroup;
+      }
     }
 
-    // Get the list of positions to be changed.
-    reorderedSourceList = reorderedSourceList.slice(sourceIndex).map(task => ({
-      id: task.id,
-      position: task.position,
+    setState(prev => ({
+      ...prev,
+      tempTaskList: [...remainingList, ...reorderedSourceList, ...reorderedDestinationList],
     }));
 
-    reorderedDestinationList = reorderedDestinationList.slice(destinationIndex).map(task => ({
-      id: task.id,
-      position: task.position,
-    }));
+    console.log('🚀 ~ onDragOverChangeTaskGroup ~ remainingList:', remainingList);
+    console.log(
+      '🚀 ~ onDragOverChangeTaskGroup ~ reorderedDestinationList:',
+      reorderedDestinationList,
+    );
+    console.log('🚀 ~ onDragOverChangeTaskGroup ~ reorderedSourceList:', reorderedSourceList);
 
-    reorderTask([...reorderedSourceList, ...reorderedDestinationList]);
-    if (isReorderTaskError) {
-      messageCreate.open({
-        type: 'error',
-        content: 'Reorder task failed!',
-      });
-    }
+    // reorderedSourceList = reorderedSourceList.slice(sourceIndex).map(task => ({
+    //   id: task.id,
+    //   position: task.position,
+    // }));
+
+    // reorderedDestinationList = reorderedDestinationList.slice(destinationIndex).map(task => ({
+    //   id: task.id,
+    //   position: task.position,
+    // }));
+
+    // reorderTask([...reorderedSourceList, ...reorderedDestinationList]);
+    // if (isReorderTaskError) {
+    //   messageCreate.open({
+    //     type: 'error',
+    //     content: 'Reorder task failed!',
+    //   });
+    // }
   };
 
   const onDragStart = (event: DragStartEvent) => {
     let currentInfo;
     if (event.active.data.current?.type === SORTABLE_TYPE.TASK) {
-      currentInfo = state.tempGroupList.find(
-        group => group.id === event.active.data.current?.groupID,
-      );
+      currentInfo = tempGroupList.find(group => group.id === event.active.data.current?.groupID);
     }
     setState(prev => ({
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
-      tempTaskList: taskList,
+      tempTaskList: tempTaskList,
       activeInfo: currentInfo,
     }));
   };
@@ -286,7 +318,6 @@ export const GroupList: React.FC<GroupsProps> = props => {
       ...prev,
       activeID: null,
       activeType: null,
-      tempTaskList: [],
     }));
   };
 
@@ -330,9 +361,9 @@ export const GroupList: React.FC<GroupsProps> = props => {
     }
 
     if (sourceType === SORTABLE_TYPE.GROUP) {
-      const destinationIndex = state.tempGroupList.findIndex(group => group.id === over.id);
-      const sourceIndex = state.tempGroupList.findIndex(group => group.id === active.id);
-      const reorderedList = reorderSingleArray(state.tempGroupList, sourceIndex, destinationIndex);
+      const destinationIndex = tempGroupList.findIndex(group => group.id === over.id);
+      const sourceIndex = tempGroupList.findIndex(group => group.id === active.id);
+      const reorderedList = reorderSingleArray(tempGroupList, sourceIndex, destinationIndex);
       let positionList = reorderedList.map(group => ({
         id: group.id,
         position: group.position,
@@ -358,7 +389,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
       reorderGroup(positionList);
     } else {
-      onDragEndReorderTask(active, over);
+      //onDragEndReorderTask(active, over);
     }
     // setState(prev => ({
     //   ...prev,
@@ -371,8 +402,8 @@ export const GroupList: React.FC<GroupsProps> = props => {
 
   const onDeleteGroup = async (id: React.Key) => {
     deleteGroup(id);
-    const updatePosition = state.tempGroupList.find(group => group.id === id)?.position;
-    const positionList = state.tempGroupList
+    const updatePosition = tempGroupList.find(group => group.id === id)?.position;
+    const positionList = tempGroupList
       .filter(group => group.id !== id)
       .map(group => ({
         id: group.id,
@@ -411,14 +442,14 @@ export const GroupList: React.FC<GroupsProps> = props => {
       {contextHolder}
       <Flex justify="flex-start" align={'flex-start'} className="gap-5 w-full h-full">
         <SortableContext
-          items={state.tempGroupList.map(group => String(group.id))}
+          items={tempGroupList.map(group => String(group.id))}
           strategy={horizontalListSortingStrategy}
         >
-          {state.tempGroupList?.map(group => (
+          {tempGroupList?.map(group => (
             <GroupItem
               key={group.id}
               group={group}
-              allTasks={taskList}
+              allTasks={tempTaskList}
               onDelete={onDeleteGroup}
               isOverlay={false}
               isRearrange={activeID !== null}
@@ -451,7 +482,7 @@ export const GroupList: React.FC<GroupsProps> = props => {
           activeType === SORTABLE_TYPE.TASK ? (
             activeInfo && (
               <TaskItem
-                task={taskList.find(task => task.id === activeID)}
+                task={tempTaskList.find(task => task.id === activeID)}
                 groupInfo={{
                   groupColor: activeInfo.color,
                   groupID: activeInfo.id,
@@ -465,8 +496,8 @@ export const GroupList: React.FC<GroupsProps> = props => {
             )
           ) : (
             <GroupItem
-              group={state.tempGroupList.find(group => group.id === activeID)}
-              allTasks={taskList}
+              group={tempGroupList.find(group => group.id === activeID)}
+              allTasks={tempTaskList}
               onDelete={async () => {}}
               isOverlay={true}
               isRearrange={false}
