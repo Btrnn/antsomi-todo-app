@@ -12,133 +12,120 @@ import {
 
 // Services
 import { BoardService } from './board.service';
-import { AccessService } from '../share_access/share_access.service';
-
-// Entities
-import { UserEntity } from '../user/user.entity';
-import { BoardEntity } from './board.entity';
-
 // Types
-import { IdentifyId } from '@app/types';
+import { IdentifyId, UserRequest } from '@app/types';
 
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
 // Constants
-import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+
+// DTOs
+import { BoardCreateDto, BoardUpdateDto } from './dto';
 
 @Controller(ROUTES.BOARD)
 export class BoardController {
-  constructor(
-    private readonly boardService: BoardService,
-    private readonly accessService: AccessService,
-  ) {}
+  constructor(private readonly boardService: BoardService) {}
 
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Get('/accessed-board')
-  getAccessedBoards(@User() user: UserEntity) {
-    return this.boardService.findOwnedAndShare(user.id);
-  }
-
-  // @RequiresPermission(ROLE.OWNER, ACCESS_OBJECT.BOARD)
-  // @Get()
-  // getAllBoards() {
-  //   return this.boardService.findAll();
-  // }
-
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Get(`/permission/:${ACCESS_OBJECT.BOARD}`)
-  getBoardPermission(
-    @User() user: UserEntity,
-    @Param(ACCESS_OBJECT.BOARD) boardID: IdentifyId,
-  ) {
-    return this.boardService.findPermission(user.id, boardID);
-  }
-
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Get(`/accessList/:${ACCESS_OBJECT.BOARD}`)
-  getUserAccessList(
-    @User() user: UserEntity,
-    @Param(ACCESS_OBJECT.BOARD) boardID: IdentifyId,
-  ) {
-    return this.boardService.findUserAccessList(boardID);
+  //@RequiresPermission(ROLE.VIEWER)
+  @Get('/list')
+  getAllBoards(@User() user: UserRequest) {
+    return this.boardService.findOwnedAndShared(user.id);
   }
 
   @Post('/create')
-  createBoard(
-    @Body() newBoard: Omit<BoardEntity, 'id'>,
-    @User() user: UserEntity,
-  ) {
+  createBoard(@Body() newBoard: BoardCreateDto, @User() user: UserRequest) {
     return this.boardService.createBoard({
       ...newBoard,
       owner_id: user.id,
     });
   }
 
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Post(`/share/:${ACCESS_OBJECT.BOARD}`)
-  shareBoard(
-    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
-    @Body() user_permission: { user_id: IdentifyId; permission: string }[],
-    @User() user: UserEntity,
-  ) {
-    return this.boardService.shareBoard(board_id, user_permission, user.id);
-  }
-
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Put(`:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, OBJECT_TYPE.BOARD)
+  @Put(`:${PARAM_KEY.OBJECT}`)
   updateBoard(
-    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
-    @Body() board: Partial<BoardEntity>,
+    @Param(PARAM_KEY.OBJECT) board_id: IdentifyId,
+    @Body() board: BoardUpdateDto,
   ) {
     return this.boardService.updateBoard(board_id, board);
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Put(`/updateAccess/:${ACCESS_OBJECT.BOARD}`)
-  updateBoardAccess(
-    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
-    @Body() accessList: { user_id: IdentifyId; permission: string }[],
-    @User() user: UserEntity,
-  ) {
-    return this.boardService.updateAccessBoard(board_id, accessList, user.id);
-  }
-
-  @RequiresPermission(ROLE.MANAGER, ACCESS_OBJECT.BOARD)
-  @Delete(`:${ACCESS_OBJECT.BOARD}`)
-  deleteBoard(@Param(ACCESS_OBJECT.BOARD) id: IdentifyId) {
+  @RequiresPermission(ROLE.OWNER, OBJECT_TYPE.BOARD)
+  @Delete(`:${PARAM_KEY.OBJECT}`)
+  deleteBoard(@Param(PARAM_KEY.OBJECT) id: IdentifyId) {
     return this.boardService.deleteBoard(id);
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Delete(`deleteAccess/:${ACCESS_OBJECT.BOARD}`)
-  deleteAccessBoard(
-    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
-    @Body('userID') user_id: IdentifyId,
-  ) {
-    return this.accessService.deleteAccess(board_id, user_id);
-  }
+  // @RequiresPermission(ROLE.OWNER, PARAM_KEY.OBJECT)
+  // @Get()
+  // getAllBoards() {
+  //   return this.boardService.findAll();
+  // }
 
-  @RequiresPermission(ROLE.OWNER, ACCESS_OBJECT.BOARD)
-  @Put(`changeOwner/:${ACCESS_OBJECT.BOARD}`)
-  changeBoardOwner(
-    @Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId,
-    @Body('new_owner') new_owner_id: IdentifyId,
-    @User() current_owner: UserEntity,
-  ) {
-    return this.boardService.changeBoardOwner(
-      board_id,
-      new_owner_id,
-      current_owner.id,
-    );
-  }
+  // @RequiresPermission(ROLE.VIEWER)
+  // @Get(`/accessList/:${PARAM_KEY.OBJECT}/:${PARAM_KEY.TYPE}`)
+  // getUserAccessList(@Param(PARAM_KEY.OBJECT) boardID: IdentifyId) {
+  //   return this.boardService.findUserAccessList(boardID);
+  // }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Patch()
-  async updateBoardPositions(
-    @Body() boardPositions: { id: string; position: number }[],
-  ) {
-    return this.boardService.reorderBoard(boardPositions);
-  }
+  // @RequiresPermission(ROLE.VIEWER)
+  // @Post(`/share/:${PARAM_KEY.OBJECT}/:${PARAM_KEY.TYPE}`)
+  // shareBoard(
+  //   @Param(PARAM_KEY.OBJECT) board_id: IdentifyId,
+  //   @Body() shareData: ShareAccessDto,
+  //   @User() user: UserRequest,
+  // ) {
+  //   return this.boardService.shareBoard(
+  //     board_id,
+  //     shareData.permissionList,
+  //     user.id,
+  //   );
+  // }
+
+  // @RequiresPermission(ROLE.EDITOR)
+  // @Put(`/updateAccess/:${PARAM_KEY.OBJECT}/:${PARAM_KEY.TYPE}`)
+  // updateBoardAccess(
+  //   @Param(PARAM_KEY.OBJECT) board_id: IdentifyId,
+  //   @Body() updateData: UpdateAccessDto,
+  //   @User() user: UserRequest,
+  // ) {
+  //   return this.boardService.updateAccessBoard(
+  //     board_id,
+  //     updateData.permissionList,
+  //     user.id,
+  //   );
+  // }
+
+  // @RequiresPermission(ROLE.EDITOR)
+  // @Delete(`deleteAccess/:${PARAM_KEY.OBJECT}`)
+  // deleteAccessBoard(
+  //   @Param(PARAM_KEY.OBJECT) boardId: IdentifyId,
+  //   @Body() deleteData: DeleteAccessDto,
+  // ) {
+  //   return this.accessService.deleteAccess(boardId, deleteData.user_id);
+  // }
+
+  // @RequiresPermission(ROLE.OWNER)
+  // @Put(`changeOwner/:${PARAM_KEY.OBJECT}`)
+  // changeBoardOwner(
+  //   @Param(PARAM_KEY.OBJECT) board_id: IdentifyId,
+  //   @Body() changeData: ChangeOwnerDto,
+  //   @User() current_owner: UserRequest,
+  // ) {
+  //   return this.boardService.changeBoardOwner(
+  //     board_id,
+  //     changeData.new_owner,
+  //     current_owner.id,
+  //   );
+  // }
+
+  // @RequiresPermission(ROLE.EDITOR, PARAM_KEY.OBJECT)
+  // @Patch()
+  // async updateBoardPositions(
+  //   @Body() boardPositions: { id: string; position: number }[],
+  // ) {
+  //   return this.boardService.reorderBoard(boardPositions);
+  // }
 }

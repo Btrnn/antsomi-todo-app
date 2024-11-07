@@ -1,20 +1,29 @@
 // Libraries
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 
 // Services
 import { UserService } from './user.service';
-
-// Entities
-import { UserEntity } from './user.entity';
-
-// Types
-import { IdentifyId } from '@app/types';
 
 // Decorators
 import { Public, User } from '@app/decorators';
 
 // Constants
 import { ROUTES } from '@app/constants';
+import {
+  UserCreateDto,
+  UserDeleteDto,
+  UserGetInfoDto,
+  UserUpdateDto,
+} from './dto';
+import { UserRequest } from '@app/types';
 
 @Controller(ROUTES.USER)
 export class UserController {
@@ -26,23 +35,28 @@ export class UserController {
   }
 
   @Get('info')
-  getUserInfo(@User() user: UserEntity) {
+  getUserInfo(@User() user: UserRequest) {
     return this.userService.findOne(user.id);
   }
 
   @Get(':email')
-  getInfoByEmail(@Param('email') email: string) {
-    return this.userService.findByEmail(email);
+  getInfoByEmail(@Param() findData: UserGetInfoDto) {
+    return this.userService.findByEmail(findData.email);
   }
 
   @Public()
   @Post('create')
-  createUser(@Body() newUser: Omit<UserEntity, 'id'>) {
+  createUser(@Body() newUser: UserCreateDto) {
     return this.userService.createUser(newUser);
   }
 
   @Delete(':id')
-  deleteTask(@Param('id') id: IdentifyId) {
-    return this.userService.deleteUser(id);
+  deleteUser(@Param() deleteData: UserDeleteDto) {
+    return this.userService.deleteUser(deleteData.id);
+  }
+
+  @Put('update')
+  updateUser(@User() user: UserRequest, @Body() updateData: UserUpdateDto) {
+    return this.userService.updateUser(user.id, updateData);
   }
 }

@@ -18,6 +18,7 @@ import { AccessService } from '../share_access/share_access.service';
 import { GroupService } from '../group/group.service';
 import { OBJECT_TYPE, PERMISSION, ROLE } from '@app/constants';
 import { UserEntity } from '../user/user.entity';
+import { AccessEntity } from '../share_access/share_access.entity';
 
 @Injectable()
 export class BoardService {
@@ -54,7 +55,15 @@ export class BoardService {
   async findShared(
     userID: IdentifyId,
   ): Promise<ServiceResponse<BoardEntity[]>> {
-    const boardIDs = await this.accessService.findObjectsByUser(userID);
+    const boardIDs = await this.accessService.findObjectsByUser(
+      userID,
+      OBJECT_TYPE.BOARD,
+    );
+
+    if (boardIDs.data.length === 0) {
+      return { data: [], meta: {} };
+    }
+
     const entities = await this.boardRepository.find({
       where: {
         id: In(boardIDs.data),
@@ -71,15 +80,59 @@ export class BoardService {
     return { data: entities, meta: { page: 1 } };
   }
 
-  async findOwnedAndShare(
+  async findOwnedAndShared(
     userID: IdentifyId,
   ): Promise<ServiceResponse<{ shared: BoardEntity[]; owned: BoardEntity[] }>> {
     const owned = await this.findOwned(userID);
     const shared = await this.findShared(userID);
     return {
-      data: { owned: owned.data, shared: shared.data },
+      data: { owned: owned.data || [], shared: shared.data || [] },
       meta: { page: 1 },
     };
+  }
+
+  async createBoard(
+    board: Omit<BoardEntity, 'id' | 'created_at'>,
+  ): Promise<ServiceResponse<BoardEntity>> {
+    const entity = await this.boardRepository.save(board);
+    return { data: entity ? entity : null, meta: {} };
+  }
+
+  async deleteBoard(board_id: IdentifyId): Promise<ServiceResponse<boolean>> {
+    let resultDelete = false;
+    await this.dataSource.transaction(async (manager) => {
+      const group_list = await manager.find(GroupEntity, {
+        select: ['id'],
+        where: { board_id: board_id as string },
+      });
+      for (const group of group_list) {
+        await this.groupService.deleteGroup(group.id);
+      }
+      await manager.delete(AccessEntity, {
+        object_id: board_id as string,
+      });
+      const result = await this.boardRepository.delete({
+        id: board_id as string,
+      });
+      if (result.affected > 0) {
+        resultDelete = true;
+      }
+    });
+    return {
+      data: resultDelete,
+      meta: {},
+    };
+  }
+
+  async updateBoard(
+    id: IdentifyId,
+    updateData: Partial<BoardEntity>,
+  ): Promise<ServiceResponse<boolean>> {
+    const result = await this.boardRepository.update(
+      { id: id as string },
+      updateData,
+    );
+    return { data: result.affected > 0, meta: {} };
   }
 
   async findPermission(
@@ -96,190 +149,100 @@ export class BoardService {
     return { data: result.data, meta: {} };
   }
 
-  async createBoard(
-    board: Omit<BoardEntity, 'id'>,
-  ): Promise<ServiceResponse<BoardEntity>> {
-    const entity = await this.boardRepository
-      .createQueryBuilder()
-      .insert()
-      .into(BoardEntity)
-      .values(board)
-      .returning('*')
-      .execute();
-    return { data: entity.raw, meta: {} };
-  }
+  // async shareBoard(
+  //   board_id: IdentifyId,
+  //   user_permission: { user_id: IdentifyId; permission: string }[],
+  //   user_id: IdentifyId,
+  // ): Promise<ServiceResponse<boolean>> {
+  //   const current_board = await this.boardRepository.findOneBy({
+  //     id: board_id as string,
+  //   });
 
-  async shareBoard(
-    board_id: IdentifyId,
-    user_permission: { user_id: IdentifyId; permission: string }[],
-    user_id: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
-    const current_board = await this.boardRepository.findOneBy({
-      id: board_id as string,
-    });
+  //   let current_permission;
+  //   if (current_board.owner_id === user_id) {
+  //     current_permission = ROLE.OWNER;
+  //   } else {
+  //     current_permission = await this.accessService.findUserPermission(
+  //       user_id,
+  //       board_id,
+  //     );
+  //     current_permission = current_permission.data;
+  //   }
 
-    let current_permission;
-    if (current_board.owner_id === user_id) {
-      current_permission = ROLE.OWNER;
-    } else {
-      current_permission = await this.accessService.findUserPermission(
-        user_id,
-        board_id,
-      );
-      current_permission = current_permission.data;
-    }
+  //   for (const permission of user_permission) {
+  //     if (current_board.owner_id === permission.user_id) {
+  //       throw new HttpException(
+  //         {
+  //           statusCode: HttpStatus.CONFLICT,
+  //           statusMessage: 'Cannot share board with owner',
+  //         },
+  //         HttpStatus.CONFLICT,
+  //       );
+  //     }
+  //     if (!PERMISSION[permission.permission].includes(current_permission)) {
+  //       throw new HttpException(
+  //         {
+  //           statusCode: HttpStatus.UNAUTHORIZED,
+  //           statusMessage: 'Cannot share access with higher permission',
+  //         },
+  //         HttpStatus.UNAUTHORIZED,
+  //       );
+  //     }
+  //     // await this.accessService.createAccess({
+  //     //   object_id: board_id as string,
+  //     //   user_id: permission.user_id as string,
+  //     //   permission: permission.permission,
+  //     //   object_type: OBJECT_TYPE.BOARD,
+  //     // });
+  //   }
+  //   return { data: true, meta: {} };
+  // }
 
-    for (const permission of user_permission) {
-      if (current_board.owner_id === permission.user_id) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            statusMessage: 'Cannot share board with owner',
-          },
-          HttpStatus.CONFLICT,
-        );
-      }
-      if (!PERMISSION[permission.permission].includes(current_permission)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            statusMessage: 'Cannot share access with higher permission',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-      await this.accessService.createAccess({
-        object_id: board_id as string,
-        user_id: permission.user_id as string,
-        permission: permission.permission,
-        object_type: OBJECT_TYPE.BOARD,
-      });
-    }
-    return { data: true, meta: {} };
-  }
+  // async updateAccessBoard(
+  //   board_id: IdentifyId,
+  //   accessList: { user_id: IdentifyId; permission: string }[],
+  //   user_id: IdentifyId,
+  // ): Promise<ServiceResponse<boolean>> {
+  //   const entity = await this.accessService.updateAccess(
+  //     board_id,
+  //     OBJECT_TYPE.BOARD,
+  //     accessList,
+  //     user_id,
+  //   );
+  //   return { data: entity.data, meta: {} };
+  // }
 
-  async updateAccessBoard(
-    board_id: IdentifyId,
-    accessList: { user_id: IdentifyId; permission: string }[],
-    user_id: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
-    const entity = await this.accessService.updateAccess(
-      board_id,
-      OBJECT_TYPE.BOARD,
-      accessList,
-      user_id,
-    );
-    return { data: entity.data, meta: {} };
-  }
+  // async changeBoardOwner(
+  //   board_id: IdentifyId,
+  //   new_owner_id: IdentifyId,
+  //   current_owner_id: IdentifyId,
+  // ): Promise<ServiceResponse<boolean>> {
+  //   const entity = await this.boardRepository
+  //     .createQueryBuilder()
+  //     .update(BoardEntity)
+  //     .set({ owner_id: new_owner_id as string })
+  //     .where('id = :id', { id: board_id })
+  //     .returning('*')
+  //     .execute();
 
-  async changeBoardOwner(
-    board_id: IdentifyId,
-    new_owner_id: IdentifyId,
-    current_owner_id: IdentifyId,
-  ): Promise<ServiceResponse<boolean>> {
-    const entity = await this.boardRepository
-      .createQueryBuilder()
-      .update(BoardEntity)
-      .set({ owner_id: new_owner_id as string })
-      .where('id = :id', { id: board_id })
-      .returning('*')
-      .execute();
+  //   if (entity.affected !== 0) {
+  //     await this.accessService.deleteAccess(board_id, new_owner_id);
+  //     // await this.accessService.createAccess({
+  //     //   object_id: board_id as string,
+  //     //   user_id: current_owner_id as string,
+  //     //   permission: ROLE.EDITOR,
+  //     //   object_type: OBJECT_TYPE.BOARD,
+  //     // });
+  //   }
+  //   return { data: entity.affected > 0, meta: {} };
+  // }
 
-    if (entity.affected !== 0) {
-      await this.accessService.deleteAccess(board_id, new_owner_id);
-      await this.accessService.createAccess({
-        object_id: board_id as string,
-        user_id: current_owner_id as string,
-        permission: ROLE.EDITOR,
-        object_type: OBJECT_TYPE.BOARD,
-      });
-    }
-    return { data: entity.affected > 0, meta: {} };
-  }
-
-  async findUserAccessList(
-    object_id: IdentifyId,
-  ): Promise<
-    ServiceResponse<
-      { id: string; name: string; email: string; permission: string }[]
-    >
-  > {
-    const currentBoard = await this.boardRepository.findOneBy({
-      id: object_id as string,
-    });
-    const object_owner = await this.dataSource.manager.findOneBy(UserEntity, {
-      id: currentBoard.owner_id,
-    });
-    const userAccessList =
-      await this.accessService.findUserAccessListByObjectId(
-        object_id,
-        OBJECT_TYPE.BOARD,
-      );
-    const userIDs = userAccessList.data.map((user) => user.id);
-    const users = await this.dataSource.manager.find(UserEntity, {
-      where: {
-        id: In(userIDs),
-      },
-    });
-    const userDetails = users.map((user) => {
-      const permission = userAccessList.data.find(
-        (u) => u.id === user.id,
-      )?.permission;
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        permission: permission,
-      };
-    });
-    userDetails.unshift({
-      id: object_owner.id,
-      name: object_owner.name,
-      email: object_owner.email,
-      permission: ROLE.OWNER,
-    });
-    return { data: userDetails, meta: {} };
-  }
-
-  async deleteBoard(board_id: IdentifyId): Promise<ServiceResponse<boolean>> {
-    await this.dataSource.transaction(async (manager) => {
-      const group_list = await manager.find(GroupEntity, {
-        select: ['id'],
-        where: { board_id: board_id as string },
-      });
-      for (const groupID of group_list) {
-        await this.groupService.deleteGroup(groupID.id);
-      }
-      const result = await manager.delete(BoardEntity, { id: board_id });
-      return { data: result.affected > 0, meta: {} };
-    });
-    // const result = await this.boardRepository.delete
-    return {
-      data: false,
-      meta: {},
-    };
-  }
-
-  async updateBoard(
-    boardID: IdentifyId,
-    updateData: Partial<BoardEntity>,
-  ): Promise<ServiceResponse<boolean>> {
-    const result = await this.boardRepository
-      .createQueryBuilder()
-      .update(BoardEntity)
-      .set(updateData)
-      .where('id = :id', { id: boardID })
-      .returning('*')
-      .execute();
-    return { data: result.affected > 0, meta: {} };
-  }
-
-  async reorderBoard(
-    boardsPosition: { id: string; position: number }[],
-  ): Promise<ServiceResponse<boolean>> {
-    for (const { id, position } of boardsPosition) {
-      await this.boardRepository.update({ id }, { position });
-    }
-    return { data: true, meta: {} };
-  }
+  // async reorderBoard(
+  //   boardsPosition: { id: string; position: number }[],
+  // ): Promise<ServiceResponse<boolean>> {
+  //   for (const { id, position } of boardsPosition) {
+  //     await this.boardRepository.update({ id }, { position });
+  //   }
+  //   return { data: true, meta: {} };
+  // }
 }

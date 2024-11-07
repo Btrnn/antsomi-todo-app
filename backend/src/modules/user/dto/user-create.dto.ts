@@ -1,5 +1,10 @@
 // Libraries
-import { DATE_CONSTRAINTS, NAME_CONSTRAINTS } from '@app/constants/dto';
+import { DATE_CONSTRAINTS, USER_NAME_CONSTRAINTS } from '@app/constants/dto';
+import { IsValidPassword, IsValidPhoneNumber } from '@app/validators';
+import {
+  IsValidUsername,
+  IsValidUsernameConstraint,
+} from '@app/validators/is-valid-username.validator';
 import { Type } from 'class-transformer';
 import {
   IsDate,
@@ -8,32 +13,30 @@ import {
   IsOptional,
   IsString,
   Length,
+  Validate,
 } from 'class-validator';
 
 export class UserCreateDto {
   @IsNotEmpty()
   @Length(
-    NAME_CONSTRAINTS.min,
-    NAME_CONSTRAINTS.max,
-    NAME_CONSTRAINTS.validationOptions,
+    USER_NAME_CONSTRAINTS.min,
+    USER_NAME_CONSTRAINTS.max,
+    USER_NAME_CONSTRAINTS.validationOptions,
   )
   @IsString()
-  name: string;
+  public readonly name: string;
 
+  @IsValidUsername()
   @IsOptional()
-  @IsString()
-  phone_number: string;
+  @IsValidPhoneNumber()
+  public readonly phone_number: string;
 
+  @IsValidUsername()
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  public readonly email: string;
 
-  @IsString()
-  password: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  public readonly created_at: Date;
-  role: string;
+  @IsNotEmpty()
+  @IsValidPassword()
+  public readonly password: string;
 }

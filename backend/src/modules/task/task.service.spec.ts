@@ -128,13 +128,13 @@ describe('TaskService', () => {
       expect(result.data).toEqual(mockSavedTask);
     });
 
-    it('should throw an error if saving fails', async () => {
-      const errorMessage = 'Database error';
-      mockTaskRepository.save.mockRejectedValue(new Error(errorMessage));
+    it('should return data as null if saving fails', async () => {
+      jest.spyOn(mockTaskRepository, 'save').mockImplementation(() => null);
+      const result: ServiceResponse<TaskEntity> =
+        await service.createTask(mockCreateTask);
 
-      await expect(service.createTask(mockCreateTask)).rejects.toThrow(
-        errorMessage,
-      );
+      expect(mockTaskRepository.save).toHaveBeenCalledWith(mockCreateTask);
+      expect(result.data).toEqual(null);
     });
   });
 

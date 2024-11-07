@@ -8,7 +8,7 @@ import { GroupController } from './group.controller';
 import { GroupService } from './group.service';
 
 // Types
-import { IdentifyId, ServiceResponse } from '@app/types';
+import { IdentifyId, ServiceResponse, UserRequest } from '@app/types';
 
 // DTOs
 import {
@@ -18,10 +18,7 @@ import {
   GroupUpdateDto,
 } from './dto';
 
-// Entities
-import { UserEntity } from '../user/user.entity';
-
-describe('GroupsController', () => {
+describe('GroupController', () => {
   let controller: GroupController;
   let service: GroupService;
 
@@ -66,29 +63,39 @@ describe('GroupsController', () => {
       expect(service.findAll).toHaveBeenCalledWith(boardID);
       expect(response).toEqual(mockServiceResponse);
     });
+
+    it('should call groupService.findAll with the correct boardID and return data as [] if failed', async () => {
+      const boardID: IdentifyId = 'mock-board-id';
+      const mockServiceResponse: ServiceResponse<any[]> = {
+        data: [],
+        meta: { page: 1 },
+      };
+
+      jest
+        .spyOn(service, 'findAll')
+        .mockImplementation(async () => mockServiceResponse);
+      const response = await controller.getAllGroups(boardID);
+
+      expect(service.findAll).toHaveBeenCalledWith(boardID);
+      expect(response).toEqual(mockServiceResponse);
+    });
   });
 
   describe('createGroup', () => {
+    const mockBoardID: IdentifyId = 'mock-board-id';
+    const mockNewGroup: GroupCreateDto = {
+      name: 'Test Group',
+      created_at: new Date(),
+      position: 1,
+      type: 'status',
+      color: '1',
+    };
+
+    const mockUser: UserRequest = {
+      id: 'mock-user-id',
+      role: 'admin',
+    };
     it('should call groupService.createGroup with the correct data and return response with data = new group', async () => {
-      const mockBoardID: IdentifyId = 'mock-board-id';
-      const mockNewGroup: GroupCreateDto = {
-        name: 'Test Group',
-        created_at: new Date(),
-        position: 1,
-        type: 'status',
-        color: '1',
-      };
-
-      const mockUser: UserEntity = {
-        id: 'mock-user-id',
-        name: 'User',
-        phone_number: '123-456-7890',
-        password: 'password123',
-        email: 'user@example.com',
-        created_at: new Date(),
-        role: 'admin',
-      };
-
       const mockServiceResponse = {
         data: {
           id: 'mock-group-id',
@@ -96,6 +103,31 @@ describe('GroupsController', () => {
           owner_id: mockUser.id,
           board_id: mockBoardID,
         },
+        meta: {},
+      };
+
+      jest
+        .spyOn(service, 'createGroup')
+        .mockImplementation(async () => mockServiceResponse);
+
+      const result = await controller.createGroup(
+        mockBoardID,
+        mockNewGroup,
+        mockUser,
+      );
+
+      expect(service.createGroup).toHaveBeenCalledWith({
+        ...mockNewGroup,
+        owner_id: mockUser.id,
+        board_id: mockBoardID,
+      });
+
+      expect(result).toEqual(mockServiceResponse);
+    });
+
+    it('should call groupService.createGroup with the correct data and return response with data as null if creating failed', async () => {
+      const mockServiceResponse = {
+        data: null,
         meta: {},
       };
 
@@ -177,7 +209,7 @@ describe('GroupsController', () => {
       expect(result).toEqual(mockServiceResponse);
     });
 
-    it('should return data: false if no task is updated', async () => {
+    it('should return data: false if no group is updated', async () => {
       const mockServiceResponse = {
         data: false,
         meta: {},

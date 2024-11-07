@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 // Modules
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   dotenv.config();
@@ -19,6 +20,7 @@ async function bootstrap() {
     }),
   );
 
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await app.listen(3000);
 }
 bootstrap();

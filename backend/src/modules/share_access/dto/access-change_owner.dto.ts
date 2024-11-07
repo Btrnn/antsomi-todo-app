@@ -1,9 +1,9 @@
 import { IsExistedUser } from '@app/validators';
 import { IsNotEmpty, IsUUID } from 'class-validator';
 
-export class UserDeleteDto {
+export class ChangeOwnerDto {
   @IsExistedUser()
   @IsUUID()
   @IsNotEmpty()
-  public readonly id: string;
+  public readonly new_owner: string;
 }

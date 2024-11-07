@@ -13,7 +13,7 @@ export type ServiceResponse<T> = {
 
 export type UserRequest = {
   id: string;
-  username: string;
+  // username: string;
   role: string;
   iat?: number;
   exp?: number;

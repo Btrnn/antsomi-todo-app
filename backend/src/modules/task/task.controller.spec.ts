@@ -68,34 +68,70 @@ describe('TaskController', () => {
       expect(service.findAll).toHaveBeenCalledWith(boardID);
       expect(response).toEqual(mockServiceResponse);
     });
+
+    it('should call taskService.findAll with the correct boardID and return data as [] if failed', async () => {
+      const boardID: IdentifyId = 'mock-board-id';
+
+      const mockServiceResponse: ServiceResponse<any[]> = {
+        data: [],
+        meta: { page: 1 },
+      };
+
+      jest
+        .spyOn(service, 'findAll')
+        .mockImplementation(async () => mockServiceResponse);
+      const response = await controller.getAllTasks(boardID);
+
+      expect(service.findAll).toHaveBeenCalledWith(boardID);
+      expect(response).toEqual(mockServiceResponse);
+    });
   });
 
   describe('createTask', () => {
-    it('should call taskService.createTask with the correct data and return response with data = new task', async () => {
-      const mockNewTask: TaskCreateDto = {
-        name: 'Test Task',
-        description: 'Description of the test task',
-        created_at: new Date(),
-        start_date: new Date(),
-        end_date: new Date(),
-        status_id: '1',
-        position: 1,
-        assignee_id: '1',
-        est_time: 1,
-      };
+    const mockNewTask: TaskCreateDto = {
+      name: 'Test Task',
+      description: 'Description of the test task',
+      created_at: new Date(),
+      start_date: new Date(),
+      end_date: new Date(),
+      status_id: '1',
+      position: 1,
+      assignee_id: '1',
+      est_time: 1,
+    };
 
-      const mockUser: UserEntity = {
-        id: 'mock-user-id',
-        name: 'User',
-        phone_number: '123-456-7890',
-        password: 'password123',
-        email: 'user@example.com',
-        created_at: new Date(),
-        role: 'admin',
-      };
-
+    const mockUser: UserEntity = {
+      id: 'mock-user-id',
+      name: 'User',
+      phone_number: '123-456-7890',
+      password: 'password123',
+      email: 'user@example.com',
+      created_at: new Date(),
+      role: 'admin',
+    };
+    it('should call taskService.createTask with the correct data and return response with data as new task', async () => {
       const mockServiceResponse = {
         data: { id: 'mock-task-id', ...mockNewTask, owner_id: mockUser.id },
+        meta: {},
+      };
+
+      jest
+        .spyOn(service, 'createTask')
+        .mockImplementation(async () => mockServiceResponse);
+
+      const result = await controller.createTask(mockNewTask, mockUser);
+
+      expect(service.createTask).toHaveBeenCalledWith({
+        ...mockNewTask,
+        owner_id: mockUser.id,
+      });
+
+      expect(result).toEqual(mockServiceResponse);
+    });
+
+    it('should call taskService.createTask with the correct data and return response with data as null if creating failed', async () => {
+      const mockServiceResponse = {
+        data: null,
         meta: {},
       };
 
@@ -167,7 +203,9 @@ describe('TaskController', () => {
 
       const result = await controller.deleteTaskByGroupID(mockDeleteGroupId);
 
-      expect(service.deleteTask).toHaveBeenCalledWith(mockDeleteGroupId.id);
+      expect(service.deleteTaskByGroupID).toHaveBeenCalledWith(
+        mockDeleteGroupId.id,
+      );
 
       expect(result).toEqual(mockServiceResponse);
     });

@@ -18,14 +18,20 @@ import { UserEntity } from '../user/user.entity';
 import { GroupService } from './group.service';
 
 // Types
-import { IdentifyId } from '@app/types';
+import { IdentifyId, UserRequest } from '@app/types';
 
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
 // Constants
-import { ACCESS_OBJECT, ROLE, ROUTES } from '@app/constants';
+import {
+  ACCESS_OBJECT,
+  OBJECT_TYPE,
+  PARAM_KEY,
+  ROLE,
+  ROUTES,
+} from '@app/constants';
 import {
   GroupCreateDto,
   GroupDeleteDto,
@@ -37,25 +43,25 @@ import {
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
-  @RequiresPermission(ROLE.VIEWER, ACCESS_OBJECT.BOARD)
-  @Get(`:${ACCESS_OBJECT.BOARD}`)
-  getAllGroups(@Param(ACCESS_OBJECT.BOARD) board_id: IdentifyId) {
+  @RequiresPermission(ROLE.VIEWER, OBJECT_TYPE.BOARD)
+  @Get(`:${PARAM_KEY.OBJECT}`)
+  getAllGroups(@Param(PARAM_KEY.OBJECT) board_id: IdentifyId) {
     return this.groupService.findAll(board_id);
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Put(`:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, OBJECT_TYPE.BOARD)
+  @Put(`:${PARAM_KEY.OBJECT}`)
   updateGroup(@Body() updateData: GroupUpdateDto) {
     const { id, ...restOfData } = updateData;
     return this.groupService.updateGroup(id, restOfData);
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Post(`:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, OBJECT_TYPE.BOARD)
+  @Post(`:${PARAM_KEY.OBJECT}`)
   createGroup(
-    @Param(ACCESS_OBJECT.BOARD) board: IdentifyId,
+    @Param(PARAM_KEY.OBJECT) board: IdentifyId,
     @Body() createData: GroupCreateDto,
-    @User() user: UserEntity,
+    @User() user: UserRequest,
   ) {
     return this.groupService.createGroup({
       ...createData,
@@ -64,14 +70,14 @@ export class GroupController {
     });
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Delete(`:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, OBJECT_TYPE.BOARD)
+  @Delete(`:${PARAM_KEY.OBJECT}`)
   deleteGroup(@Body() deleteData: GroupDeleteDto) {
     return this.groupService.deleteGroup(deleteData.id);
   }
 
-  @RequiresPermission(ROLE.EDITOR, ACCESS_OBJECT.BOARD)
-  @Patch(`reorder/:${ACCESS_OBJECT.BOARD}`)
+  @RequiresPermission(ROLE.EDITOR, OBJECT_TYPE.BOARD)
+  @Patch(`reorder/:${PARAM_KEY.OBJECT}`)
   async updateGroupPositions(@Body() reorderData: GroupReorderDto) {
     return this.groupService.reorderGroup(reorderData.positionList);
   }

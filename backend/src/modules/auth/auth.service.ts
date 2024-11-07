@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { AccessService } from '../share_access/share_access.service';
 import { BoardEntity } from '../board/board.entity';
+import { OBJECT_ENTITY } from '@app/constants';
 
 @Injectable()
 export class AuthService {
@@ -55,16 +56,26 @@ export class AuthService {
     userID: IdentifyId,
     objectID: IdentifyId,
     permissionActions: string[],
+    objectType: string,
   ): Promise<ServiceResponse<boolean>> {
-    const currentBoard = await this.dataSource.manager.findOneBy(BoardEntity, {
-      id: objectID as string,
-    });
+    // const currentObject = await this.dataSource.manager.findOneBy(BoardEntity, {
+    //   id: objectID as string,
+    // });
 
-    if (!currentBoard) {
+    const currentObject = await this.dataSource.manager.findOne<any>(
+      `${OBJECT_ENTITY[objectType]}Entity`,
+      {
+        where: {
+          id: objectID as string,
+        },
+      },
+    );
+
+    if (!currentObject) {
       return { data: false, meta: {} };
     }
 
-    if (currentBoard.owner_id === (userID as string)) {
+    if (currentObject.owner_id === (userID as string)) {
       return { data: true, meta: {} };
     }
     const permission = await this.accessService.findUserPermission(

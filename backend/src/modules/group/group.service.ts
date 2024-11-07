@@ -32,14 +32,14 @@ export class GroupService {
         },
       },
     });
-    return { data: entities, meta: { page: 1 } };
+    return { data: entities ? entities : [], meta: { page: 1 } };
   }
 
   async createGroup(
     group: Omit<GroupEntity, 'id'>,
   ): Promise<ServiceResponse<GroupEntity>> {
     const entity = await this.groupRepository.save(group);
-    return { data: entity, meta: {} };
+    return { data: entity ? entity : null, meta: {} };
   }
 
   async deleteGroup(id: IdentifyId): Promise<ServiceResponse<boolean>> {

@@ -14,10 +14,22 @@ import { UserService } from './user.service';
 // Repositories
 import { UserRepository } from './user.repository';
 
+// Validators
+import {
+  IsExistedUserConstraint,
+  IsValidUsernameConstraint,
+} from '@app/validators';
+
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity])],
   exports: [UserService],
   controllers: [UserController],
-  providers: [TypeOrmModule, UserService, UserRepository],
+  providers: [
+    TypeOrmModule,
+    UserService,
+    UserRepository,
+    IsValidUsernameConstraint,
+    IsExistedUserConstraint,
+  ],
 })
 export class UserModule {}

@@ -26,4 +26,14 @@ export const ACCESS_OBJECT = {
 
 export const OBJECT_TYPE = {
   BOARD: 'board',
+  NOTE: 'note',
+} as const;
+
+export const PARAM_KEY = {
+  OBJECT: 'objectID',
+  TYPE: 'objectType',
+} as const;
+
+export const OBJECT_ENTITY = {
+  [OBJECT_TYPE.BOARD]: 'Board',
 } as const;

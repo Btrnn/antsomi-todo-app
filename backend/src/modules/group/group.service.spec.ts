@@ -6,7 +6,7 @@ import { DataSource } from 'typeorm';
 import { ServiceResponse } from '@app/types';
 import { TaskEntity } from '../task/task.entity';
 
-describe('GroupsService', () => {
+describe('GroupService', () => {
   let service: GroupService;
   let mockGroupRepository: any;
   let mockDataSource: any;
@@ -69,7 +69,7 @@ describe('GroupsService', () => {
       });
       expect(response.data).toEqual(mockGroups);
     });
-    it('should return an empty array when no groups are found', async () => {
+    it('should return an empty array when no group are found', async () => {
       const boardID = 'mock-board-id';
 
       jest.spyOn(mockGroupRepository, 'find').mockImplementation(() => []);
@@ -112,13 +112,13 @@ describe('GroupsService', () => {
       expect(result.data).toEqual(mockSavedGroup);
     });
 
-    it('should throw an error if saving fails', async () => {
-      const errorMessage = 'Database error';
-      mockGroupRepository.save.mockRejectedValue(new Error(errorMessage));
+    it('should return data as null if saving fails', async () => {
+      jest.spyOn(mockGroupRepository, 'save').mockImplementation(() => null);
+      const result: ServiceResponse<GroupEntity> =
+        await service.createGroup(mockCreateGroup);
 
-      await expect(service.createGroup(mockCreateGroup)).rejects.toThrow(
-        errorMessage,
-      );
+      expect(mockGroupRepository.save).toHaveBeenCalledWith(mockCreateGroup);
+      expect(result.data).toEqual(null);
     });
   });
 
@@ -131,8 +131,7 @@ describe('GroupsService', () => {
 
       jest
         .spyOn(mockDataSource.manager, 'delete')
-        .mockImplementationOnce(() => mockDeleteResult)
-        .mockImplementationOnce(() => mockDeleteResult);
+        .mockImplementation(() => mockDeleteResult);
 
       const result: ServiceResponse<boolean> =
         await service.deleteGroup(groupID);
@@ -153,8 +152,7 @@ describe('GroupsService', () => {
       };
       jest
         .spyOn(mockDataSource.manager, 'delete')
-        .mockImplementationOnce(() => mockDeleteResult)
-        .mockImplementationOnce(() => mockDeleteResult);
+        .mockImplementation(() => mockDeleteResult);
 
       const result: ServiceResponse<boolean> =
         await service.deleteGroup(groupID);

@@ -1,10 +1,5 @@
 // Libraries
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
@@ -29,6 +24,12 @@ export class UserService {
     ServiceResponse<Pick<UserEntity, 'id' | 'email' | 'name'>[]>
   > {
     const entities = await this.userRepository.find();
+    if (!entities) {
+      return {
+        data: [],
+        meta: {},
+      };
+    }
     const result = entities.map((user) => ({
       id: user.id,
       email: user.email,
@@ -47,15 +48,19 @@ export class UserService {
     const entity = await this.userRepository.findOneBy({
       id: id as string,
     });
+
+    // if (!entity) {
+    //   throw new HttpException(
+    //     {
+    //       statusCode: HttpStatus.NOT_FOUND,
+    //       statusMessage: 'Can not find this user',
+    //     },
+    //     HttpStatus.NOT_FOUND,
+    //   );
+    // }
+
     return {
-      data: {
-        id: id as string,
-        name: entity.name,
-        phone_number: entity.phone_number,
-        email: entity.email,
-        created_at: entity.created_at,
-        role: entity.role,
-      },
+      data: entity ? omit(entity, 'password') : null,
       meta: {},
     };
   }
@@ -63,20 +68,21 @@ export class UserService {
   async findByEmail(
     email: string,
   ): Promise<ServiceResponse<Partial<UserEntity>>> {
-    const entity = await this.userRepository.findOne({
-      where: { email: email },
+    const entity = await this.userRepository.findOneBy({
+      email,
     });
-    if (entity === null) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          statusMessage: 'Can not find this user',
-        },
-        HttpStatus.NOT_FOUND,
-      );
-    }
+
+    // if (!entity) {
+    //   throw new HttpException(
+    //     {
+    //       statusCode: HttpStatus.NOT_FOUND,
+    //       statusMessage: 'Can not find this user',
+    //     },
+    //     HttpStatus.NOT_FOUND,
+    //   );
+    // }
     return {
-      data: omit(entity, 'password'),
+      data: entity ? omit(entity, 'password', 'created_at', 'role') : null,
       meta: {},
     };
   }
@@ -97,43 +103,25 @@ export class UserService {
   }
 
   async createUser(
-    user: Omit<UserEntity, 'id' | 'role'>,
+    user: Omit<UserEntity, 'id' | 'role' | 'created_at'>,
   ): Promise<ServiceResponse<UserEntity>> {
     const saltRounds = 10;
 
-    const isExistedEmail = await this.findByUsername(user.email);
-    const isExistedPhone = await this.findByUsername(user.phone_number);
-
-    if (isExistedEmail.data || isExistedPhone.data) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          statusMessage: 'Email or phone number have been used!',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
-
-    const entity = this.userRepository.create({
+    const entity = await this.userRepository.save({
       ...user,
       password: await bcrypt.hash(user.password, saltRounds),
       role: 'user',
     });
-    await this.userRepository.save(entity);
 
     return {
-      data: entity,
+      data: entity ? entity : null,
       meta: {},
     };
   }
 
   async deleteUser(id: IdentifyId): Promise<ServiceResponse<boolean>> {
-    const result = await this.userRepository
-      .createQueryBuilder()
-      .delete()
-      .from('User')
-      .where('id = :id', { id })
-      .execute();
+    const result = await this.userRepository.delete(id);
+
     return {
       data: result.affected > 0,
       meta: {},
@@ -143,17 +131,14 @@ export class UserService {
   async updateUser(
     id: IdentifyId,
     updateData: Partial<UserEntity>,
-  ): Promise<ServiceResponse<UserEntity>> {
-    const result = await this.userRepository
-      .createQueryBuilder()
-      .update(UserEntity)
-      .set(updateData)
-      .where('id = :id', { id })
-      .returning('*')
-      .execute();
+  ): Promise<ServiceResponse<boolean>> {
+    const result = await this.userRepository.update(
+      { id: id as string },
+      updateData,
+    );
 
     return {
-      data: result.raw,
+      data: result.affected > 0,
       meta: {},
     };
   }

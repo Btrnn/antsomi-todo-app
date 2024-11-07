@@ -15,9 +15,10 @@ import { jwtConstants } from './constants';
 import {
   IS_PUBLIC_KEY,
   PERMISSION_KEY,
-  OBJECT_KEY,
   PERMISSION,
-  ACCESS_OBJECT,
+  PARAM_KEY,
+  OBJECT_TYPE,
+  OBJECT_KEY,
 } from '@app/constants';
 
 // Services
@@ -74,20 +75,25 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
     );
 
-    const objectType = this.reflector.get<string>(
-      OBJECT_KEY,
-      context.getHandler(),
-    );
-
     if (!requiredPermission) return true;
 
-    const objectID = request.params[objectType];
+    const contextObjectType =
+      (this.reflector.get<any>(OBJECT_KEY, context.getHandler()) as any) ||
+      null;
 
-    if (!isUUID(objectID) && objectID) {
+    const objectID = request.params[PARAM_KEY.OBJECT];
+    const objectType = request.query[PARAM_KEY.TYPE] || contextObjectType;
+
+    if (
+      !objectType ||
+      !objectID ||
+      !isUUID(objectID) ||
+      !Object.values(OBJECT_TYPE).includes(objectType)
+    ) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
-          statusMessage: `Action failed: Invalid ${objectType}`,
+          statusMessage: `Action failed: Invalid parameters`,
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -95,8 +101,9 @@ export class AuthGuard implements CanActivate {
 
     const hasAccess = await this.authService.isAcceptedPermission(
       request['user'].id,
-      request.params[objectType],
+      objectID,
       PERMISSION[requiredPermission],
+      objectType,
     );
 
     if (!hasAccess.data) {

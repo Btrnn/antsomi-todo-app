@@ -27,6 +27,9 @@ import { BoardController } from './modules/board/board.controller';
 import { BoardModule } from './modules/board/board.module';
 import { BoardUserModule } from './modules/share_access/share_access.module';
 import { CaslModule } from './casl/casl.module';
+import { UserEntity } from './modules/user/user.entity';
+import { UserController } from './modules/user/user.controller';
+import { UserService } from './modules/user/user.service';
 
 @Module({
   imports: [
@@ -52,7 +55,7 @@ import { CaslModule } from './casl/casl.module';
     BoardUserModule,
     CaslModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [
     AppService,
     {
