@@ -137,7 +137,6 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
     if (inputUser) {
       try {
         const userInfo = await getInfo(inputUser);
-        console.log(userInfo);
         const isExisted = [...shareUsers, ...alreadySharedList].find(
           user => user.id === userInfo.data.id,
         );

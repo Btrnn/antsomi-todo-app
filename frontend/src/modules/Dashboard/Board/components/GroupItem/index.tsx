@@ -2,7 +2,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ConfigProvider } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
 // Icons
@@ -79,7 +79,7 @@ type TState = {
 };
 
 export const GroupItem: React.FC<GroupItemProps> = (props) => {
-  const { group, allTasks, onDelete, isOverlay, boardId, permission } = props;
+  const { group, onDelete, isOverlay, allTasks, boardId, permission } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
   // Queries
@@ -105,6 +105,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     id: String(group?.id),
     data: { type: SORTABLE_TYPE.GROUP },
   });
+  
 
   // Store
   const dispatch: AppDispatch = useDispatch();
@@ -138,25 +139,37 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     isChangeColor,
   } = state;
 
+  //console.log("allTasks:: ", allTasks)
   // Handlers
-  useEffect(() => {
-    if (group) {
-      setState((prev) => ({
-        ...prev,
-        taskList: allTasks.filter((task) => task.status_id === group.id),
-      }));
-    }
-  }, [allTasks]);
+  // useEffect(() => {
+  //   if (group) {
+  //     setState((prev) => ({
+  //       ...prev,
+  //       taskList: allTasks.filter((task) => task.status_id === group.id),
+  //     }));
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (group) {
+  // useEffect(() => {
+  //   if (group) {
+  //     console.log("allTasks:: ", allTasks)
+  //     setState((prev) => ({
+  //       ...prev,
+  //       textColor: getContrastTextColor(group.color),
+  //       taskList: allTasks.filter((task) => task.status_id === group.id),
+  //     }));
+  //   }
+  // }, [allTasks]);
+
+  useMemo(() => {
+     if (group) {
       setState((prev) => ({
         ...prev,
         textColor: getContrastTextColor(group.color),
         taskList: allTasks.filter((task) => task.status_id === group.id),
       }));
     }
-  }, []);
+  }, [allTasks]);
 
   const onChangeGroupNewName = (
     event: React.ChangeEvent<HTMLInputElement> | undefined
@@ -446,17 +459,6 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     },
   ];
 
-  const getTaskList = async () => {
-    try {
-      const fetchedTasks = await getAllTasks(boardId);
-      dispatch(setTaskList(fetchedTasks.data));
-    } catch (error) {
-      messageCreate.open({
-        type: "error",
-        content: error as string,
-      });
-    }
-  };
 
   return (
     <>

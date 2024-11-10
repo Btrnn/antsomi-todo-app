@@ -65,6 +65,8 @@ type TState = {
   activeInfo: Group | undefined;
   tempGroupList: Group[];
   tempTaskList: Task[];
+  startIndex: number | undefined;
+  startGroup: React.Key | undefined;
 };
 
 const dropAnimation: DropAnimation = {
@@ -89,10 +91,10 @@ export const GroupList: React.FC<GroupsProps> = props => {
     isError: isCreateGroupError,
     error: createGroupError,
   } = useCreateGroup({ boardId });
-  const { mutateAsync: reorderGroup, isError: isReorderGroupError } = useReorderGroup({ boardId });
-  const { mutateAsync: reorderTask, isError: isReorderTaskError } = useReorderTask({ boardId });
+  const { mutateAsync: reorderGroup } = useReorderGroup({ boardId });
+  const { mutateAsync: reorderTask } = useReorderTask({ boardId });
   const { mutateAsync: deleteGroup, isError: isDeleteGroupError } = useDeleteGroup({ boardId });
-  const { mutateAsync: updateTask, isError: isUpdateTaskError } = useUpdateTask({
+  const { mutateAsync: updateTask } = useUpdateTask({
     boardId: boardId,
   });
 
@@ -105,9 +107,20 @@ export const GroupList: React.FC<GroupsProps> = props => {
     activeInfo: undefined,
     tempGroupList: [],
     tempTaskList: [],
+    startIndex: undefined,
+    startGroup: undefined,
   });
 
-  const { activeID, activeType, inputGroupName, activeInfo, tempTaskList, tempGroupList } = state;
+  const {
+    activeID,
+    activeType,
+    inputGroupName,
+    activeInfo,
+    tempTaskList,
+    tempGroupList,
+    startIndex,
+    startGroup,
+  } = state;
 
   // Hooks
   const { taskList } = useTaskList(boardId);
@@ -160,156 +173,102 @@ export const GroupList: React.FC<GroupsProps> = props => {
     setState(prev => ({ ...prev, inputGroupName: '' }));
   };
 
-  const onDragEndReorderTask = (source: Active, destination: Over) => {
-    // Find reordered group information
-    const reorderedGroup = tempTaskList.filter(
-      task => task.status_id === source.data.current?.groupID,
-    );
+  const moveTaskToIndex = (taskList, taskID, index) => {
+    const currentIndex = taskList.findIndex(task => task.id === activeID);
 
-    // Find source's information
-    const sourceIndex = reorderedGroup.findIndex(task => task.id === source.id);
-
-    // Find destination's information
-    let destinationIndex;
-    if (destination.data.current?.type === SORTABLE_TYPE.GROUP) {
-      return;
-    } else {
-      destinationIndex = reorderedGroup.findIndex(task => task.id === destination.id);
+    if (currentIndex === -1 || index < 0 || index >= taskList.length) {
+      return taskList;
     }
 
-    const reorderedList = reorderSingleArray(reorderedGroup, sourceIndex, destinationIndex);
-    for (
-      let i = Math.min(sourceIndex, destinationIndex);
-      i <= Math.max(sourceIndex, destinationIndex);
-      i++
-    ) {
-      reorderedList[i].position = i;
-    }
-    const positionList = reorderedList
-      .slice(Math.min(sourceIndex, destinationIndex), Math.max(sourceIndex, destinationIndex) + 1)
-      .map(task => ({ id: task.id, position: task.position }));
+    const updatedTaskList = [...taskList];
+    const [task] = updatedTaskList.splice(currentIndex, 1);
+    updatedTaskList.splice(index, 0, task);
 
-    reorderTask(positionList);
-    if (isReorderTaskError) {
-      messageCreate.open({
-        type: 'error',
-        content: 'Reorder task failed!',
-      });
-    }
-    // console.log('🚀 ~ reorderTask ~ reorderedList:', positionList);
+    return updatedTaskList;
   };
 
-  const onDragOverChangeTaskGroup = (source: Active, destination: Over) => {
+  const onDragEndReorderTask = (endIndex: number, endGroup: number) => {
+    if (!startGroup || !endGroup) {
+      return;
+    }
+
     // Find source's information
-    const sourceList = tempTaskList.filter(task => task.status_id === source.data.current?.groupID);
-    const sourceIndex = sourceList.findIndex(task => task.id === source.id);
+    const sourceList = tempTaskList.filter(task => task.status_id === startGroup);
+    const destinationList = tempTaskList.filter(task => task.status_id === endGroup);
 
-    // Find destination's information
-    let destinationList, destinationIndex, destinationGroup;
-    if (destination.data.current?.type === SORTABLE_TYPE.GROUP) {
-      destinationList = tempTaskList.filter(task => task.status_id === destination.id);
-      destinationIndex = 0;
-    } else {
-      destinationList = tempTaskList.filter(
-        task => task.status_id === destination.data.current?.groupID,
-      );
-      destinationIndex = destinationList.findIndex(task => task.id === destination.id);
-    }
+    let positionList, reorderedList, remainingList;
+    if (startGroup === endGroup) {
+      remainingList = tempTaskList.filter(task => task.status_id !== startGroup);
 
-    if (destination.data.current?.type === SORTABLE_TYPE.TASK) {
-      destinationGroup = destination.data.current?.groupID;
-      //updateTask({ id: source.id, status_id: destination.data.current?.groupID });
-    } else {
-      destinationGroup = destination?.id;
-      //updateTask({ id: source.id, status_id: destination?.id });
-    }
-
-    const remainingList = tempTaskList.filter(
-      task =>
-        task.status_id !== source.data.current?.groupID && task.status_id !== destinationGroup,
-    );
-
-    // setState(prev => {
-    //   const updateTaskIndex = tempTaskList.findIndex(task => task.id === source.id);
-    //   const updatedTaskList = [...prev.tempTaskList];
-
-    //   updatedTaskList[updateTaskIndex] = {
-    //     ...updatedTaskList[updateTaskIndex],
-    //     status_id: destinationGroup,
-    //   };
-
-    //   return {
-    //     ...prev,
-    //     tempTaskList: updatedTaskList,
-    //   };
-    // });
-
-    // if (sourceIndex === -1) {
-    //   //console.log('🚀 ~ onDragOverChangeTaskGroup ~ sourceList:', sourceList);
-    //   return;
-    // }
-
-    // Reorder 2 lists
-    const [reorderedSourceList, reorderedDestinationList] = reorderDoubleArrays(
-      sourceList,
-      destinationList,
-      sourceIndex,
-      destinationIndex,
-    );
-
-    for (let i = sourceIndex; i < reorderedSourceList.length; i++) {
-      reorderedSourceList[i].position = i;
-    }
-
-    for (let i = destinationIndex; i < reorderedDestinationList.length; i++) {
-      reorderedDestinationList[i].position = i;
-      if (reorderedDestinationList[i].id === source.id) {
-        reorderedDestinationList[i].status_id = destinationGroup;
+      reorderedList = reorderSingleArray(sourceList, startIndex ?? 0, endIndex);
+      for (
+        let i = Math.min(startIndex ?? 0, endIndex);
+        i <= Math.max(startIndex ?? 0, endIndex);
+        i++
+      ) {
+        reorderedList[i].position = i;
       }
+      positionList = reorderedList
+        .map(task => ({ id: task.id, position: task.position }))
+        .slice(Math.min(startIndex ?? 0, endIndex), Math.max(startIndex ?? 0, endIndex) + 1);
+
+      setState(prev => ({ ...prev, tempTaskList: [...remainingList, ...reorderedList] }));
+      reorderTask(positionList);
+    } else {
+      // Get unchanged tasks list
+      remainingList = tempTaskList.filter(
+        task => task.status_id !== endGroup && task.status_id !== startGroup,
+      );
+
+      // Get reordered sourceList
+      for (let i = startIndex ?? 0; i < sourceList.length; i++) {
+        sourceList[i].position = i;
+      }
+      const sourcePositionList = sourceList
+        .map(task => ({ id: task.id, position: task.position }))
+        .splice(startIndex ?? 0);
+
+      // Get reordered destinationList
+      const currentIndex = destinationList.findIndex(task => task.id === activeID);
+      const [task] = destinationList.splice(currentIndex, 1);
+      destinationList.splice(endIndex, 0, task);
+
+      for (let i = endIndex; i < destinationList.length; i++) {
+        destinationList[i].position = i;
+      }
+      const destinationPositionList = destinationList
+        .map(task => ({
+          id: task.id,
+          position: task.position,
+        }))
+        .splice(endIndex);
+
+      setState(prev => ({
+        ...prev,
+        tempTaskList: [...remainingList, ...destinationList, ...sourceList],
+      }));
+      reorderTask([...sourcePositionList, ...destinationPositionList]);
+      updateTask({ id: activeID ?? '', status_id: endGroup });
     }
-
-    setState(prev => ({
-      ...prev,
-      tempTaskList: [...remainingList, ...reorderedSourceList, ...reorderedDestinationList],
-    }));
-
-    console.log('🚀 ~ onDragOverChangeTaskGroup ~ remainingList:', remainingList);
-    console.log(
-      '🚀 ~ onDragOverChangeTaskGroup ~ reorderedDestinationList:',
-      reorderedDestinationList,
-    );
-    console.log('🚀 ~ onDragOverChangeTaskGroup ~ reorderedSourceList:', reorderedSourceList);
-
-    // reorderedSourceList = reorderedSourceList.slice(sourceIndex).map(task => ({
-    //   id: task.id,
-    //   position: task.position,
-    // }));
-
-    // reorderedDestinationList = reorderedDestinationList.slice(destinationIndex).map(task => ({
-    //   id: task.id,
-    //   position: task.position,
-    // }));
-
-    // reorderTask([...reorderedSourceList, ...reorderedDestinationList]);
-    // if (isReorderTaskError) {
-    //   messageCreate.open({
-    //     type: 'error',
-    //     content: 'Reorder task failed!',
-    //   });
-    // }
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    let currentInfo;
+    const { active } = event;
+    let currentInfo,
+      sourceGroup = undefined;
+
     if (event.active.data.current?.type === SORTABLE_TYPE.TASK) {
       currentInfo = tempGroupList.find(group => group.id === event.active.data.current?.groupID);
+      sourceGroup = active.data.current?.sortable?.containerId;
     }
+
     setState(prev => ({
       ...prev,
       activeID: event.active?.id,
       activeType: event.active.data.current?.type,
-      tempTaskList: tempTaskList,
       activeInfo: currentInfo,
+      startIndex: active.data.current?.sortable?.index,
+      startGroup: sourceGroup,
     }));
   };
 
@@ -327,25 +286,34 @@ export const GroupList: React.FC<GroupsProps> = props => {
       return;
     }
 
-    let destinationGroup;
+    let destinationGroup, destinationIndex;
 
     if (active.data.current?.type === SORTABLE_TYPE.TASK) {
-      // if (destination?.type === SORTABLE_TYPE.TASK) {
-      //   if (destination?.groupID !== source?.groupID) {
-      //     updateTask({ id: active.id, status_id: destination?.groupID });
-      //   }
-      // } else {
-      //   updateTask({ id: active.id, status_id: over?.id });
-      // }
-
       if (over.data.current?.type === SORTABLE_TYPE.GROUP) {
         destinationGroup = over.id;
+        destinationIndex = 0;
       } else {
         destinationGroup = over.data.current?.groupID;
+        destinationIndex = over.data.current?.sortable?.index;
       }
 
-      if (active.data.current?.groupID !== destinationGroup) {
-        onDragOverChangeTaskGroup(active, over);
+      const sourceGroup = tempTaskList.find(task => task.id === active.id)?.status_id;
+
+      if (sourceGroup !== destinationGroup) {
+        setState(prev => ({
+          ...prev,
+          activeInfo: prev.activeInfo
+            ? {
+                ...prev.activeInfo,
+                id: destinationGroup,
+              }
+            : undefined,
+          tempTaskList: prev.tempTaskList.map(task => ({
+            ...task,
+            status_id: task.id === active.id ? destinationGroup : task.status_id,
+            position: task.id === active.id ? destinationIndex : task.position,
+          })),
+        }));
       }
 
       //dispatch(reorderTask({ source: active, destination: over }));
@@ -355,49 +323,54 @@ export const GroupList: React.FC<GroupsProps> = props => {
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     const sourceType = active.data.current?.type;
+    const destinationType = over?.data.current?.type;
 
     if (!over) {
       return;
     }
 
-    if (sourceType === SORTABLE_TYPE.GROUP) {
-      const destinationIndex = tempGroupList.findIndex(group => group.id === over.id);
-      const sourceIndex = tempGroupList.findIndex(group => group.id === active.id);
-      const reorderedList = reorderSingleArray(tempGroupList, sourceIndex, destinationIndex);
-      let positionList = reorderedList.map(group => ({
-        id: group.id,
-        position: group.position,
-      }));
+    const endIndex = over.data.current?.sortable?.index;
 
-      for (
-        let i = Math.min(sourceIndex, destinationIndex);
-        i <= Math.max(sourceIndex, destinationIndex);
-        i++
-      ) {
-        positionList[i].position = i;
+    if (startIndex !== undefined && endIndex !== undefined) {
+      if (sourceType === SORTABLE_TYPE.GROUP) {
+        const reorderedList = reorderSingleArray(tempGroupList, startIndex, endIndex);
+        let positionList = reorderedList.map(group => ({
+          id: group.id,
+          position: group.position,
+        }));
+
+        for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
+          positionList[i].position = i;
+        }
+
+        positionList = positionList.slice(
+          Math.min(startIndex, endIndex),
+          Math.max(startIndex, endIndex) + 1,
+        );
+
+        setState(prev => ({
+          ...prev,
+          tempGroupList: reorderedList,
+        }));
+
+        reorderGroup(positionList);
+      } else {
+        let endGroup;
+        if (destinationType === SORTABLE_TYPE.TASK) {
+          endGroup = over.data.current?.sortable?.containerId;
+        } else {
+          endGroup = over.id;
+        }
+        onDragEndReorderTask(endIndex, endGroup);
       }
-
-      positionList = positionList.slice(
-        Math.min(sourceIndex, destinationIndex),
-        Math.max(sourceIndex, destinationIndex) + 1,
-      );
-
-      setState(prev => ({
-        ...prev,
-        tempGroupList: reorderedList,
-      }));
-
-      reorderGroup(positionList);
-    } else {
-      //onDragEndReorderTask(active, over);
     }
-    // setState(prev => ({
-    //   ...prev,
-    //   activeID: null,
-    //   activeType: null,
-    //   tempTaskList: [],
-    //   activeInfo: undefined,
-    // }));
+    setState(prev => ({
+      ...prev,
+      activeID: null,
+      activeType: null,
+      //tempTaskList: [],
+      activeInfo: undefined,
+    }));
   };
 
   const onDeleteGroup = async (id: React.Key) => {
