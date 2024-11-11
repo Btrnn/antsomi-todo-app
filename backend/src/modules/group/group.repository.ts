@@ -1,5 +1,7 @@
 // Entities
 import { Repository } from 'typeorm';
+
+// Entities
 import { GroupEntity } from './group.entity';
 
 export class GroupRepository extends Repository<GroupEntity> {

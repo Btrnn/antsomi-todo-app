@@ -10,10 +10,6 @@ import {
   Patch,
 } from '@nestjs/common';
 
-// Entities
-import { GroupEntity } from './group.entity';
-import { UserEntity } from '../user/user.entity';
-
 // Services
 import { GroupService } from './group.service';
 
@@ -25,13 +21,9 @@ import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
 // Constants
-import {
-  ACCESS_OBJECT,
-  OBJECT_TYPE,
-  PARAM_KEY,
-  ROLE,
-  ROUTES,
-} from '@app/constants';
+import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+
+// DTOs
 import {
   GroupCreateDto,
   GroupDeleteDto,

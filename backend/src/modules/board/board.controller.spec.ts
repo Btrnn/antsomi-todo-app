@@ -13,6 +13,8 @@ import { IdentifyId, ServiceResponse, UserRequest } from '@app/types';
 
 // Entities
 import { BoardEntity } from './board.entity';
+
+// DTOs
 import { BoardCreateDto, BoardUpdateDto } from './dto';
 
 describe('BoardController', () => {

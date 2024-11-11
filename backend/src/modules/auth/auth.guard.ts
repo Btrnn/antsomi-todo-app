@@ -1,4 +1,5 @@
 // Libraries
+import { isUUID } from 'class-validator';
 import {
   CanActivate,
   ExecutionContext,
@@ -23,8 +24,6 @@ import {
 
 // Services
 import { AuthService } from './auth.service';
-
-import { isUUID } from 'class-validator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

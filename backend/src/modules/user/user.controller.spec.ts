@@ -1,7 +1,16 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Controllers
 import { UserController } from './user.controller';
+
+// Services
 import { UserService } from './user.service';
+
+// Types
 import { ServiceResponse, UserRequest } from '@app/types';
+
+// DTOs
 import {
   UserCreateDto,
   UserDeleteDto,

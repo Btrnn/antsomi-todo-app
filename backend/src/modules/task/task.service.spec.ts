@@ -12,6 +12,8 @@ import { ServiceResponse } from '@app/types';
 // Entities
 import { TaskEntity } from './task.entity';
 import { GroupEntity } from '../group/group.entity';
+
+// Constants
 import { PRIORITY } from '@app/constants';
 
 describe('TaskService', () => {

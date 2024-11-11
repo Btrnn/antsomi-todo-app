@@ -14,6 +14,8 @@ import { GroupEntity } from '../group/group.entity';
 
 // Types
 import { ServiceResponse } from '@app/types';
+
+// Constants
 import { OBJECT_TYPE } from '@app/constants';
 
 describe('BoardService', () => {

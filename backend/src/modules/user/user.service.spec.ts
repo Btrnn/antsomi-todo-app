@@ -1,9 +1,15 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { UserEntity } from './user.entity';
-import { HttpException } from '@nestjs/common';
 import { omit } from 'lodash';
+
+// Entites
+import { UserEntity } from './user.entity';
+
+// Services
+import { UserService } from './user.service';
+
+// Types
 import { ServiceResponse } from '@app/types';
 
 describe('UserService', () => {

@@ -1,12 +1,18 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccessService } from './share_access.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { AccessEntity } from './share_access.entity';
 import { DataSource, In } from 'typeorm';
 import { ServiceResponse } from '@app/types';
-import { OBJECT_ENTITY, ROLE } from '@app/constants';
 import { HttpException } from '@nestjs/common';
-import { mock } from 'node:test';
+
+// Constants
+import { OBJECT_ENTITY, ROLE } from '@app/constants';
+
+// Services
+import { AccessService } from './share_access.service';
+
+// Entites
+import { AccessEntity } from './share_access.entity';
 import { UserEntity } from '../user/user.entity';
 
 describe('ShareAccessService', () => {

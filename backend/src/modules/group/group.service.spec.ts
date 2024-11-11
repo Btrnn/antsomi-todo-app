@@ -1,10 +1,17 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
-import { GroupService } from './group.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { GroupEntity } from './group.entity';
 import { DataSource } from 'typeorm';
-import { ServiceResponse } from '@app/types';
+
+// Entities
+import { GroupEntity } from './group.entity';
 import { TaskEntity } from '../task/task.entity';
+
+// Services
+import { GroupService } from './group.service';
+
+// Types
+import { ServiceResponse } from '@app/types';
 
 describe('GroupService', () => {
   let service: GroupService;

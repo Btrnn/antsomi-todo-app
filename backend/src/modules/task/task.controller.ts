@@ -16,21 +16,12 @@ import { TaskService } from './task.service';
 // Types
 import { IdentifyId, UserRequest } from '@app/types';
 
-// Entities
-import { UserEntity } from '../user/user.entity';
-
 // Decorators
 import { User } from '@app/decorators';
 import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
 // Constants
-import {
-  ACCESS_OBJECT,
-  OBJECT_TYPE,
-  PARAM_KEY,
-  ROLE,
-  ROUTES,
-} from '@app/constants';
+import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
 
 // Dtos
 import {

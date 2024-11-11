@@ -10,12 +10,20 @@ import {
   Query,
 } from '@nestjs/common';
 
+// Decorators
+import { User } from '@app/decorators';
+import { RequiresPermission } from '@app/decorators/authorize.decorator';
+
 // Constants
 import { PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+
+// Services
 import { AccessService } from './share_access.service';
-import { RequiresPermission } from '@app/decorators/authorize.decorator';
-import { User } from '@app/decorators';
+
+// Types
 import { IdentifyId, UserRequest } from '@app/types';
+
+// DTOs
 import {
   ChangeOwnerDto,
   DeleteAccessDto,

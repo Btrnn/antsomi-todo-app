@@ -1,14 +1,20 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccessController } from './share_access.controller';
 import { UserRequest } from '@app/types';
+
+// Controllers
+import { AccessController } from './share_access.controller';
+
+// Services
 import { AccessService } from './share_access.service';
+
+// DTOs
 import {
   AccessCreateDto,
   AccessUpdateDto,
   ChangeOwnerDto,
   DeleteAccessDto,
 } from './dto';
-import { HttpException } from '@nestjs/common';
 
 describe('ShareAccessController', () => {
   let controller: AccessController;

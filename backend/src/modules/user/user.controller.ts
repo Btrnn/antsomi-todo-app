@@ -23,6 +23,8 @@ import {
   UserGetInfoDto,
   UserUpdateDto,
 } from './dto';
+
+// Types
 import { UserRequest } from '@app/types';
 
 @Controller(ROUTES.USER)

@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IdentifyId, ServiceResponse } from '@app/types';
 
 // Constants
-import { OBJECT_ENTITY, OBJECT_TYPE, PERMISSION, ROLE } from '@app/constants';
+import { OBJECT_ENTITY, PERMISSION, ROLE } from '@app/constants';
 
 // Entities
 import { AccessEntity } from './share_access.entity';

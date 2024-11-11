@@ -1,5 +1,5 @@
 // Libraries
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
@@ -72,15 +72,6 @@ export class UserService {
       email,
     });
 
-    // if (!entity) {
-    //   throw new HttpException(
-    //     {
-    //       statusCode: HttpStatus.NOT_FOUND,
-    //       statusMessage: 'Can not find this user',
-    //     },
-    //     HttpStatus.NOT_FOUND,
-    //   );
-    // }
     return {
       data: entity ? omit(entity, 'password', 'created_at', 'role') : null,
       meta: {},

@@ -8,7 +8,8 @@ import * as bcrypt from 'bcrypt';
 // Services
 import { UserService } from '../user/user.service';
 import { AccessService } from '../share_access/share_access.service';
-import { BoardEntity } from '../board/board.entity';
+
+// Constants
 import { OBJECT_ENTITY } from '@app/constants';
 
 @Injectable()
@@ -58,10 +59,6 @@ export class AuthService {
     permissionActions: string[],
     objectType: string,
   ): Promise<ServiceResponse<boolean>> {
-    // const currentObject = await this.dataSource.manager.findOneBy(BoardEntity, {
-    //   id: objectID as string,
-    // });
-
     const currentObject = await this.dataSource.manager.findOne<any>(
       `${OBJECT_ENTITY[objectType]}Entity`,
       {
