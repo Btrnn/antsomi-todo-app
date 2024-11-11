@@ -12,6 +12,7 @@ import { Type } from 'class-transformer';
 
 // Constants
 import { DATE_CONSTRAINTS, NAME_CONSTRAINTS } from '@app/constants/dto';
+import { IsExistedUser, IsValidPriority } from '@app/validators';
 
 export class TaskCreateDto {
   @IsString()
@@ -52,9 +53,19 @@ export class TaskCreateDto {
 
   @IsOptional()
   @IsUUID()
+  @IsExistedUser()
   public readonly assignee_id: string;
+
+  @IsOptional()
+  @IsUUID()
+  @IsExistedUser()
+  public readonly reviewer_id: string;
 
   @IsOptional()
   @IsNumber()
   public readonly est_time: number;
+
+  @IsOptional()
+  @IsValidPriority()
+  public readonly priority: string;
 }

@@ -34,8 +34,14 @@ export class TaskEntity {
   assignee_id: string | null;
 
   @Column({ nullable: true })
+  reviewer_id: string | null;
+
+  @Column({ nullable: true })
   est_time: number | null;
 
   @Column()
   owner_id: string;
+
+  @Column({ nullable: true })
+  priority: string;
 }
