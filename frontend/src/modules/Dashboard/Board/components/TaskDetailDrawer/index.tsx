@@ -75,17 +75,17 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
     {
       key: MENU_KEY.KEY1,
       label: 'Overview',
-      children: <TaskDetail task={task} onClose={onClose} permission={permission} />,
+      children: <TaskDetail task={task} boardId={params.boardId ?? ''} permission={permission} />,
     },
     {
       key: MENU_KEY.KEY2,
       label: 'Subtasks',
-      children: <SubTasks taskID={searchParams.get('taskId') || ''} />,
+      children: <SubTasks taskID={searchParams.get('taskId') ?? ''} />,
     },
     {
       key: MENU_KEY.KEY3,
       label: 'Comments',
-      children: <Comments taskID={searchParams.get('taskId') || ''} />,
+      children: <Comments taskID={searchParams.get('taskId') ?? ''} />,
     },
   ];
 

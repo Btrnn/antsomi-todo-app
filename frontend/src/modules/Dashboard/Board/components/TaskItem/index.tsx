@@ -28,9 +28,10 @@ import { Task } from 'models';
 // Constants
 import { PERMISSION, ROLE_KEY } from 'constants/role';
 import { MENU_KEY, SORTABLE_TYPE } from 'constants/tasks';
+import { PRIORITY } from 'constants/common';
 
 // Utils
-import { checkAuthority } from 'utils';
+import { checkAuthority, getContrastTextColor } from 'utils';
 
 // Hooks
 import { useUserList } from 'hooks';
@@ -202,9 +203,32 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
                 >
                   {groupInfo.groupName}
                 </Tag>
+                {task.priority
+                  ? (() => {
+                      const priority = Object.values(PRIORITY).find(p => p.key === task.priority);
+
+                      return priority ? (
+                        <Tag
+                          bordered={false}
+                          className="justify-center"
+                          style={{
+                            backgroundColor: priority.color,
+                            color: getContrastTextColor(priority.color),
+                          }}
+                        >
+                          {priority?.label}
+                        </Tag>
+                      ) : null;
+                    })()
+                  : null}
                 {task.assignee_id ? (
                   <Tag bordered={false} className="justify-center">
                     {userList.find(user => user.id === task.assignee_id)?.name}
+                  </Tag>
+                ) : null}
+                {task.reviewer_id ? (
+                  <Tag bordered={false} className="justify-center">
+                    {userList.find(user => user.id === task.reviewer_id)?.name}
                   </Tag>
                 ) : null}
                 {task.est_time && (

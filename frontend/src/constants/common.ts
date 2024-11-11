@@ -45,3 +45,26 @@ export const OBJECT_TYPE = {
 export const API_QUERY_KEY = {
   OBJECT_TYPE: 'objectType',
 };
+
+export const PRIORITY = {
+  NORMAL: {
+    key: 'normal',
+    label: 'Normal',
+    color: '#59f790',
+  },
+  MEDIUM: {
+    key: 'medium',
+    label: 'Medium',
+    color: '#edfa60',
+  },
+  HIGH: {
+    key: 'high',
+    label: 'High',
+    color: '#efb803',
+  },
+  URGENT: {
+    key: 'urgent',
+    label: 'Urgent',
+    color: '#d1420a',
+  },
+} as const;

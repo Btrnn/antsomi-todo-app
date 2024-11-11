@@ -12,4 +12,6 @@ export interface Task {
   end_date: string | null;
   created_at: string;
   owner_id: React.Key;
+  reviewer_id: React.Key | null;
+  priority: string | null;
 }

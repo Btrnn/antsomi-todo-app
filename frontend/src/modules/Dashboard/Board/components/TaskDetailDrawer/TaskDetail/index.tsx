@@ -10,37 +10,42 @@ import { useParams } from 'react-router-dom';
 import {} from 'components/icons';
 
 // Components
-import { DatePicker, Form, Input, InputNumber, message, Select } from 'components/ui';
+import { DatePicker, Form, Input, InputNumber, message, Select, Tag } from 'components/ui';
 
 // Models
 import { Task } from 'models';
 
 // Utils
-import { checkAuthority } from 'utils';
+import { checkAuthority, getContrastTextColor } from 'utils';
 
 // Constants
 import { PERMISSION, ROLE_KEY } from 'constants/role';
 
 // Hooks
-import { useUserList } from 'hooks';
+import { useAccessList, useLoggedUser, useUserList } from 'hooks';
 import { useUpdateTask } from 'queries';
+import { IdentifyId } from 'types';
+import { OBJECT_TYPE, PRIORITY } from 'constants/common';
+import { queryOptions } from '@tanstack/react-query';
 
 interface TaskDetailProp {
   task: Task | undefined;
-  onClose: () => void;
+  boardId: IdentifyId;
   permission: string;
 }
 
 type FormType = Task;
 
 export const TaskDetail: React.FC<TaskDetailProp> = props => {
-  const { task, onClose, permission } = props;
+  const { task, permission, boardId } = props;
   const [messageCreate, contextHolder] = message.useMessage();
 
   // Hooks
   const [form] = Form.useForm();
   const params = useParams();
-  const { list: userList } = useUserList();
+  //const { list: userList } = useUserList();
+  const { user: currentUser } = useLoggedUser();
+  const { accessList: userList } = useAccessList(boardId, OBJECT_TYPE.BOARD);
 
   // Queries
   const { mutateAsync: updateTask, isError: isUpdateTaskError } = useUpdateTask({
@@ -55,6 +60,9 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         start_date: task.start_date ? dayjs(task.start_date) : undefined,
         end_date: task.end_date ? dayjs(task.end_date) : undefined,
         created_at: dayjs(task.created_at),
+        priority: task.priority
+          ? Object.values(PRIORITY).find(p => p.key === task.priority)
+          : undefined,
       });
     }
   }, [task, form]);
@@ -109,27 +117,73 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
             autoSize={{ minRows: 2, maxRows: 8 }}
           />
         </Form.Item>
+        <Form.Item<FormType> label="Priority:" name="priority">
+          <Select
+            placeholder="Defines the importance level of the task for prioritization."
+            options={Object.values(PRIORITY).map(priority => ({
+              value: priority.key,
+              label: priority.label,
+              color: priority.color,
+            }))}
+            optionRender={option => {
+              const { label, color } = option.data;
+              return (
+                <Tag
+                  bordered={false}
+                  color={color}
+                  className="justify-center items-center"
+                  style={{ color: getContrastTextColor(color) }}
+                >
+                  {label}
+                </Tag>
+              );
+            }}
+          />
+        </Form.Item>
         <Form.Item<FormType> label="Assignee:" name="assignee_id">
           <Select
             placeholder="Select the person responsible for this task"
             options={userList.map(user => ({
               value: user.id,
               label: user.name,
+              email: user.email,
             }))}
+            optionRender={option => {
+              const { label, value, email } = option.data;
+              return (
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span>{label}</span>
+                    <span className="font-light">{email}</span>
+                  </div>
+                  {value === (currentUser?.id as string) ? <Tag>You</Tag> : <></>}
+                </div>
+              );
+            }}
           />
         </Form.Item>
-        {/* <Form.Item<FormType> label="Status:" name="status_id">
-        <Select
-          options={groupList.map(group => ({
-            value: group.id,
-            label: (
-              <Tag bordered={false} color={group.color} className="justify-center">
-                {group.name}
-              </Tag>
-            ),
-          }))}
-        />
-      </Form.Item> */}
+        <Form.Item<FormType> label="Reviewer:" name="reviewer_id">
+          <Select
+            placeholder="The person responsible for reviewing and evaluating the task."
+            options={userList.map(user => ({
+              value: user.id,
+              label: user.name,
+              email: user.email,
+            }))}
+            optionRender={option => {
+              const { label, value, email } = option.data;
+              return (
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span>{label}</span>
+                    <span className="font-light">{email}</span>
+                  </div>
+                  {value === (currentUser?.id as string) ? <Tag>You</Tag> : <></>}
+                </div>
+              );
+            }}
+          />
+        </Form.Item>
         <Form.Item<FormType> label="Estimate time:" name="est_time">
           <InputNumber
             placeholder="Enter the estimated time to complete the task"

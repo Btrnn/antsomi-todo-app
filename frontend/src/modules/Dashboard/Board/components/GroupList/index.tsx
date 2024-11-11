@@ -173,20 +173,6 @@ export const GroupList: React.FC<GroupsProps> = props => {
     setState(prev => ({ ...prev, inputGroupName: '' }));
   };
 
-  const moveTaskToIndex = (taskList, taskID, index) => {
-    const currentIndex = taskList.findIndex(task => task.id === activeID);
-
-    if (currentIndex === -1 || index < 0 || index >= taskList.length) {
-      return taskList;
-    }
-
-    const updatedTaskList = [...taskList];
-    const [task] = updatedTaskList.splice(currentIndex, 1);
-    updatedTaskList.splice(index, 0, task);
-
-    return updatedTaskList;
-  };
-
   const onDragEndReorderTask = (endIndex: number, endGroup: number) => {
     if (!startGroup || !endGroup) {
       return;
