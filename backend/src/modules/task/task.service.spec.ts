@@ -12,6 +12,7 @@ import { ServiceResponse } from '@app/types';
 // Entities
 import { TaskEntity } from './task.entity';
 import { GroupEntity } from '../group/group.entity';
+import { PRIORITY } from '@app/constants';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -110,6 +111,8 @@ describe('TaskService', () => {
       assignee_id: '1',
       est_time: 1,
       owner_id: '1',
+      reviewer_id: 'mock-reviewer-id',
+      priority: PRIORITY.NORMAL,
     };
 
     it('should create a task and return the created task', async () => {

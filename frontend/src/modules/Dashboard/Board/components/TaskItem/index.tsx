@@ -62,7 +62,7 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
     data: { groupID: groupInfo.groupID, type: SORTABLE_TYPE.TASK },
   });
   const { list: userList } = useUserList();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const setSearchParams = useSearchParams()[1];
 
   // Store
   const dispatch: AppDispatch = useDispatch();

@@ -1,9 +1,12 @@
+// Libraries
 import { Test, TestingModule } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+
+// Services
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { AccessService } from '../share_access/share_access.service';
-import { DataSource } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
 
 describe('AuthService', () => {
   let service: AuthService;

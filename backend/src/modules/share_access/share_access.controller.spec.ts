@@ -184,13 +184,18 @@ describe('ShareAccessController', () => {
     });
 
     it('should call the service.findUserAccessList and return response with data as [] if cannot find accessed list', async () => {
+      const mockServiceResponse = {
+        data: [],
+        meta: {},
+      };
+
       jest
         .spyOn(service, 'findUserAccessList')
-        .mockRejectedValueOnce(HttpException);
+        .mockImplementation(async () => mockServiceResponse);
 
-      await expect(
-        controller.getUserAccessList(objectID, objectType),
-      ).rejects.toThrow(HttpException);
+      const result = await controller.getUserAccessList(objectID, objectType);
+
+      await expect(result).toEqual(mockServiceResponse);
 
       expect(service.findUserAccessList).toHaveBeenCalledWith(
         objectID,

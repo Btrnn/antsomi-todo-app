@@ -20,6 +20,7 @@ import {
   TaskReorderDto,
   TaskUpdateDto,
 } from './dto';
+import { PRIORITY } from '@app/constants';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -98,6 +99,8 @@ describe('TaskController', () => {
       position: 1,
       assignee_id: '1',
       est_time: 1,
+      reviewer_id: 'mock-reviewer-id',
+      priority: PRIORITY.NORMAL,
     };
 
     const mockUser: UserEntity = {

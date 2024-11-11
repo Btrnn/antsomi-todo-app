@@ -227,11 +227,14 @@ export class AccessService {
     }
 
     const userIDs = userAccessList.map((user) => user.id);
-    const users = await this.dataSource.manager.find(UserEntity, {
-      where: {
-        id: In(userIDs),
-      },
-    });
+    let users = [];
+    if (userIDs.length !== 0) {
+      users = await this.dataSource.manager.find(UserEntity, {
+        where: {
+          id: In(userIDs),
+        },
+      });
+    }
     const userDetails = users.map((user) => {
       const permission = userAccessList.find(
         (u) => u.id === user.id,

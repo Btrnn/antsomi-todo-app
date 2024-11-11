@@ -4,8 +4,6 @@ import { debounce } from 'lodash';
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-//Providers
-
 // Icons
 import {} from 'components/icons';
 
@@ -20,13 +18,16 @@ import { checkAuthority, getContrastTextColor } from 'utils';
 
 // Constants
 import { PERMISSION, ROLE_KEY } from 'constants/role';
+import { OBJECT_TYPE, PRIORITY } from 'constants/common';
 
 // Hooks
-import { useAccessList, useLoggedUser, useUserList } from 'hooks';
+import { useAccessList, useLoggedUser } from 'hooks';
+
+// Queries
 import { useUpdateTask } from 'queries';
+
+// Types
 import { IdentifyId } from 'types';
-import { OBJECT_TYPE, PRIORITY } from 'constants/common';
-import { queryOptions } from '@tanstack/react-query';
 
 interface TaskDetailProp {
   task: Task | undefined;
@@ -61,8 +62,10 @@ export const TaskDetail: React.FC<TaskDetailProp> = props => {
         end_date: task.end_date ? dayjs(task.end_date) : undefined,
         created_at: dayjs(task.created_at),
         priority: task.priority
-          ? Object.values(PRIORITY).find(p => p.key === task.priority)
+          ? Object.values(PRIORITY).find(p => p.key === task.priority)?.key
           : undefined,
+        assignee_id: userList.find(user => user.id === task.assignee_id) ? task.assignee_id : null,
+        reviewer_id: userList.find(user => user.id === task.reviewer_id) ? task.reviewer_id : null,
       });
     }
   }, [task, form]);

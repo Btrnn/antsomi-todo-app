@@ -1083,33 +1083,6 @@ describe('ShareAccessService', () => {
     });
 
     it('should throw error if cannot find the object', async () => {
-      const mockObject = {
-        id: mockObjectID,
-        owner_id: 'mock-owner-ID',
-      };
-
-      const mockOwner = {
-        id: mockObject.owner_id,
-        name: 'mock-name-owner',
-        email: 'mock-email@gmail.com',
-        permission: 'owner',
-      };
-
-      const mockAccessList = Array.from({ length: 3 }, (_, i) => ({
-        user_id: `mock-user-${i}`,
-        permission: 'viewer',
-        object_id: mockObjectID,
-        object_type: mockObjectType,
-      }));
-
-      const mockUserIDs = mockAccessList.map((access) => access.user_id);
-      const mockUserList = mockAccessList.map((access, i) => ({
-        id: access.user_id,
-        name: `mock-name-${i}`,
-        email: `mock-email-${i}@gmail.com`,
-        permission: access.permission,
-      }));
-
       jest
         .spyOn(mockDataSource.manager, 'findOne')
         .mockImplementation(() => null);
@@ -1128,6 +1101,94 @@ describe('ShareAccessService', () => {
       );
       expect(mockDataSource.manager.findOneBy).not.toHaveBeenCalled();
       expect(mockAccessRepository.find).not.toHaveBeenCalled();
+      expect(mockDataSource.manager.find).not.toHaveBeenCalled();
+    });
+
+    it("should throw error if cannot find the object's owner", async () => {
+      const mockObject = {
+        id: mockObjectID,
+        owner_id: 'mock-owner-ID',
+      };
+
+      jest
+        .spyOn(mockDataSource.manager, 'findOne')
+        .mockImplementation(() => mockObject);
+
+      jest
+        .spyOn(mockDataSource.manager, 'findOneBy')
+        .mockImplementation(() => null);
+
+      await expect(
+        service.findUserAccessList(mockObjectID, mockObjectType),
+      ).rejects.toThrow(HttpException);
+
+      expect(mockDataSource.manager.findOne).toHaveBeenCalledWith(
+        `${OBJECT_ENTITY[mockObjectType]}Entity`,
+        {
+          where: {
+            id: mockObjectID as string,
+          },
+        },
+      );
+      expect(mockDataSource.manager.findOneBy).toHaveBeenCalledWith(
+        UserEntity,
+        {
+          id: mockObject.owner_id,
+        },
+      );
+      expect(mockAccessRepository.find).not.toHaveBeenCalled();
+      expect(mockDataSource.manager.find).not.toHaveBeenCalled();
+    });
+
+    it('should return data as an array containing only the owner if no permissions are found for other users', async () => {
+      const mockObject = {
+        id: mockObjectID,
+        owner_id: 'mock-owner-ID',
+      };
+
+      const mockOwner = {
+        id: mockObject.owner_id,
+        name: 'mock-name-owner',
+        email: 'mock-email@gmail.com',
+        permission: 'owner',
+      };
+
+      jest
+        .spyOn(mockDataSource.manager, 'findOne')
+        .mockImplementation(() => mockObject);
+
+      jest
+        .spyOn(mockDataSource.manager, 'findOneBy')
+        .mockImplementation(() => mockOwner);
+
+      jest.spyOn(mockAccessRepository, 'find').mockImplementation(() => null);
+
+      const result = await service.findUserAccessList(
+        mockObjectID,
+        mockObjectType,
+      );
+      expect(result.data).toEqual([mockOwner]);
+      expect(mockDataSource.manager.findOne).toHaveBeenCalledWith(
+        `${OBJECT_ENTITY[mockObjectType]}Entity`,
+        {
+          where: {
+            id: mockObjectID as string,
+          },
+        },
+      );
+
+      expect(mockDataSource.manager.findOneBy).toHaveBeenCalledWith(
+        UserEntity,
+        {
+          id: mockObject.owner_id,
+        },
+      );
+
+      expect(mockAccessRepository.find).toHaveBeenCalledWith({
+        select: ['user_id', 'permission'],
+        where: { object_id: mockObjectID, object_type: mockObjectType },
+      });
+
       expect(mockDataSource.manager.find).not.toHaveBeenCalled();
     });
   });
