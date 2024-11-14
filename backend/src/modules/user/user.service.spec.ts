@@ -1,13 +1,11 @@
 // Libraries
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { omit } from 'lodash';
-
-// Entites
-import { UserEntity } from './user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 // Services
 import { UserService } from './user.service';
+import { UserEntity } from './user.entity';
 
 // Types
 import { ServiceResponse } from '@app/types';

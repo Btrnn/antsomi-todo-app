@@ -7,6 +7,7 @@ import {
   Length,
   IsNumber,
   IsOptional,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -68,4 +69,19 @@ export class TaskCreateDto {
   @IsOptional()
   @IsValidPriority()
   public readonly priority: string;
+
+  // @IsOptional()
+  // public readonly attachments: string;
+
+  @IsOptional()
+  @IsObject()
+  public readonly attachments: [
+    {
+      filename: string;
+      path: string;
+      url: string;
+      size: number;
+      mimetype: string;
+    },
+  ];
 }

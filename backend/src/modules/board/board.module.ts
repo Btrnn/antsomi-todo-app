@@ -18,14 +18,14 @@ import { BoardEntity } from './board.entity';
 import { AccessEntity } from '../share_access/share_access.entity';
 
 // Modules
-import { BoardUserModule } from '../share_access/share_access.module';
+import { ShareAccessModule } from '../share_access/share_access.module';
 import { AuthModule } from '../auth/auth.module';
 import { GroupModule } from '../group/group.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([BoardEntity, AccessEntity]),
-    BoardUserModule,
+    ShareAccessModule,
     AuthModule,
     GroupModule,
   ],

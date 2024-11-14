@@ -21,4 +21,4 @@ import { BoardRepository } from '../board/board.repository';
   controllers: [AccessController],
   providers: [TypeOrmModule, AccessService, AccessRepository, BoardRepository],
 })
-export class BoardUserModule {}
+export class ShareAccessModule {}

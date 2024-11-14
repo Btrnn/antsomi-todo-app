@@ -96,7 +96,7 @@ export class BoardService {
     board: Omit<BoardEntity, 'id' | 'created_at'>,
   ): Promise<ServiceResponse<BoardEntity>> {
     const entity = await this.boardRepository.save(board);
-    return { data: entity ? entity : null, meta: {} };
+    return { data: entity, meta: {} };
   }
 
   async deleteBoard(board_id: IdentifyId): Promise<ServiceResponse<boolean>> {

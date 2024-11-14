@@ -97,6 +97,69 @@ export class TaskService {
     };
   }
 
+  async addAttachments(
+    id: IdentifyId,
+    attachment: {
+      filename: string;
+      path: string;
+      size: number;
+      mimetype: string;
+    },
+  ): Promise<
+    ServiceResponse<{
+      filename: string;
+      path: string;
+      size: number;
+      mimetype: string;
+    }>
+  > {
+    const currentTask = await this.taskRepository.findOneBy({
+      id: id as string,
+    });
+
+    currentTask.attachments.push(attachment);
+
+    const result = await this.taskRepository.update(
+      { id: id as string },
+      { attachments: currentTask.attachments },
+    );
+
+    return {
+      data: attachment,
+      meta: {},
+    };
+  }
+
+  async deleteAttachments(
+    id: IdentifyId,
+    path: string,
+  ): Promise<ServiceResponse<boolean>> {
+    const currentTask = await this.taskRepository.findOneBy({
+      id: id as string,
+    });
+
+    if (!currentTask.attachments) {
+      return {
+        data: false,
+        meta: {},
+      };
+    }
+
+    const newAttachments = currentTask.attachments.filter(
+      (attachment) => attachment.path !== path,
+    );
+
+    const result = await this.taskRepository.update(
+      { id: id as string },
+      { attachments: newAttachments },
+    );
+
+    return {
+      data: result.affected > 0,
+      meta: {},
+    };
+  }
+
   async reorderTask(
     tasksPosition: { id: string; position: number }[],
   ): Promise<ServiceResponse<boolean>> {

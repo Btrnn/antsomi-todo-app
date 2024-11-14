@@ -14,22 +14,25 @@ import { AppService } from './app.service';
 // Modules
 import { TaskModule } from '@app/modules/task/task.module';
 import { GroupModule } from '@app/modules/group/group.module';
+import { BoardService } from './modules/board/board.service';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CaslModule } from './casl/casl.module';
 
 // Guards
 import { AuthGuard } from './modules/auth/auth.guard';
 
 // Interceptors
 import { ResponseFormatInterceptor } from './interceptors/response-format.interceptor';
-import { BoardService } from './modules/board/board.service';
 import { BoardController } from './modules/board/board.controller';
 import { BoardModule } from './modules/board/board.module';
-import { BoardUserModule } from './modules/share_access/share_access.module';
-import { CaslModule } from './casl/casl.module';
+import { ShareAccessModule } from './modules/share_access/share_access.module';
 import { UserEntity } from './modules/user/user.entity';
 import { UserController } from './modules/user/user.controller';
 import { UserService } from './modules/user/user.service';
+import { FileModule } from './modules/file/file.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -47,13 +50,18 @@ import { UserService } from './modules/user/user.service';
       ssl: false,
       synchronize: true, // This should be false in production
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     TaskModule,
     GroupModule,
     UserModule,
     AuthModule,
     BoardModule,
-    BoardUserModule,
+    ShareAccessModule,
     CaslModule,
+    FileModule,
   ],
   controllers: [AppController, UserController],
   providers: [

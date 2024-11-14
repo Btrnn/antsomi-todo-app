@@ -5,4 +5,5 @@ export const ROUTES = {
   BOARD: 'board',
   TASK: 'task',
   SHARE_ACCESS: 'share-access',
+  FILE: 'file',
 } as const;
