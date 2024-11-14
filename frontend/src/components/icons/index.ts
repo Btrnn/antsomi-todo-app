@@ -25,3 +25,4 @@ export * from './DownIcon';
 export * from './ShareIcon';
 export * from './RolesIcon';
 export * from './SwitchUserIcon';
+export * from './UploadIcon';

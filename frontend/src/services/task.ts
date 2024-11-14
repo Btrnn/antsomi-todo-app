@@ -5,11 +5,11 @@ import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Task } from 'models';
-import { OBJECT_TYPE } from 'constants/common';
 
 export const getAllTasks = async (boardID: IdentifyId): Promise<ServiceResponse<Task[]>> => {
   try {
     const response = await axiosInstance.get(`task/${boardID}`);
+    console.log('🚀 ~ getAllTasks ~ response:', response);
     return response.data;
   } catch (error) {
     return Promise.reject(error);

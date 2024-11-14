@@ -303,7 +303,8 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
         status_id: group.id,
         position: taskList.length,
         reviewer_id: null,
-        priority: null
+        priority: null,
+        attachments: null,
       };
 
       createTask(newTask);

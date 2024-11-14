@@ -1,5 +1,13 @@
 import React from 'react';
 
+export interface Attachment {
+  filename: string;
+  path: string;
+  size: number;
+  mimetype: string;
+  status?: string;
+}
+
 export interface Task {
   id: React.Key;
   name: string;
@@ -14,4 +22,5 @@ export interface Task {
   owner_id: React.Key;
   reviewer_id: React.Key | null;
   priority: string | null;
+  attachments: Attachment[] | null;
 }

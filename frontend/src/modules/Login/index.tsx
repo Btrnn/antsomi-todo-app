@@ -64,7 +64,19 @@ export const Login: React.FC = () => {
           type: 'success',
           content: <div className="z-10">Login successfully!</div>,
         });
-        cookies.set('authToken', result.data, { path: '/', maxAge: 3600 * 24 * 7 });
+
+        if (values.remember) {
+          cookies.set('authToken', result.data, {
+            path: '/',
+            maxAge: 3600 * 24 * 7,
+          });
+        } else {
+          cookies.set('authToken', result.data, {
+            path: '/',
+          });
+        }
+
+        //cookies.set('authToken', result.data, { path: '/', maxAge: 3600 * 24 * 7 });
         const currentUser = await getUserInfo();
         dispatch(setUser(currentUser.data));
 

@@ -25,7 +25,9 @@ import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Task } from 'models';
-import { persistTaskMutate } from 'utils/react-query/task';
+
+// Utils
+import { persistTaskMutate } from 'utils';
 
 type UseGetTaskListProps = {
   boardId: IdentifyId;

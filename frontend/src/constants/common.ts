@@ -40,6 +40,7 @@ export const DASHBOARD_NAME = {
 
 export const OBJECT_TYPE = {
   BOARD: 'board',
+  TASK: 'task',
 } as const;
 
 export const API_QUERY_KEY = {
@@ -68,3 +69,5 @@ export const PRIORITY = {
     color: '#d1420a',
   },
 } as const;
+
+export const BACKEND_URL = 'http://localhost:3000/';
