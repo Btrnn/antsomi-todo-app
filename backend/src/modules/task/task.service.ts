@@ -117,7 +117,12 @@ export class TaskService {
       id: id as string,
     });
 
-    currentTask.attachments.push(attachment);
+    if (currentTask.attachments) {
+      //currentTask.attachments = [];
+      currentTask.attachments.push(attachment);
+    } else {
+      currentTask.attachments = [attachment];
+    }
 
     const result = await this.taskRepository.update(
       { id: id as string },

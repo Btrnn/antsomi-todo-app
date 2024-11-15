@@ -33,6 +33,7 @@ import { UserService } from './modules/user/user.service';
 import { FileModule } from './modules/file/file.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CommentGateway } from './modules/comment/comment.gateway';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { join } from 'path';
       provide: APP_INTERCEPTOR,
       useClass: ResponseFormatInterceptor,
     },
+    CommentGateway,
   ],
 })
 export class AppModule {}

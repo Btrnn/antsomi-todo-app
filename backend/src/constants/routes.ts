@@ -6,4 +6,5 @@ export const ROUTES = {
   TASK: 'task',
   SHARE_ACCESS: 'share-access',
   FILE: 'file',
+  COMMENT: 'comment',
 } as const;

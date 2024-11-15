@@ -45,9 +45,6 @@ export class TaskEntity {
   @Column({ nullable: true })
   priority: string;
 
-  // @Column({ nullable: true })
-  // attachments: string;
-
   @Column({ type: 'jsonb', nullable: true })
   attachments:
     | [
@@ -59,7 +56,4 @@ export class TaskEntity {
         },
       ]
     | null;
-
-  // @OneToMany(() => FileEntity, (file) => file.task, { cascade: true })
-  // files: File[];
 }
