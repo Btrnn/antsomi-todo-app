@@ -34,6 +34,9 @@ import { FileModule } from './modules/file/file.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CommentGateway } from './modules/comment/comment.gateway';
+import { CommentService } from './modules/comment/comment.service';
+import { CommentController } from './modules/comment/comment.controller';
+import { CommentModule } from './modules/comment/comment.module';
 
 @Module({
   imports: [
@@ -63,6 +66,7 @@ import { CommentGateway } from './modules/comment/comment.gateway';
     ShareAccessModule,
     CaslModule,
     FileModule,
+    CommentModule,
   ],
   controllers: [AppController, UserController],
   providers: [
@@ -76,6 +80,7 @@ import { CommentGateway } from './modules/comment/comment.gateway';
       useClass: ResponseFormatInterceptor,
     },
     CommentGateway,
+    CommentService,
   ],
 })
 export class AppModule {}
