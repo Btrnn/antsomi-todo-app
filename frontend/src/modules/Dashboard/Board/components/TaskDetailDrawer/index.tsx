@@ -9,7 +9,7 @@ import { } from 'components/icons';
 
 // Components
 import { Drawer, Tabs, type TabsProps, message } from 'components/ui';
-import { Comments } from './Comments';
+import { CommentList } from './Comments';
 import { SubTasks } from './SubTasks';
 import { TaskDetail } from './TaskDetail';
 
@@ -85,7 +85,7 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
     {
       key: MENU_KEY.KEY3,
       label: 'Comments',
-      children: <Comments taskID={searchParams.get('taskId') ?? ''} />,
+      children: <CommentList taskID={searchParams.get('taskId') ?? ''} />,
     },
   ];
 
@@ -98,8 +98,9 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
       open={isDrawerOpen}
       footer={<></>}
       closeIcon={false}
+      className='flex flex-col h-full'
     >
-      <Tabs defaultActiveKey={MENU_KEY.KEY1} items={items} />
+      <Tabs className='flex flex-col w-full h-full' centered defaultActiveKey={MENU_KEY.KEY1} items={items}/>
     </Drawer>
   );
 };

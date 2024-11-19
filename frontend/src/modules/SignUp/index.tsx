@@ -121,7 +121,7 @@ export const Signup: React.FC<SignupProps> = props => {
   };
 
   const onClickBack = () => {
-    navigate(-1);
+    navigate('/login');
   };
 
   // const prefixSelector = (
@@ -215,8 +215,8 @@ export const Signup: React.FC<SignupProps> = props => {
             >
               <Row
                 style={{
-                  justifyContent: 'center',
-                  width: '60vw',
+                  justifyContent: 'space-between',
+                  width: 'full',
                   padding: '20px',
                 }}
                 gutter={[16, 16]}
@@ -261,6 +261,9 @@ export const Signup: React.FC<SignupProps> = props => {
                           if (!value) {
                             return Promise.reject(new Error('Please input your phone number!'));
                           }
+                          if (value.length !== 10) {
+                            return Promise.reject(new Error('Phone number must be 10 digits!'));
+                          }
                           if (!/^\d+$/.test(value)) {
                             return Promise.reject(
                               new Error('The input must contain only numbers.'),
@@ -286,6 +289,15 @@ export const Signup: React.FC<SignupProps> = props => {
                       {
                         required: true,
                         message: 'Please input your password!',
+                      },
+                      {
+                        min: 5,
+                        message: 'Password must be at least 5 characters!',
+                      },
+                      {
+                        pattern: /^(?=.*[a-z])(?=.*\d)/,
+                        message:
+                          'Password must contain at least one lowercase letter and one number!',
                       },
                     ]}
                     hasFeedback

@@ -137,14 +137,14 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
   useEffect(() => {
     // if()
     //console.log("uploadList: ",uploadList);
-    if(uploadList.length > 0) {
-      customRequest(uploadList)
+    if (uploadList.length > 0) {
+      customRequest(uploadList);
       setState((prev) => ({
         ...prev,
         uploadList: [],
       }));
     }
-  }, [uploadList])
+  }, [uploadList]);
 
   // Handlers
   const debounceUpdateTask = debounce(() => {
@@ -169,7 +169,7 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
     let updateAttachment: Attachment[] = [];
     for (const file of files) {
       const response = await uploadFile(file.originFileObj as File);
-      updateAttachment.push(response.data)
+      updateAttachment.push(response.data);
     }
     setState((prev) => ({
       ...prev,
@@ -186,15 +186,17 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
     customRequest: () => {},
     onChange: async (info) => {
       if (info.file.status !== "removed") {
-        const allStatusesDefined = info.fileList.every((file) => file.status !== undefined);
+        const allStatusesDefined = info.fileList.every(
+          (file) => file.status !== undefined
+        );
         if (allStatusesDefined) {
           setState((prev) => ({
-          ...prev,
-          uploadList: info.fileList
-          .filter((file) => file.status === "uploading"),
-        }));
+            ...prev,
+            uploadList: info.fileList.filter(
+              (file) => file.status === "uploading"
+            ),
+          }));
         }
-
       }
     },
 
@@ -232,7 +234,8 @@ export const TaskDetail: React.FC<TaskDetailProp> = (props) => {
         labelAlign="left"
         form={form}
         onValuesChange={(changedValues: any, values: Task) =>
-          changedValues !== "attachments" && debounceUpdateTask
+          !Object.keys(changedValues).some((key) => key === "attachments") &&
+          debounceUpdateTask()
         }
         onFinish={onFinishForm}
         disabled={!checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])}

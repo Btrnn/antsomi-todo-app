@@ -26,3 +26,5 @@ export * from './ShareIcon';
 export * from './RolesIcon';
 export * from './SwitchUserIcon';
 export * from './UploadIcon';
+export * from './ReplyIcon';
+export * from './SendIcon';

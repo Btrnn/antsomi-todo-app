@@ -9,7 +9,6 @@ import { Task } from 'models';
 export const getAllTasks = async (boardID: IdentifyId): Promise<ServiceResponse<Task[]>> => {
   try {
     const response = await axiosInstance.get(`task/${boardID}`);
-    console.log('🚀 ~ getAllTasks ~ response:', response);
     return response.data;
   } catch (error) {
     return Promise.reject(error);
