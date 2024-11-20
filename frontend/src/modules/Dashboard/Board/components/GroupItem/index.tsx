@@ -139,28 +139,6 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
     isChangeColor,
   } = state;
 
-  //console.log("allTasks:: ", allTasks)
-  // Handlers
-  // useEffect(() => {
-  //   if (group) {
-  //     setState((prev) => ({
-  //       ...prev,
-  //       taskList: allTasks.filter((task) => task.status_id === group.id),
-  //     }));
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   if (group) {
-  //     console.log("allTasks:: ", allTasks)
-  //     setState((prev) => ({
-  //       ...prev,
-  //       textColor: getContrastTextColor(group.color),
-  //       taskList: allTasks.filter((task) => task.status_id === group.id),
-  //     }));
-  //   }
-  // }, [allTasks]);
-
   useMemo(() => {
      if (group) {
       setState((prev) => ({

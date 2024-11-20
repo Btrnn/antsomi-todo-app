@@ -1,11 +1,11 @@
-import { Comment } from "models";
-import { useEffect, useState } from "react";
-import { socket } from "services";
-import { IdentifyId } from "types";
+import { Comment } from 'models';
+import { useEffect, useState } from 'react';
+import { socket } from 'services';
+import { IdentifyId } from 'types';
 
 // Components
-import { Button, Input, List } from "components/ui";
-import { CommentItem } from "../CommentItem";
+import { Button, Input, List } from 'components/ui';
+import { CommentItem } from '../CommentItem';
 
 interface CommentThreadProp {
   allComments: Comment[];
@@ -19,33 +19,32 @@ type TState = {
 };
 
 const users = [
-  { id: "1", name: "A", email: "a@gmail.com" },
-  { id: "2", name: "B", email: "b@gmail.com" },
-  { id: "3", name: "C", email: "c@gmail.com" },
+  { id: '1', name: 'A', email: 'a@gmail.com' },
+  { id: '2', name: 'B', email: 'b@gmail.com' },
+  { id: '3', name: 'C', email: 'c@gmail.com' },
 ];
 
-export const CommentThread: React.FC<CommentThreadProp> = (props) => {
+export const CommentThread: React.FC<CommentThreadProp> = props => {
   const { taskID, threadID, allComments } = props;
 
   const [state, setState] = useState<TState>({
     commentList: [],
-    newComment: "",
+    newComment: '',
   });
 
   const { commentList, newComment } = state;
 
   // Effects
-  useEffect(() => {
-    setState((prev) => ({
-      ...prev,
-      commentList: allComments.filter(
-        (comment) => comment.threadId === threadID
-      ),
-    }));
-  }, [allComments]);
+  // useEffect(() => {
+  //   setState((prev) => ({
+  //     ...prev,
+  //     commentList: allComments.filter(
+  //       (comment) => comment.threadId === threadID
+  //     ),
+  //   }));
+  // }, [allComments]);
 
   // Handlers
-
 
   //   useEffect(() => {
   //     socket.on("comment-received", (data: string) => {
@@ -102,40 +101,42 @@ export const CommentThread: React.FC<CommentThreadProp> = (props) => {
   //     return user ? user.name : "Unknown User";
   //   };
 
-  return (
-    <List
-      dataSource={commentList.filter((comment) => comment.parentId === null)}
-      renderItem={(item) => (
-        <CommentItem
-          taskID={taskID}
-          comment={item}
-          replies={commentList.filter(
-            (comment) => comment.parentId === item.id
-          )}
-          allThreadComment={commentList}
-        />
-        // <List.Item>
-        //   <List.Item.Meta
-        //     avatar={<UserIcon />}
-        //     title={getUserName(item.user_id)}
-        //     description={
-        //       <div>
-        //         {item.content}
-        //         <ReplyIcon />
-        //       </div>
-        //     }
-        //   />
-        //   <div className="text-xs">
-        //     {item.created_at
-        //       ? formatDistanceToNow(new Date(item.created_at), {
-        //           addSuffix: true,
-        //         })
-        //       : ""}
-        //   </div>
-        // </List.Item>
-      )}
-    />
-  );
+  return <div></div>;
+  // (
+
+  // <List
+  //   dataSource={commentList.filter((comment) => comment.parentId === null)}
+  //   renderItem={(item) => (
+  //     <CommentItem
+  //       taskID={taskID}
+  //       comment={item}
+  //       replies={commentList.filter(
+  //         (comment) => comment.parentId === item.id
+  //       )}
+  //       allThreadComment={commentList}
+  //     />
+  //     // <List.Item>
+  //     //   <List.Item.Meta
+  //     //     avatar={<UserIcon />}
+  //     //     title={getUserName(item.user_id)}
+  //     //     description={
+  //     //       <div>
+  //     //         {item.content}
+  //     //         <ReplyIcon />
+  //     //       </div>
+  //     //     }
+  //     //   />
+  //     //   <div className="text-xs">
+  //     //     {item.created_at
+  //     //       ? formatDistanceToNow(new Date(item.created_at), {
+  //     //           addSuffix: true,
+  //     //         })
+  //     //       : ""}
+  //     //   </div>
+  //     // </List.Item>
+  //   )}
+  // />
+  //);
   // <div className="flex flex-col h-full w-full">
   //   <div className="flex-1 overflow-auto p-2">
   //     <List

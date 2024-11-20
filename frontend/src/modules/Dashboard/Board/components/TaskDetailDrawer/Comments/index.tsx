@@ -4,9 +4,17 @@ import { io, Socket } from "socket.io-client";
 import { formatDistanceToNow } from "date-fns";
 
 // Components
-import { SendIcon, UserIcon } from "components/icons";
-import { Button, Input, List } from "components/ui";
-import { CommentThread } from "./components/CommentThread";
+import { CloseIcon, DownIcon, RepliedIcon, SendIcon, UserIcon } from "components/icons";
+import {
+  Button,
+  Input,
+  List,
+  MenuProps,
+  Tree,
+  TreeDataNode,
+  TreeProps,
+} from "components/ui";
+import { CommentItem } from "./components/CommentItem";
 
 // Services
 import { socket } from "services";
@@ -16,6 +24,9 @@ import { IdentifyId } from "types";
 
 // Models
 import { Comment } from "models";
+
+// Styled
+import { CommentWrapper } from "./styled";
 
 interface CommentProp {
   taskID: IdentifyId;
@@ -29,7 +40,6 @@ const comments = [
     object_type: "task",
     content: "COMMENT 1",
     parentId: null,
-    threadId: 1,
     created_at: "2024-10-23 01:42:04.022",
     updated_at: "2024-11-19T08:00:00Z",
   },
@@ -40,7 +50,6 @@ const comments = [
     object_type: "task",
     content: "COMMENT 1.1",
     parentId: 1,
-    threadId: 1,
     created_at: "2024-11-19T08:10:00Z",
     updated_at: "2024-11-19T08:10:00Z",
   },
@@ -51,7 +60,6 @@ const comments = [
     object_type: "task",
     content: "COMMENT 2",
     parentId: null,
-    threadId: 3,
     created_at: "2024-11-19T09:00:00Z",
     updated_at: "2024-11-19T09:00:00Z",
   },
@@ -62,7 +70,6 @@ const comments = [
     object_type: "task",
     content: "COMMENT 1.2",
     parentId: 1,
-    threadId: 1,
     created_at: "2024-11-19T08:20:00Z",
     updated_at: "2024-11-19T08:20:00Z",
   },
@@ -73,16 +80,20 @@ const comments = [
     object_type: "task",
     content: "COMMENT 1.1.1",
     parentId: 2,
-    threadId: 1,
     created_at: "2024-11-19T08:30:00Z",
     updated_at: "2024-11-19T08:30:00Z",
   },
 ];
 
+// type MenuItem = Required<TreeDataNode>["items"][number];
+
 type TState = {
   commentList: Comment[];
   newComment: string;
-  threadList: React.Key[];
+  treeList: TreeDataNode[];
+  isReplying: boolean;
+  replyDescription: string;
+  repliedComment: React.Key | null;
 };
 
 export const CommentList: React.FC<CommentProp> = (props) => {
@@ -90,20 +101,45 @@ export const CommentList: React.FC<CommentProp> = (props) => {
   const [response, setResponse] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
 
+  // States
   const [state, setState] = useState<TState>({
     commentList: comments,
     newComment: "",
-    threadList: comments
-      .filter((comment) => comment.parentId === null)
-      .map((comment) => comment.threadId),
+    treeList: [],
+    isReplying: false,
+    replyDescription: "",
+    repliedComment: null,
   });
 
-  const { commentList, newComment, threadList } = state;
+  const { commentList, newComment, treeList, isReplying, replyDescription, repliedComment } =
+    state;
+
+  // Handlers
+  const buildTree = (comments: Comment[], parentId: React.Key | null) => {
+    if (comments.length === 0) {
+      return;
+    }
+    return comments
+      .filter((comment) => comment.parentId === parentId)
+      .map((comment) => ({
+        ...comment,
+        key: comment.id,
+        title: (
+          <CommentItem
+            taskID={taskID}
+            comment={comment}
+            onReply={(id) => {
+              onClickStartReply(id);
+            }}
+          />
+        ),
+        children: buildTree(comments, comment.id),
+      }));
+  };
 
   // Effects
   useEffect(() => {
     socket.on("comment-received", (data: any) => {
-      console.log("🚀 ~ socket.on ~ data:", data)
       const newId = Math.random();
       const newCommentObj: Comment = {
         id: newId,
@@ -112,7 +148,6 @@ export const CommentList: React.FC<CommentProp> = (props) => {
         object_type: "task",
         content: data.content,
         parentId: data.parentId,
-        threadId: data.threadId || newId ,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -130,68 +165,88 @@ export const CommentList: React.FC<CommentProp> = (props) => {
   useEffect(() => {
     setState((prev) => ({
       ...prev,
-      threadList: prev.commentList
-        .filter((comment) => comment.parentId === null)
-        .map((comment) => comment.threadId),
+      treeList: buildTree(commentList, null),
     }));
   }, [commentList]);
 
-  // const sendMessage = () => {
-  //   const socket: Socket = io('http://localhost:4000');
-  //   // const commentData: Omit<Comment, 'id' | 'created_at' | 'user_id'> = {
-  //   //   object_id: taskID,
-
-  //   // };
-  //   socket.emit('comment', message);
-  //   setMessage('');
-  // };
-
   // Handlers
+  const onClickStartReply = (commentID: React.Key) => {
+    const comment = commentList.find((comment) => comment.id === commentID);
+    setState((prev) => ({
+      ...prev,
+      isReplying: true,
+      replyDescription: `Replying to: ${comment?.content}`,
+      repliedComment: commentID,
+    }));
+  };
+
   const onClickAddComment = () => {
     if (newComment.trim() === "") {
       return;
     }
 
     const socket: Socket = io("http://localhost:4000");
-    socket.emit("comment-sent", {content: newComment, parentId: null, threadId: null});
+    socket.emit("comment-sent", {
+      content: newComment,
+      parentId: repliedComment,
+    });
 
     setState((prev) => ({
       ...prev,
       newComment: "",
+      isReplying: false,
+      replyDescription: "",
+      repliedComment: null,
     }));
+
+    
   };
 
   return (
-    <div className="flex flex-col h-full w-full justify-between">
-      <div className="flex-1 overflow-auto">
-        {threadList.map((thread) => (
-          <CommentThread
-            allComments={commentList}
-            taskID={taskID}
-            threadID={thread}
-          />
-        ))}
-      </div>
-      <div className="flex mt-2">
-        <Input.TextArea
-          rows={2}
-          value={newComment}
-          onChange={(e) =>
-            setState((prev) => ({
-              ...prev,
-              newComment: e.target.value,
-            }))
-          }
-          placeholder="Write a comment..."
-
+    <CommentWrapper className="flex flex-col h-full w-full justify-between flex-1">
+      <div className="overflow-auto w-full">
+        <Tree
+          //showLine
+          treeData={treeList}
+          switcherIcon={<DownIcon />}
+          selectedKeys={[repliedComment || '']}
+          //expandedKeys={[]}
         />
-          <Button
-            icon={<SendIcon />}
-            type="primary"
-            onClick={onClickAddComment}
-            style={{ marginTop: "8px" }}
-          />
       </div>
-    </div>
+      <div className="w-full mt-2">
+          {isReplying && (
+              <div className="w-full flex text-xs text-gray-500 p-1 gap-1 mb-1">
+                <RepliedIcon />
+                {replyDescription}
+                <CloseIcon className="cursor-pointer mr-10 hover:text-red-700" onClick={() => setState((prev) => ({ ...prev, isReplying: false, replyDescription: "", repliedComment: null }))}/>
+              </div>
+          )}
+          <div className="w-full gap-x-1 flex">
+            <Input
+              className="p-2"
+              style={{
+                outline: "none",
+                boxShadow: "none",
+              }}
+              placeholder="Add new comment"
+              value={newComment}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  newComment: e.target.value,
+                }))
+              }
+              onPressEnter={onClickAddComment}
+            />
+            <Button
+              className="w-10 h-10"
+              onClick={onClickAddComment}
+              type="primary"
+            >
+              <SendIcon />
+            </Button>
+          </div>
+      </div>
+    </CommentWrapper>
   );
 };

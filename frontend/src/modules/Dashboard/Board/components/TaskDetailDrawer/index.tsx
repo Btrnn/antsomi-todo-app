@@ -29,6 +29,7 @@ interface TaskDrawerProp {
 interface TState {
   task: Task | undefined;
   isDrawerOpen: boolean;
+  activeKey: string;
 }
 
 export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
@@ -39,9 +40,10 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
   const [state, setState] = useState<TState>({
     task: undefined,
     isDrawerOpen: false,
+    activeKey: MENU_KEY.KEY1,
   });
 
-  const { task, isDrawerOpen } = state;
+  const { task, isDrawerOpen, activeKey } = state;
 
   // Hooks
   const params = useParams();
@@ -56,7 +58,7 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
     if (!isLoading) {
       const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
       if (taskInfo) {
-        setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true }));
+        setState(prev => ({ ...prev, task: taskInfo, isDrawerOpen: true, activeKey: MENU_KEY.KEY1 }));
       }
     }
     // const taskInfo = taskList.find(task => (task.id as string) === searchParams.get('taskId'));
@@ -100,7 +102,7 @@ export const TaskDrawer: React.FC<TaskDrawerProp> = props => {
       closeIcon={false}
       className='flex flex-col h-full'
     >
-      <Tabs className='flex flex-col w-full h-full' centered defaultActiveKey={MENU_KEY.KEY1} items={items}/>
+      <Tabs className='flex flex-col w-full h-full' centered activeKey={activeKey} onChange={key => setState(prev => ({ ...prev, activeKey: key }))} items={items}/>
     </Drawer>
   );
 };
