@@ -13,22 +13,19 @@ const server = http.createServer(app);
 const socketIO = new SocketIOServer(server, {
   cors: {
     origin: 'http://localhost:3001',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Authorization'],
+    credentials: true,
   },
 });
 
 // Socket.IO events
 socketIO.on('connection', (socket) => {
+  console.log('🚀 ~ socketIO.on ~ header:', socket.handshake.headers);
   const token = socket.handshake.headers['authorization'];
-  // socket.on('message', (message) => {
-  //   console.log('Received message:', message); // Log the message received from frontend
-  //   // You can emit the message back or perform other actions
-
-  //   socket.broadcast.emit('message', message);
-
-  //   //socketIO.emit('message_response', `Message received: ${message}`); // Emit back a response
-  // });
-
+  console.log('🚀 ~ socketIO.on ~ token:', token);
   socket.on('comment-sent', (comment) => {
+    console.log('🚀 ~ socket.on ~ comment:', comment);
     socket.broadcast.emit('comment-received', comment);
 
     //socketIO.emit('message_response', `Message received: ${message}`); // Emit back a response

@@ -24,9 +24,6 @@ export class CommentEntity {
   @Column({ nullable: true })
   parentId: string | null;
 
-  @Column()
-  threadId: string;
-
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
