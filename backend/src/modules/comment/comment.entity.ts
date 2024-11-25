@@ -10,23 +10,23 @@ export class CommentEntity {
   id: string;
 
   @Column()
-  userId: string;
+  user_id: string;
 
   @Column()
-  objectId: string;
+  object_id: string;
 
   @Column({ length: 10 })
-  objectType: string;
+  object_type: string;
 
   @Column({ type: 'text', nullable: true })
   content: string;
 
   @Column({ nullable: true })
-  parentId: string | null;
+  parent_id: string | null;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  updated_at: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  updated_at: Date | null;
 }

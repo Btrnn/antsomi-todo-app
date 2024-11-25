@@ -59,7 +59,7 @@ export class TaskService {
     const entity = await this.taskRepository.save(task);
 
     return {
-      data: entity ? entity : null,
+      data: entity,
       meta: {},
     };
   }

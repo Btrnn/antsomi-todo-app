@@ -72,12 +72,10 @@ export class AuthService {
       return { data: false, meta: {} };
     }
 
-    if (currentObject.owner_id === (userID as string)) {
-      return { data: true, meta: {} };
-    }
-    const permission = await this.accessService.findUserPermission(
+    const permission = await this.accessService.findPermission(
       userID,
       objectID,
+      objectType,
     );
     if (permission && permissionActions.includes(permission.data)) {
       return { data: true, meta: {} };

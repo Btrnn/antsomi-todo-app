@@ -79,8 +79,6 @@ import { CommentModule } from './modules/comment/comment.module';
       provide: APP_INTERCEPTOR,
       useClass: ResponseFormatInterceptor,
     },
-    CommentGateway,
-    CommentService,
   ],
 })
 export class AppModule {}

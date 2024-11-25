@@ -18,3 +18,8 @@ export type UserRequest = {
   iat?: number;
   exp?: number;
 };
+
+export type ObjectRequest = {
+  id: string;
+  type: string;
+};

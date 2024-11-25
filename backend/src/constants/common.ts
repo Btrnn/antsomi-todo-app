@@ -1,7 +1,7 @@
 export type PriorityType = (typeof PRIORITY)[keyof typeof PRIORITY];
 
 export const PRIORITY = {
-  NORMAL: 'normal',
+  LOW: 'low',
   MEDIUM: 'medium',
   HIGH: 'high',
   URGENT: 'urgent',
