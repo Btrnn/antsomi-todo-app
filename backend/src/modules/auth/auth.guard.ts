@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { DataSource } from 'typeorm';
 
 // Constants
 import { jwtConstants } from './constants';
@@ -20,10 +20,15 @@ import {
   PARAM_KEY,
   OBJECT_TYPE,
   OBJECT_KEY,
+  SOCKET_QUERY_KEY,
 } from '@app/constants';
 
 // Services
 import { AuthService } from './auth.service';
+
+// Entities
+import { TaskEntity } from '../task/task.entity';
+import { GroupEntity } from '../group/group.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,11 +36,10 @@ export class AuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
     private readonly authService: AuthService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    if (context.getType() === 'ws') return true;
-
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -43,8 +47,10 @@ export class AuthGuard implements CanActivate {
 
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const { request, client, token } = this.extractTokenFromHeader(context);
+
+    //console.log({ request, client, token });
+
     if (!token) {
       throw new HttpException(
         {
@@ -59,7 +65,12 @@ export class AuthGuard implements CanActivate {
         secret: jwtConstants.secret,
       });
 
-      request['user'] = payload;
+      if (request) {
+        request['user'] = payload;
+      }
+      if (client) {
+        client['user'] = payload;
+      }
     } catch {
       throw new HttpException(
         {
@@ -82,8 +93,32 @@ export class AuthGuard implements CanActivate {
       (this.reflector.get<any>(OBJECT_KEY, context.getHandler()) as any) ||
       null;
 
-    const objectID = request.params[PARAM_KEY.OBJECT];
-    const objectType = request.query[PARAM_KEY.TYPE] || contextObjectType;
+    let objectID,
+      objectType = contextObjectType,
+      userID;
+    if (request) {
+      userID = request['user'].id;
+      objectID = request.params[PARAM_KEY.OBJECT];
+      if (request.query[PARAM_KEY.TYPE]) {
+        objectType = request.query[PARAM_KEY.TYPE];
+      }
+    }
+    if (client) {
+      userID = client['user'].id;
+      const object = JSON.parse(
+        client.handshake.query[SOCKET_QUERY_KEY.OBJECT] as string,
+      );
+
+      const task = await this.dataSource.manager.findOneBy(TaskEntity, {
+        id: object.id,
+      });
+
+      const group = await this.dataSource.manager.findOneBy(GroupEntity, {
+        id: task.status_id,
+      });
+
+      objectID = group.board_id;
+    }
 
     if (
       !objectType ||
@@ -101,7 +136,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const hasAccess = await this.authService.isAcceptedPermission(
-      request['user'].id,
+      userID,
       objectID,
       PERMISSION[requiredPermission],
       objectType,
@@ -120,8 +155,29 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+  private extractTokenFromHeader(context: ExecutionContext): {
+    request: any;
+    client: any;
+    token: string | undefined;
+  } {
+    const contextType = context.getType();
+    let request = null,
+      client = null,
+      token = null,
+      type = '';
+    if (contextType === 'http') {
+      request = context.switchToHttp().getRequest();
+      [type, token] = request.headers.authorization?.split(' ') ?? [];
+    } else if (contextType === 'ws') {
+      client = context.switchToWs().getClient();
+      [type, token] =
+        client.handshake.headers['authorization']?.split(' ') ?? [];
+    }
+
+    return {
+      request,
+      client,
+      token: type === 'Bearer' ? token : undefined,
+    };
   }
 }

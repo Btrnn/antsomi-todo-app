@@ -9,11 +9,17 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Inject } from '@nestjs/common';
+import { Inject, UseGuards } from '@nestjs/common';
 
 // Constants
 import { jwtConstants } from '../auth/constants';
-import { SOCKET_CHANEL, SOCKET_QUERY_KEY } from '@app/constants';
+import {
+  OBJECT_TYPE,
+  PERMISSION,
+  ROLE,
+  SOCKET_CHANEL,
+  SOCKET_QUERY_KEY,
+} from '@app/constants';
 
 // Decorators
 import { Object, User } from '@app/decorators';
@@ -28,8 +34,11 @@ import { CommentService } from './comment.service';
 import { CommentEntity } from './comment.entity';
 
 // DTOs
-import { CommentCreateDto, CommentDeleteDto } from './dto';
+import { CommentCreateDto, CommentDeleteDto, CommentEditDto } from './dto';
+import { AuthGuard } from '../auth/auth.guard';
+import { RequiresPermission } from '@app/decorators/authorize.decorator';
 
+@UseGuards(AuthGuard)
 @WebSocketGateway(4000, {
   namespace: 'comment',
   cors: {
@@ -48,6 +57,7 @@ export class CommentGateway
     private readonly commentService: CommentService,
   ) {}
 
+  @RequiresPermission(ROLE.COMMENTER, OBJECT_TYPE.BOARD)
   @SubscribeMessage(SOCKET_CHANEL.CREATE_COMMENT)
   async createComment(
     @MessageBody()
@@ -76,7 +86,7 @@ export class CommentGateway
   @SubscribeMessage(SOCKET_CHANEL.EDIT_COMMENT)
   async editComment(
     @MessageBody()
-    data: Pick<CommentEntity, 'id' | 'updated_at' | 'content'>,
+    data: CommentEditDto,
     @Object() object: ObjectRequest,
   ) {
     const result = await this.commentService.updateComment(data);
@@ -85,30 +95,11 @@ export class CommentGateway
     }
   }
 
+  @RequiresPermission(ROLE.VIEWER, OBJECT_TYPE.BOARD)
   async handleConnection(client: Socket) {
-    const [type, token] =
-      client.handshake.headers['authorization']?.split(' ') ?? [];
-    if (type !== 'Bearer' || !token) {
-      client.disconnect();
-      return;
-    }
-
-    try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: jwtConstants.secret,
-      });
-      client['user'] = payload;
-
-      const object = client.handshake.query[SOCKET_QUERY_KEY.OBJECT];
-      const chanel = JSON.parse(object as string).id;
-      client.join(chanel);
-    } catch {
-      client.disconnect();
-      return;
-      //throw new WsException('Invalid credentials.');
-    }
-
-    //console.log(`Client connected: ${client.id}`);
+    const object = client.handshake.query[SOCKET_QUERY_KEY.OBJECT];
+    const chanel = JSON.parse(object as string).id;
+    client.join(chanel);
   }
 
   handleDisconnect(client: Socket) {
