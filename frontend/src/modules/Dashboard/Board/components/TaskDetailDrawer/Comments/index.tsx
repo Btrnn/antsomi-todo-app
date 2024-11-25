@@ -10,7 +10,16 @@ import {
   SendIcon,
   UserIcon,
 } from "components/icons";
-import { Button, Input, Tree, TreeDataNode } from "components/ui";
+import {
+  Button,
+  Empty,
+  GetProp,
+  Input,
+  MentionProps,
+  Mentions,
+  Tree,
+  TreeDataNode,
+} from "components/ui";
 import { CommentItem } from "./CommentItem";
 
 // Services
@@ -26,10 +35,17 @@ import { Comment } from "models";
 import { CommentWrapper } from "./styled";
 
 // Constants
-import { OBJECT_TYPE, SOCKET_CHANEL, SOCKET_NAMESPACE } from "constant";
+import {
+  OBJECT_TYPE,
+  PERMISSION,
+  ROLE_KEY,
+  SOCKET_CHANEL,
+  SOCKET_NAMESPACE,
+} from "constant";
 
 // Hooks
 import { useAccessList, useLoggedUser, usePermission } from "hooks";
+import { checkAuthority } from "utils";
 
 interface CommentListProp {
   taskID: IdentifyId;
@@ -42,7 +58,11 @@ type TState = {
   isReplying: boolean;
   replyDescription: string;
   repliedComment: React.Key | null;
+  mentionList: IdentifyId[];
+  isSelecting: boolean;
 };
+
+type MentionsOptionProps = GetProp<MentionProps, "options">[number];
 
 export const CommentList: React.FC<CommentListProp> = (props) => {
   const { taskID } = props;
@@ -56,6 +76,8 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     isReplying: false,
     replyDescription: "",
     repliedComment: null,
+    mentionList: [],
+    isSelecting: false,
   });
   const {
     commentList,
@@ -64,6 +86,8 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     isReplying,
     replyDescription,
     repliedComment,
+    mentionList,
+    isSelecting
   } = state;
 
   // Hooks
@@ -76,6 +100,14 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     OBJECT_TYPE.BOARD
   );
   const { user } = useLoggedUser();
+
+  // List
+  const MentionOptions = (): MentionsOptionProps[] => {
+    return accessList.map((user) => ({
+      value: user.id,
+      label: user.name,
+    }));
+  };
 
   // Refs
   const sendInputRef = useRef<any>(null);
@@ -164,14 +196,19 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
   // Handlers
   const onClickStartReply = (commentID: React.Key) => {
     const comment = commentList.find((comment) => comment.id === commentID);
-    setState((prev) => ({
-      ...prev,
-      isReplying: true,
-      replyDescription: `Replying to: ${comment?.content}`,
-      repliedComment: commentID,
-    }));
+    const user = accessList.find(user => user.id === comment?.user_id);
+    if(user){
+      setState((prev) => ({
+        ...prev,
+        isReplying: true,
+        replyDescription: `Replying to: ${comment?.content}`,
+        repliedComment: commentID,
+        newComment: `@${user?.name} ${prev.newComment}`,
+        mentionList: [...prev.mentionList, user.id],
+      }));
+    }
 
-      sendInputRef.current?.focus();
+    sendInputRef.current?.focus();
   };
 
   const onClickAddComment = () => {
@@ -194,17 +231,39 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     }));
   };
 
+  const onChangeMentions = (value: string) => {
+    setState((prev) => ({
+      ...prev,
+      newComment: value,
+    }))
+  };
+
+  const onClickSelectMention = (option: any) => {
+    setState((prev) => ({
+      ...prev,
+      isSelecting: true,
+      mentionList: [...prev.mentionList, option.key],
+    }));
+  };
+
   return (
     <CommentWrapper className="flex flex-col h-full w-full justify-between flex-1">
-      <div className="overflow-auto w-full">
-        <Tree
-          //showLine
-          motion={false}
-          treeData={treeList}
-          switcherIcon={<DownIcon />}
-          selectedKeys={[repliedComment || ""]}
-          //expandedKeys={[]}
-        />
+      <div className="overflow-auto h-full w-full">
+        {treeList.length === 0 ? (
+          <Empty
+            className="flex h-full items-center justify-center"
+            description="No comments yet"
+          />
+        ) : (
+          <Tree
+            //showLine
+            motion={false}
+            treeData={treeList}
+            switcherIcon={<DownIcon />}
+            selectedKeys={[repliedComment || ""]}
+            //expandedKeys={[]}
+          />
+        )}
       </div>
       <div className="w-full mt-2">
         {isReplying && (
@@ -224,33 +283,48 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
             />
           </div>
         )}
-        <div className="w-full gap-x-1 flex">
-          <Input
-            ref={sendInputRef}
-            className="p-2"
-            style={{
-              outline: "none",
-              boxShadow: "none",
-            }}
-            placeholder="Add new comment"
-            value={newComment}
-            onChange={(e) =>
-              setState((prev) => ({
-                ...prev,
-                newComment: e.target.value,
-              }))
-            }
-
-            onPressEnter={onClickAddComment}
-          />
-          <Button
-            className="w-10 h-10"
-            onClick={onClickAddComment}
-            type="primary"
-          >
-            <SendIcon />
-          </Button>
-        </div>
+        {checkAuthority(boardPermission, PERMISSION[ROLE_KEY.COMMENTER]) ? (
+          <div className="w-full gap-x-1 flex">
+            {/* <Input
+              ref={sendInputRef}
+              className="p-2"
+              style={{
+                outline: "none",
+                boxShadow: "none",
+              }}
+              placeholder="Add new comment"
+              value={newComment}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  newComment: e.target.value,
+                }))
+              }
+              onPressEnter={onClickAddComment}
+            /> */}
+            <Mentions
+              className = "outline-none shadow-none items-center h-full p-1"
+              placeholder="Add new comment"
+              value={newComment}
+              onChange={onChangeMentions}
+              ref={sendInputRef}
+              onSelect={(option) => onClickSelectMention(option)}
+              options={accessList.map((user) => ({
+                value: user.name,
+                label: user.name,
+                key: user.id,
+              }))}
+              onPressEnter={onClickAddComment}
+            />
+            <Button
+              className="w-10 h-10"
+              onClick={onClickAddComment}
+              type="primary"
+            >
+              <SendIcon />
+            </Button>
+          </div>
+        ) : null}
       </div>
     </CommentWrapper>
   );

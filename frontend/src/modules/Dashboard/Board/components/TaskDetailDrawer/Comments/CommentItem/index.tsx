@@ -20,7 +20,15 @@ import { ReplyIcon, MoreIcon, DeleteIcon, EditIcon } from 'components/icons';
 import { Dropdown, Input, MenuInfo, MenuProps, Modal } from 'components/ui';
 
 // Constants
-import { MENU_KEY, OBJECT_TYPE, ROLE_KEY, SOCKET_CHANEL, SOCKET_NAMESPACE } from 'constant';
+import {
+  MENU_KEY,
+  OBJECT_TYPE,
+  PERMISSION,
+  ROLE_KEY,
+  SOCKET_CHANEL,
+  SOCKET_NAMESPACE,
+} from 'constant';
+import { checkAuthority } from 'utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -281,9 +289,11 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
           )}
 
           <div className="flex gap-1">
-            <button onClick={() => onReply(comment.id)}>
-              <ReplyIcon />
-            </button>
+            {checkAuthority(permission, PERMISSION[ROLE_KEY.COMMENTER]) ? (
+              <button onClick={() => onReply(comment.id)}>
+                <ReplyIcon />
+              </button>
+            ) : null}
             {permission === ROLE_KEY.OWNER || userID === comment.user_id ? (
               <Dropdown
                 key={comment.id}
