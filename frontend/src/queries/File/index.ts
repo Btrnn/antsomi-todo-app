@@ -2,10 +2,12 @@
 import { useMutation, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
 
 // Constants
-import { MUTATION_KEYS, QUERY_KEYS } from 'constants/query';
+import { MUTATION_KEYS, QUERY_KEYS } from 'constant';
 
 // Models
 import { Attachment, Task } from 'models';
+
+// Services
 import { deleteFile, uploadFile } from 'services';
 
 // Types

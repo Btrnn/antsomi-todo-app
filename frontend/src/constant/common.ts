@@ -45,12 +45,13 @@ export const OBJECT_TYPE = {
 
 export const API_QUERY_KEY = {
   OBJECT_TYPE: 'objectType',
+  OBJECT_ID: 'objectID',
 };
 
 export const PRIORITY = {
-  NORMAL: {
-    key: 'normal',
-    label: 'Normal',
+  LOW: {
+    key: 'low',
+    label: 'Low',
     color: '#59f790',
   },
   MEDIUM: {

@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-query';
 
 // Constants
-import { MUTATION_KEYS, QUERY_KEYS } from 'constants/query';
+import { MUTATION_KEYS, QUERY_KEYS } from 'constant';
 
 // Services
 import { createBoard, deleteBoard, getAllBoards, updateBoard, UpdateBoardArgs } from 'services';
@@ -18,6 +18,8 @@ import { IdentifyId, ServiceResponse } from 'types';
 
 // Models
 import { Board } from 'models';
+
+// Utils
 import { persistBoardMutate } from 'utils';
 
 type UseGetBoardListProps = {

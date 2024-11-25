@@ -1,4 +1,5 @@
-import { API_QUERY_KEY } from 'constants/common';
+// Constants
+import { API_QUERY_KEY } from 'constant';
 import { axiosInstance } from './api';
 
 // Types

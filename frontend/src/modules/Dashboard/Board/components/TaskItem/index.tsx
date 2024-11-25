@@ -26,9 +26,7 @@ import {
 import { Task } from 'models';
 
 // Constants
-import { PERMISSION, ROLE_KEY } from 'constants/role';
-import { MENU_KEY, SORTABLE_TYPE } from 'constants/tasks';
-import { PRIORITY } from 'constants/common';
+import { PERMISSION, ROLE_KEY, MENU_KEY, SORTABLE_TYPE, PRIORITY } from 'constant';
 
 // Utils
 import { checkAuthority, getContrastTextColor } from 'utils';
@@ -131,7 +129,9 @@ export const TaskItem: React.FC<TaskItemProp> = props => {
             if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
               Modal.confirm({
                 title: 'Are you sure you want to delete this task?',
-                content: <div className="text-red-500 text-xs">All task data will be deleted.</div>,
+                content: (
+                  <div className="text-gray-700 text-xs">All task data will be deleted.</div>
+                ),
                 footer: (_, { OkBtn, CancelBtn }) => (
                   <>
                     <CancelBtn />

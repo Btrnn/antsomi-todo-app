@@ -28,8 +28,7 @@ import { Attachment, Task } from "models";
 import { checkAuthority, getContrastTextColor } from "utils";
 
 // Constants
-import { PERMISSION, ROLE_KEY } from "constants/role";
-import { BACKEND_URL, OBJECT_TYPE, PRIORITY } from "constants/common";
+import { PERMISSION, ROLE_KEY, BACKEND_URL, OBJECT_TYPE, PRIORITY } from "constant";
 
 // Hooks
 import { useAccessList, useLoggedUser } from "hooks";
@@ -39,7 +38,6 @@ import { useDeleteFile, useUpdateTask, useUploadFile } from "queries";
 
 // Types
 import { IdentifyId } from "types";
-import { deleteFile } from "services";
 
 interface TaskDetailProp {
   task: Task | undefined;

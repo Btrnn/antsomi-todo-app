@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cookies } from 'react-cookie';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 // Icons
 import { UserIcon, HomeIcon, LogoutIcon, ProfileIcon } from 'components/icons';
@@ -11,10 +11,12 @@ import { UserIcon, HomeIcon, LogoutIcon, ProfileIcon } from 'components/icons';
 import { Drawer, Avatar, Menu, type MenuProps, type MenuInfo, message } from 'components/ui';
 
 // Constants
-import { MENU_KEY } from 'constants/tasks';
+import { MENU_KEY } from 'constant';
 
 // Stores
-import { RootState, AppDispatch, setGroupList, setTaskList } from 'store';
+import { AppDispatch, setGroupList, setTaskList } from 'store';
+
+// Hooks
 import { useLoggedUser } from 'hooks';
 
 interface UserDrawerProp {

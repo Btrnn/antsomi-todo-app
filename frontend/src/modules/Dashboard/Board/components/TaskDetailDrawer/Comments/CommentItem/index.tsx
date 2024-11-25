@@ -1,27 +1,41 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { io, Socket } from 'socket.io-client';
+import { vi } from 'date-fns/locale';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 
 // Models
 import { Comment } from 'models';
 
 // Services
-import { socket } from 'services';
+import { createSocket } from 'services';
 
 // Types
 import { IdentifyId } from 'types';
 
 // Components
-import { UserIcon, ReplyIcon, SendIcon, MoreIcon, DeleteIcon, EditIcon } from 'components/icons';
-import { Button, Dropdown, Input, List, MenuInfo, MenuProps, Modal } from 'components/ui';
+import { ReplyIcon, MoreIcon, DeleteIcon, EditIcon } from 'components/icons';
+import { Dropdown, Input, MenuInfo, MenuProps, Modal } from 'components/ui';
 
 // Constants
-import { MENU_KEY } from 'constants/tasks';
+import { MENU_KEY, OBJECT_TYPE, ROLE_KEY, SOCKET_CHANEL, SOCKET_NAMESPACE } from 'constant';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface CommentItemProp {
   taskID: React.Key;
   comment: Comment;
+  permission: string;
+  userList: {
+    id: string;
+    name: string;
+    email: string;
+    permission: string;
+  }[];
+  userID: IdentifyId;
   onReply: (id: React.Key) => void;
 }
 
@@ -30,65 +44,41 @@ type TState = {
   newComment: string;
   isReplying: boolean;
   isOpen: boolean;
+  isEdited: boolean;
+  editedContent: string | undefined;
 };
 
-const users = [
-  { id: '1', name: 'A', email: 'a@gmail.com' },
-  { id: '2', name: 'B', email: 'b@gmail.com' },
-  { id: '3', name: 'C', email: 'c@gmail.com' },
-];
-
 export const CommentItem: React.FC<CommentItemProp> = props => {
-  const { taskID, comment, onReply } = props;
+  const { taskID, comment, onReply, permission, userList, userID } = props;
   const [state, setState] = useState<TState>({
     commentList: [],
     newComment: '',
     isReplying: false,
     isOpen: false,
+    isEdited: false,
+    editedContent: undefined,
   });
+  const { isOpen, isEdited, editedContent } = state;
 
-  const { commentList, newComment, isReplying, isOpen } = state;
+  // Services
+  const socket = createSocket(SOCKET_NAMESPACE.COMMENT, taskID, OBJECT_TYPE.TASK);
 
   // Effects
-  //   useEffect(() => {
-  //     setState(prev => ({
-  //       ...prev,
-  //       commentList: allThreadComment,
-  //     }));
-  //   }, [allThreadComment]);
 
   // Handlers
   const getUserName = (userId: React.Key): string => {
-    const user = users.find(u => u.id === String(userId));
+    const user = userList.find(u => u.id === String(userId));
     return user ? user.name : 'Unknown User';
   };
 
-  const onClickAddReply = () => {
-    if (newComment.trim() === '') {
-      return;
-    }
-
-    const socket: Socket = io('http://localhost:4000');
-    socket.emit('comment-sent', {
-      content: newComment,
-      parentId: comment.id,
-    });
-
-    setState(prev => ({
-      ...prev,
-      newComment: '',
-      isReplying: false,
-    }));
-  };
-
-  const onClickAction = (event: MenuInfo, commentID: React.Key) => {
-    if (event.key === MENU_KEY.KEY2) {
-      //onClickBeginRenaming(groupID, groupName);
-    }
+  const onClickAction = (event: MenuInfo) => {
     setState(prev => ({
       ...prev,
       isOpen: false,
     }));
+    if (event.key === MENU_KEY.KEY2) {
+      onClickBeginEditing();
+    }
   };
 
   const onClickChangeOpen = () => {
@@ -123,6 +113,35 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
     // }
   };
 
+  const onClickDeleteComment = () => {
+    socket.emit(SOCKET_CHANEL.DELETE_COMMENT, { id: comment.id });
+  };
+
+  const onClickBeginEditing = () => {
+    setState(prev => ({
+      ...prev,
+      isEdited: true,
+      editedContent: comment.content,
+    }));
+  };
+
+  const onChangeContent = (event: React.ChangeEvent<HTMLInputElement> | undefined) => {
+    setState(prev => ({ ...prev, editedContent: event?.target.value }));
+  };
+
+  const onClickEditComment = () => {
+    socket.emit(SOCKET_CHANEL.EDIT_COMMENT, {
+      id: comment.id,
+      content: editedContent,
+      updated_at: new Date(),
+    });
+    setState(prev => ({
+      ...prev,
+      isEdited: false,
+      editedContent: '',
+    }));
+  };
+
   const items: MenuProps['items'] = [
     {
       label: (
@@ -142,7 +161,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
             Modal.confirm({
               title: 'Are you sure you want to delete this comment?',
               content: (
-                <div className="text-red-500 text-xs">
+                <div className="text-gray-700 text-xs">
                   Deleting this comment will remove all its replies.
                 </div>
               ),
@@ -152,7 +171,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
                   <OkBtn />
                 </>
               ),
-              onOk: () => {},
+              onOk: onClickDeleteComment,
             });
             // }
           }}
@@ -227,34 +246,62 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
         <div className="text-xs text-gray-500">
           {comment.created_at
             ? formatDistanceToNow(new Date(comment.created_at), {
-                addSuffix: true,
+                addSuffix: false,
+                includeSeconds: true,
+                // locale: vi,
               })
             : ''}
         </div>
       </div>
       <div className="mt-2">
         <div className="flex w-full justify-between items-center">
-          <span>{comment.content}</span>
+          {isEdited ? (
+            <Input
+              className="w-full h-full p-0"
+              style={{
+                boxShadow: 'none',
+                borderColor: 'transparent',
+                backgroundColor: 'transparent',
+              }}
+              autoFocus={true}
+              value={editedContent}
+              onChange={onChangeContent}
+              onPressEnter={onClickEditComment}
+              onBlur={() => {
+                setState(prev => ({
+                  ...prev,
+                  isEdited: false,
+                  editID: '',
+                  editedContent: '',
+                }));
+              }}
+            />
+          ) : (
+            <span>{comment.content}</span>
+          )}
+
           <div className="flex gap-1">
             <button onClick={() => onReply(comment.id)}>
               <ReplyIcon />
             </button>
-            <Dropdown
-              key={comment.id}
-              menu={{
-                items,
-                onClick: event => onClickAction(event, comment.id),
-              }}
-              placement="bottomLeft"
-              open={isOpen}
-              trigger={['click']}
-              onOpenChange={onClickChangeOpen}
-            >
-              <MoreIcon
-                className="hover:text-sky-900 hover:brightness-200"
-                onClick={onClickShowDropDown}
-              />
-            </Dropdown>
+            {permission === ROLE_KEY.OWNER || userID === comment.user_id ? (
+              <Dropdown
+                key={comment.id}
+                menu={{
+                  items,
+                  onClick: event => onClickAction(event),
+                }}
+                placement="bottomLeft"
+                open={isOpen}
+                trigger={['click']}
+                onOpenChange={onClickChangeOpen}
+              >
+                <MoreIcon
+                  className="hover:text-sky-900 hover:brightness-200"
+                  onClick={onClickShowDropDown}
+                />
+              </Dropdown>
+            ) : null}
           </div>
         </div>
       </div>

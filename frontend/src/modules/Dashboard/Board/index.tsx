@@ -8,10 +8,10 @@ import { GroupList } from './components/GroupList';
 import { TaskDrawer } from './components/TaskDetailDrawer';
 
 // Constants
-import { OBJECT_TYPE } from 'constants/common';
+import { OBJECT_TYPE } from 'constant';
 
 // Hooks
-import { useGroupList, usePermission, useTaskList } from 'hooks';
+import { usePermission } from 'hooks';
 
 export const Board: React.FC = () => {
   const params = useParams();

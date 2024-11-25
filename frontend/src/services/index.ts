@@ -5,3 +5,4 @@ export * from './board';
 export * from './access';
 export * from './file';
 export * from './socket';
+export * from './comment';

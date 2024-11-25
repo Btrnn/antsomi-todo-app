@@ -3,7 +3,7 @@ import React from 'react';
 import { ConfigProvider } from 'antd';
 
 // Constants
-import { THEME } from '../constants';
+import { THEME } from '../constant';
 
 interface AntdConfigProviderProps {}
 

@@ -6,7 +6,7 @@ import { Select, Typography } from '../../ui';
 import { DeleteIcon, SwitchUserIcon } from '../../icons';
 
 // Constants
-import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
+import { PERMISSION, ROLE_OPTIONS } from 'constant';
 
 // Utils
 import { checkAuthority } from 'utils';

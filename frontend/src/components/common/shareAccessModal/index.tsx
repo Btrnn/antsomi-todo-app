@@ -3,18 +3,22 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
 import { AddIcon, CloseIcon } from '../../icons';
-import { AutoComplete, Input, List, message, Modal, Tag, Typography } from '../../ui';
+import { AutoComplete, Input, List, message, Modal, Tag } from '../../ui';
+import { AccessDropDown } from '../AccessDropdown';
 
 // Constants
-import { PERMISSION, ROLE_KEY, ROLE_OPTIONS } from 'constants/role';
-import { getInfo, shareAccess, updateAccess } from 'services';
+import { PERMISSION, ROLE_KEY } from 'constant';
+
+// Services
+import { getInfo } from 'services';
 
 // Utils
 import { checkAuthority } from 'utils';
 
 // Hooks
 import { useLoggedUser, useUserList } from 'hooks';
-import { AccessDropDown } from '../AccessDropdown';
+
+// Queries
 import { useChangeOwner, useDeleteAccess, useShareAccess, useUpdateAccess } from 'queries';
 
 interface ShareAccessProp {
@@ -247,7 +251,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       Modal.confirm({
         title: "Are you sure you want to remove this user's access?",
         content: (
-          <div className="text-red-500 text-xs">
+          <div className="text-gray-700 text-xs">
             Removing this user&apos;s access will revoke their permissions to this board.
           </div>
         ),
@@ -264,7 +268,7 @@ export const ShareAccessModal: React.FC<ShareAccessProp> = props => {
       Modal.confirm({
         title: 'Are you sure you want to transfer your ownership?',
         content: (
-          <div className="text-red-500 text-xs">
+          <div className="text-gray-700 text-xs">
             This action will grant full control to the new owner, including permissions and
             responsibilities.
           </div>

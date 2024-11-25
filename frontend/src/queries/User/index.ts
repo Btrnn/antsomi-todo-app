@@ -2,7 +2,7 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
 // Constants
-import { QUERY_KEYS } from 'constants/query';
+import { QUERY_KEYS } from 'constant';
 
 // Services
 import { getAllUsers, getInfo, getUserInfo } from 'services';

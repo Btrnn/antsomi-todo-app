@@ -52,7 +52,7 @@ import {
   OBJECT_TYPE,
   PERMISSION,
   ROLE_KEY,
-} from "../../constants";
+} from "../../constant";
 
 // Models
 import { Board } from "models";
@@ -381,7 +381,7 @@ export const Dashboard: React.FC = () => {
       Modal.confirm({
         title: "Are you sure you want to delete this board?",
         content: (
-          <div className="text-red-500 text-xs">
+          <div className="text-gray-700 text-xs">
             Deleting this board will remove all its groups.
           </div>
         ),

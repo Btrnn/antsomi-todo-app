@@ -6,7 +6,7 @@ export interface Comment {
   user_id: React.Key;
   object_type: string;
   content: string;
-  parentId: React.Key | null;
+  parent_id: React.Key | null;
   created_at: string | null;
   updated_at: string | null;
 }

@@ -34,14 +34,13 @@ import { TaskList } from "../TaskList";
 // Providers
 import {
   AppDispatch,
-  setTaskList
 } from "store";
 
 // Models
 import { Group, Task } from "models";
 
 // Constants
-import { MENU_KEY, SORTABLE_TYPE } from "constants/tasks";
+import { MENU_KEY, SORTABLE_TYPE, PERMISSION, ROLE_KEY } from "constant";
 
 // Services
 import {
@@ -49,9 +48,10 @@ import {
 } from "services/task";
 
 // Utils
-import { PERMISSION, ROLE_KEY } from "constants/role";
-import { useCreateTask, useDeleteTaskByGroupID, useUpdateGroup } from "queries";
 import { checkAuthority, getContrastTextColor } from "utils";
+
+// Queries
+import { useCreateTask, useDeleteTaskByGroupID, useUpdateGroup } from "queries";
 
 interface GroupItemProps {
   group: Group | undefined;
@@ -387,7 +387,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
               Modal.confirm({
                 title: "Are you sure you want to clear this group?",
                 content: (
-                  <div className="text-red-500 text-xs">
+                  <div className="text-gray-700 text-xs">
                     All tasks belong to it will be removed.
                   </div>
                 ),
@@ -417,7 +417,7 @@ export const GroupItem: React.FC<GroupItemProps> = (props) => {
               Modal.confirm({
                 title: "Are you sure you want to delete this group?",
                 content: (
-                  <div className="text-red-500 text-xs">
+                  <div className="text-gray-700 text-xs">
                     Deleting this group will remove all its tasks.
                   </div>
                 ),

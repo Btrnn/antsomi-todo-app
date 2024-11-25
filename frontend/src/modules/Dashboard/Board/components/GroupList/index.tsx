@@ -12,10 +12,8 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import type { Active, Over } from '@dnd-kit/core/dist/store/index';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { memo, useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
 
 // Icons
 import { AddIcon } from 'components/icons';
@@ -26,16 +24,15 @@ import { GroupItem } from '../GroupItem';
 import { TaskItem } from '../TaskItem';
 
 // Constants
-import { PERMISSION, ROLE_KEY } from 'constants/role';
-import { SORTABLE_TYPE } from 'constants/tasks';
-
-// Services
-import { updateTask as updatedTaskAPI } from 'services/task';
+import { PERMISSION, ROLE_KEY, SORTABLE_TYPE } from 'constant';
 
 // Models
 import { Group, Task } from 'models';
 
 // Utils
+import { checkAuthority, getContrastTextColor, reorderSingleArray } from 'utils';
+
+// Queries
 import {
   useCreateGroup,
   useDeleteGroup,
@@ -43,12 +40,8 @@ import {
   useReorderTask,
   useUpdateTask,
 } from 'queries';
-import {
-  checkAuthority,
-  getContrastTextColor,
-  reorderDoubleArrays,
-  reorderSingleArray,
-} from 'utils';
+
+// Hooks
 import { useGroupList, useTaskList } from 'hooks';
 
 interface GroupsProps {

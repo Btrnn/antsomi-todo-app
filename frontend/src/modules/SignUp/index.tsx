@@ -31,7 +31,7 @@ import {
 } from 'components/icons';
 
 // Constants
-import { globalToken } from '../../constants';
+import { globalToken } from '../../constant';
 
 // Services
 import { createUser } from 'services/user';
