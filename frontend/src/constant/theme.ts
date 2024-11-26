@@ -17,6 +17,7 @@ export const THEME: ThemeConfig = {
       // colorBgContainer: 'blue',
     },
   },
+  cssVar: true,
   //algorithm: theme.darkAlgorithm,
 };
 

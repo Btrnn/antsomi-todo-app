@@ -1,6 +1,7 @@
 // Libraries
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { MentionsInput, Mention } from "react-mentions";
 
 // Components
 import {
@@ -45,7 +46,7 @@ import {
 
 // Hooks
 import { useAccessList, useLoggedUser, usePermission } from "hooks";
-import { checkAuthority } from "utils";
+import { checkAuthority, formatMentions } from "utils";
 
 interface CommentListProp {
   taskID: IdentifyId;
@@ -87,7 +88,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     replyDescription,
     repliedComment,
     mentionList,
-    isSelecting
+    isSelecting,
   } = state;
 
   // Hooks
@@ -196,8 +197,8 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
   // Handlers
   const onClickStartReply = (commentID: React.Key) => {
     const comment = commentList.find((comment) => comment.id === commentID);
-    const user = accessList.find(user => user.id === comment?.user_id);
-    if(user){
+    const user = accessList.find((user) => user.id === comment?.user_id);
+    if (user) {
       setState((prev) => ({
         ...prev,
         isReplying: true,
@@ -232,18 +233,23 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
   };
 
   const onChangeMentions = (value: string) => {
+    // Extract mentions from the input
+    const currentMentions = value.match(/@\w+/g)?.map((m) => m.slice(1)) || [];
+
     setState((prev) => ({
       ...prev,
       newComment: value,
-    }))
+    }));
   };
 
-  const onClickSelectMention = (option: any) => {
-    setState((prev) => ({
-      ...prev,
-      isSelecting: true,
-      mentionList: [...prev.mentionList, option.key],
-    }));
+  const onSelectMention = (option: any) => {
+    // console.log("onSelectMention:: ", option);
+
+    // setState((prev) => ({
+    //   ...prev,
+    //   isSelecting: true,
+    //   mentionList: [...prev.mentionList, option.key],
+    // }));
   };
 
   return (
@@ -302,20 +308,39 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
               }
               onPressEnter={onClickAddComment}
             /> */}
-            <Mentions
-              className = "outline-none shadow-none items-center h-full p-1"
-              placeholder="Add new comment"
+
+            <MentionsInput
+              className="w-full"
               value={newComment}
+              onChange={(e) => onChangeMentions(e.target.value)}
+            >
+              <Mention
+                trigger="@"
+                data={accessList.map((user) => ({
+                  id: user.id,
+                  display: user.name,
+                }))}
+                renderSuggestion={({ id, display }) => {
+                  console.log("user:: ", user);
+
+                  return <div>{display}</div>;
+                }}
+              />
+            </MentionsInput>
+            {/* <Mentions
+              className="outline-none shadow-none items-center h-full p-1"
+              placeholder="Add new comment"
+              // value={newComment}
               onChange={onChangeMentions}
               ref={sendInputRef}
-              onSelect={(option) => onClickSelectMention(option)}
+              onSelect={(option) => onSelectMention(option)}
               options={accessList.map((user) => ({
                 value: user.name,
                 label: user.name,
                 key: user.id,
               }))}
               onPressEnter={onClickAddComment}
-            />
+            /> */}
             <Button
               className="w-10 h-10"
               onClick={onClickAddComment}

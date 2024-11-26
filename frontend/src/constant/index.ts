@@ -4,3 +4,4 @@ export * from './tasks';
 export * from './query';
 export * from './role';
 export * from './socket';
+export * from './regex';

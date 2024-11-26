@@ -28,7 +28,7 @@ import {
   SOCKET_CHANEL,
   SOCKET_NAMESPACE,
 } from 'constant';
-import { checkAuthority } from 'utils';
+import { checkAuthority, formatMentions } from 'utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -285,7 +285,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
               }}
             />
           ) : (
-            <span>{comment.content}</span>
+            <span>{formatMentions(comment.content || '')}</span>
           )}
 
           <div className="flex gap-1">
