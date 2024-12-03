@@ -166,7 +166,6 @@ export const Dashboard: React.FC = () => {
   } = state;
 
   // Store
-  const dispatch: AppDispatch = useDispatch();
 
   // Hooks
   const location = useLocation();

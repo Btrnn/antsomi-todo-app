@@ -16,7 +16,7 @@ import { createSocket } from 'services';
 import { IdentifyId } from 'types';
 
 // Components
-import { ReplyIcon, MoreIcon, DeleteIcon, EditIcon } from 'components/icons';
+import { ReplyIcon, MoreIcon, DeleteIcon, EditIcon, DoneIcon } from 'components/icons';
 import { Dropdown, Input, MenuInfo, MenuProps, Modal } from 'components/ui';
 
 // Constants
@@ -29,6 +29,9 @@ import {
   SOCKET_NAMESPACE,
 } from 'constant';
 import { checkAuthority, formatMentions } from 'utils';
+import MentionInput from 'components/common/MentionInput';
+import { useAccessList } from 'hooks';
+import { useParams } from 'react-router-dom';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -58,6 +61,9 @@ type TState = {
 
 export const CommentItem: React.FC<CommentItemProp> = props => {
   const { taskID, comment, onReply, permission, userList, userID } = props;
+  const params = useParams();
+
+  // States
   const [state, setState] = useState<TState>({
     commentList: [],
     newComment: '',
@@ -70,6 +76,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
 
   // Services
   const socket = createSocket(SOCKET_NAMESPACE.COMMENT, taskID, OBJECT_TYPE.TASK);
+  const { accessList } = useAccessList(params?.boardId ?? '', OBJECT_TYPE.BOARD);
 
   // Effects
 
@@ -133,8 +140,8 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
     }));
   };
 
-  const onChangeContent = (event: React.ChangeEvent<HTMLInputElement> | undefined) => {
-    setState(prev => ({ ...prev, editedContent: event?.target.value }));
+  const onChangeContent = (newContent: string) => {
+    setState(prev => ({ ...prev, editedContent: newContent }));
   };
 
   const onClickEditComment = () => {
@@ -264,26 +271,17 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
       <div className="mt-2">
         <div className="flex w-full justify-between items-center">
           {isEdited ? (
-            <Input
-              className="w-full h-full p-0"
-              style={{
-                boxShadow: 'none',
-                borderColor: 'transparent',
-                backgroundColor: 'transparent',
-              }}
-              autoFocus={true}
-              value={editedContent}
-              onChange={onChangeContent}
-              onPressEnter={onClickEditComment}
-              onBlur={() => {
-                setState(prev => ({
-                  ...prev,
-                  isEdited: false,
-                  editID: '',
-                  editedContent: '',
-                }));
-              }}
-            />
+            <div className="flex justify-between w-full">
+              <MentionInput
+                editedContent={comment.content}
+                onChangeContent={onChangeContent}
+                userList={accessList}
+              />
+              <DoneIcon
+                className="px-1 hover:text-sky-900 hover:brightness-200"
+                onClick={onClickEditComment}
+              />
+            </div>
           ) : (
             <span>{formatMentions(comment.content || '')}</span>
           )}

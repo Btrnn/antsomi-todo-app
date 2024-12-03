@@ -1,1 +1,1 @@
-export { Mentions, type MentionProps } from 'antd';
+export { Mentions, type MentionProps, type GetProp } from 'antd';

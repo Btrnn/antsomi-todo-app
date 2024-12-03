@@ -47,6 +47,7 @@ import {
 // Hooks
 import { useAccessList, useLoggedUser, usePermission } from "hooks";
 import { checkAuthority, formatMentions } from "utils";
+import MentionInput from "components/common/MentionInput";
 
 interface CommentListProp {
   taskID: IdentifyId;
@@ -57,7 +58,7 @@ type TState = {
   newComment: string;
   treeList: TreeDataNode[];
   isReplying: boolean;
-  replyDescription: string;
+  replyDescription: React.ReactElement | null;
   repliedComment: React.Key | null;
   mentionList: IdentifyId[];
   isSelecting: boolean;
@@ -75,7 +76,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     newComment: "",
     treeList: [],
     isReplying: false,
-    replyDescription: "",
+    replyDescription: null,
     repliedComment: null,
     mentionList: [],
     isSelecting: false,
@@ -101,14 +102,6 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     OBJECT_TYPE.BOARD
   );
   const { user } = useLoggedUser();
-
-  // List
-  const MentionOptions = (): MentionsOptionProps[] => {
-    return accessList.map((user) => ({
-      value: user.id,
-      label: user.name,
-    }));
-  };
 
   // Refs
   const sendInputRef = useRef<any>(null);
@@ -202,9 +195,9 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       setState((prev) => ({
         ...prev,
         isReplying: true,
-        replyDescription: `Replying to: ${comment?.content}`,
+        replyDescription: <span>Replying to: {formatMentions(comment?.content || '')}</span>,
         repliedComment: commentID,
-        newComment: `@${user?.name} ${prev.newComment}`,
+        newComment: `@[${user?.name}](${user?.id}) ${prev.newComment}`,
         mentionList: [...prev.mentionList, user.id],
       }));
     }
@@ -227,15 +220,12 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       ...prev,
       newComment: "",
       isReplying: false,
-      replyDescription: "",
+      replyDescription: null,
       repliedComment: null,
     }));
   };
 
-  const onChangeMentions = (value: string) => {
-    // Extract mentions from the input
-    const currentMentions = value.match(/@\w+/g)?.map((m) => m.slice(1)) || [];
-
+  const onChangeComments = (value: string) => {
     setState((prev) => ({
       ...prev,
       newComment: value,
@@ -282,7 +272,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
                 setState((prev) => ({
                   ...prev,
                   isReplying: false,
-                  replyDescription: "",
+                  replyDescription: null,
                   repliedComment: null,
                 }))
               }
@@ -290,7 +280,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
           </div>
         )}
         {checkAuthority(boardPermission, PERMISSION[ROLE_KEY.COMMENTER]) ? (
-          <div className="w-full gap-x-1 flex">
+          <div className="w-full h-full gap-x-1 flex">
             {/* <Input
               ref={sendInputRef}
               className="p-2"
@@ -309,24 +299,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
               onPressEnter={onClickAddComment}
             /> */}
 
-            <MentionsInput
-              className="w-full"
-              value={newComment}
-              onChange={(e) => onChangeMentions(e.target.value)}
-            >
-              <Mention
-                trigger="@"
-                data={accessList.map((user) => ({
-                  id: user.id,
-                  display: user.name,
-                }))}
-                renderSuggestion={({ id, display }) => {
-                  console.log("user:: ", user);
-
-                  return <div>{display}</div>;
-                }}
-              />
-            </MentionsInput>
+            <MentionInput userList={accessList} editedContent={newComment} onChangeContent={onChangeComments}/>
             {/* <Mentions
               className="outline-none shadow-none items-center h-full p-1"
               placeholder="Add new comment"
