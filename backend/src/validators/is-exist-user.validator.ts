@@ -2,7 +2,7 @@ import { UserEntity } from '@app/modules/user/user.entity';
 import { UserRepository } from '@app/modules/user/user.repository';
 import { UserService } from '@app/modules/user/user.service';
 import { IdentifyId } from '@app/types';
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   isUUID,
@@ -13,10 +13,10 @@ import {
   ValidatorOptions,
 } from 'class-validator';
 
-@ValidatorConstraint({ name: 'IsExistedUser', async: true })
 @Injectable()
+@ValidatorConstraint({ name: 'IsExistedUser', async: true })
 export class IsExistedUserConstraint implements ValidatorConstraintInterface {
-  constructor(@Inject(UserService) private readonly userService: UserService) {}
+  constructor(@Inject(forwardRef(() => UserService))  private readonly userService: UserService) {}
   async validate(id: IdentifyId, args: ValidationArguments): Promise<boolean> {
     if (!isUUID(id)) return false;
     const existUser = await this.userService.findOne(id);

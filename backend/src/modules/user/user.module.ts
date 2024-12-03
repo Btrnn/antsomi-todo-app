@@ -25,7 +25,6 @@ import {
   exports: [UserService],
   controllers: [UserController],
   providers: [
-    TypeOrmModule,
     UserService,
     UserRepository,
     IsValidUsernameConstraint,

@@ -1,7 +1,7 @@
 import { UserEntity } from '@app/modules/user/user.entity';
 import { UserRepository } from '@app/modules/user/user.repository';
 import { UserService } from '@app/modules/user/user.service';
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   registerDecorator,
@@ -11,10 +11,10 @@ import {
   ValidatorOptions,
 } from 'class-validator';
 
-@ValidatorConstraint({ name: 'IsValidUsername', async: true })
 @Injectable()
+@ValidatorConstraint({ name: 'IsValidUsername', async: true })
 export class IsValidUsernameConstraint implements ValidatorConstraintInterface {
-  constructor(@Inject(UserService) private readonly userService: UserService) {}
+  constructor(@Inject(forwardRef(() => UserService))  private readonly userService: UserService) {}
   async validate(
     username: string,
     args: ValidationArguments,

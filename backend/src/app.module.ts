@@ -4,8 +4,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import 'dotenv/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 // Controllers
+import { UserController } from './modules/user/user.controller';
 import { AppController } from './app.controller';
 
 // Services
@@ -14,29 +17,20 @@ import { AppService } from './app.service';
 // Modules
 import { TaskModule } from '@app/modules/task/task.module';
 import { GroupModule } from '@app/modules/group/group.module';
-import { BoardService } from './modules/board/board.service';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CaslModule } from './casl/casl.module';
+import { BoardModule } from './modules/board/board.module';
+import { CommentModule } from './modules/comment/comment.module';
+import { FileModule } from './modules/file/file.module';
+import { ShareAccessModule } from './modules/share_access/share_access.module';
 
 // Guards
 import { AuthGuard } from './modules/auth/auth.guard';
 
 // Interceptors
 import { ResponseFormatInterceptor } from './interceptors/response-format.interceptor';
-import { BoardController } from './modules/board/board.controller';
-import { BoardModule } from './modules/board/board.module';
-import { ShareAccessModule } from './modules/share_access/share_access.module';
-import { UserEntity } from './modules/user/user.entity';
-import { UserController } from './modules/user/user.controller';
 import { UserService } from './modules/user/user.service';
-import { FileModule } from './modules/file/file.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-import { CommentGateway } from './modules/comment/comment.gateway';
-import { CommentService } from './modules/comment/comment.service';
-import { CommentController } from './modules/comment/comment.controller';
-import { CommentModule } from './modules/comment/comment.module';
 
 @Module({
   imports: [
