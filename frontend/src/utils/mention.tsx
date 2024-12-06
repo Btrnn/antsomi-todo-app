@@ -22,7 +22,7 @@ export const formatMentions = (text: string) => {
             style={{ color: globalToken.colorPrimary }}
             className="font-bold cursor-pointer bg-blue-200 px-1 rounded-md"
           >
-            {name}
+            @{name}
           </span>
         </Tooltip>
       );

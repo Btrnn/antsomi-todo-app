@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+// Components
+import { Features, Footer, Hero } from './components';
+
 interface AboutProps {}
 
 export const About: React.FC<AboutProps> = props => {
@@ -36,29 +39,10 @@ export const About: React.FC<AboutProps> = props => {
   };
 
   return (
-    <div>
-      <h1>About</h1>
-
-      {/* Display messages received from the server */}
-      <div>
-        <h3>Messages:</h3>
-        <div>
-          {response.map((msg, index) => (
-            <li key={index}>{msg}</li>
-          ))}
-        </div>
-      </div>
-
-      {/* Input to type the message */}
-      <div>
-        <input
-          type="text"
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          placeholder="Type a message"
-        />
-        <button onClick={sendMessage}>Send Message</button>
-      </div>
+    <div className="h-screen flex flex-col justify-between">
+      <Hero />
+      <Features />
+      <Footer />
     </div>
   );
 };
