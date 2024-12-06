@@ -22,6 +22,8 @@ import {
   TreeDataNode,
 } from "components/ui";
 import { CommentItem } from "./CommentItem";
+import MentionInput from "components/common/MentionInput";
+
 
 // Services
 import { createSocket, getAllComments } from "services";
@@ -46,8 +48,9 @@ import {
 
 // Hooks
 import { useAccessList, useLoggedUser, usePermission } from "hooks";
+
+// Utils
 import { checkAuthority, formatMentions } from "utils";
-import MentionInput from "components/common/MentionInput";
 
 interface CommentListProp {
   taskID: IdentifyId;
@@ -209,7 +212,6 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     if (!newComment.trim()) {
       return;
     }
-
     socket.emit(SOCKET_COMMENT_CHANEL.CREATE_COMMENT, {
       content: newComment,
       parent_id: repliedComment,
@@ -230,16 +232,6 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       ...prev,
       newComment: value,
     }));
-  };
-
-  const onSelectMention = (option: any) => {
-    // console.log("onSelectMention:: ", option);
-
-    // setState((prev) => ({
-    //   ...prev,
-    //   isSelecting: true,
-    //   mentionList: [...prev.mentionList, option.key],
-    // }));
   };
 
   return (
@@ -281,7 +273,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
         )}
         {checkAuthority(boardPermission, PERMISSION[ROLE_KEY.COMMENTER]) ? (
           <div className="w-full h-full gap-x-1 flex">
-            <MentionInput isEdit={false} userList={accessList} editedContent={newComment} onChangeContent={onChangeComments}/>
+            <MentionInput isEdit={false} userList={accessList} editedContent={newComment} onChangeContent={onChangeComments} onEnter={onClickAddComment}/>
             <Button
               className="w-10 h-10"
               onClick={onClickAddComment}

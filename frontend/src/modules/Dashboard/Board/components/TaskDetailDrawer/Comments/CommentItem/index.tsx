@@ -276,6 +276,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
                 onChangeContent={onChangeContent}
                 userList={accessList}
                 isEdit={true}
+                onEnter={onClickEditComment}
                 //onBlur={onClickEditComment}
               />
               <DoneIcon
