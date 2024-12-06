@@ -5,7 +5,7 @@ import React from 'react';
 import { globalToken, REGEX } from 'constant';
 
 // Components
-import { Tooltip } from 'components/ui';
+import { Tag, Tooltip } from 'components/ui';
 
 export const formatMentions = (text: string) => {
   return text.split(REGEX.MENTION).map((part, index) => {
@@ -15,12 +15,14 @@ export const formatMentions = (text: string) => {
 
       return (
         <Tooltip key={id} title={name}>
-          <span
+          <Tag
+            bordered={false}
+            className="justify-center font-bold"
             style={{ color: globalToken.colorPrimary }}
-            className="font-bold cursor-pointer bg-blue-200 px-[6px] rounded-md"
+            color="blue"
           >
             @{name}
-          </span>
+          </Tag>
         </Tooltip>
       );
     }

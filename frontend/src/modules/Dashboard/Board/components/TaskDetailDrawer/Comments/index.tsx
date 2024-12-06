@@ -239,7 +239,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       <div className="overflow-auto h-full w-full">
         {treeList.length === 0 ? (
           <Empty
-            className="flex h-full items-center justify-center"
+            className="flex flex-col h-full items-center justify-center"
             description="No comments yet"
           />
         ) : (
