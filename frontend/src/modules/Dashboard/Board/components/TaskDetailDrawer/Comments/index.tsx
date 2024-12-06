@@ -40,7 +40,7 @@ import {
   OBJECT_TYPE,
   PERMISSION,
   ROLE_KEY,
-  SOCKET_CHANEL,
+  SOCKET_COMMENT_CHANEL,
   SOCKET_NAMESPACE,
 } from "constant";
 
@@ -150,14 +150,14 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
   // Effects
   useEffect(() => {
     getCommentList();
-    socket.on(SOCKET_CHANEL.COMMENT_CREATED, (data: any) => {
+    socket.on(SOCKET_COMMENT_CHANEL.COMMENT_CREATED, (data: any) => {
       setState((prev) => ({
         ...prev,
         commentList: [...prev.commentList, data],
       }));
     });
 
-    socket.on(SOCKET_CHANEL.COMMENT_EDITED, (data: any) => {
+    socket.on(SOCKET_COMMENT_CHANEL.COMMENT_EDITED, (data: any) => {
       setState((prev) => ({
         ...prev,
         commentList: prev.commentList.map((comment) =>
@@ -166,7 +166,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       }));
     });
 
-    socket.on(SOCKET_CHANEL.COMMENT_DELETED, (data: IdentifyId) => {
+    socket.on(SOCKET_COMMENT_CHANEL.COMMENT_DELETED, (data: IdentifyId) => {
       setState((prev) => ({
         ...prev,
         commentList: prev.commentList.filter((comment) => comment.id !== data),
@@ -174,9 +174,9 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
     });
 
     return () => {
-      socket.off(SOCKET_CHANEL.COMMENT_CREATED);
-      socket.off(SOCKET_CHANEL.COMMENT_DELETED);
-      socket.off(SOCKET_CHANEL.COMMENT_EDITED);
+      socket.off(SOCKET_COMMENT_CHANEL.COMMENT_CREATED);
+      socket.off(SOCKET_COMMENT_CHANEL.COMMENT_DELETED);
+      socket.off(SOCKET_COMMENT_CHANEL.COMMENT_EDITED);
     };
   }, []);
 
@@ -210,7 +210,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
       return;
     }
 
-    socket.emit(SOCKET_CHANEL.CREATE_COMMENT, {
+    socket.emit(SOCKET_COMMENT_CHANEL.CREATE_COMMENT, {
       content: newComment,
       parent_id: repliedComment,
       updated_at: null,
@@ -281,39 +281,7 @@ export const CommentList: React.FC<CommentListProp> = (props) => {
         )}
         {checkAuthority(boardPermission, PERMISSION[ROLE_KEY.COMMENTER]) ? (
           <div className="w-full h-full gap-x-1 flex">
-            {/* <Input
-              ref={sendInputRef}
-              className="p-2"
-              style={{
-                outline: "none",
-                boxShadow: "none",
-              }}
-              placeholder="Add new comment"
-              value={newComment}
-              onChange={(e) =>
-                setState((prev) => ({
-                  ...prev,
-                  newComment: e.target.value,
-                }))
-              }
-              onPressEnter={onClickAddComment}
-            /> */}
-
-            <MentionInput userList={accessList} editedContent={newComment} onChangeContent={onChangeComments}/>
-            {/* <Mentions
-              className="outline-none shadow-none items-center h-full p-1"
-              placeholder="Add new comment"
-              // value={newComment}
-              onChange={onChangeMentions}
-              ref={sendInputRef}
-              onSelect={(option) => onSelectMention(option)}
-              options={accessList.map((user) => ({
-                value: user.name,
-                label: user.name,
-                key: user.id,
-              }))}
-              onPressEnter={onClickAddComment}
-            /> */}
+            <MentionInput isEdit={false} userList={accessList} editedContent={newComment} onChangeContent={onChangeComments}/>
             <Button
               className="w-10 h-10"
               onClick={onClickAddComment}

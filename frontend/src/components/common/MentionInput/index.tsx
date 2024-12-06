@@ -1,5 +1,8 @@
-import React, { Component, LegacyRef, RefObject, useEffect, useRef, useState } from 'react';
-import { MentionsInput, Mention, MentionsInputProps } from 'react-mentions';
+// Libraries
+import React, { useEffect, useRef, useState } from 'react';
+import { MentionsInput, Mention } from 'react-mentions';
+
+// Styled
 import { MentionInputWrapper } from './styled';
 
 interface MentionInputProp {
@@ -11,7 +14,8 @@ interface MentionInputProp {
   }[];
   editedContent: string;
   onChangeContent: (newContent: string) => void;
-  //onClickEditComment: () => void;
+  isEdit: boolean;
+  //onBlur: () => void;
 }
 
 type TState = {
@@ -19,7 +23,7 @@ type TState = {
 };
 
 const MentionInput: React.FC<MentionInputProp> = props => {
-  const { editedContent, onChangeContent, userList } = props;
+  const { editedContent, onChangeContent, userList, isEdit } = props;
   const currentCommentRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<TState>({
@@ -28,7 +32,7 @@ const MentionInput: React.FC<MentionInputProp> = props => {
   const { newComment } = state;
 
   const onChangeMentions = (value: string) => {
-    const currentMentions = value.match(/@\w+/g)?.map(m => m.slice(1)) || [];
+    //const currentMentions = value.match(/@\w+/g)?.map(m => m.slice(1)) || [];
     setState(prev => ({
       ...prev,
       newComment: value,
@@ -52,7 +56,20 @@ const MentionInput: React.FC<MentionInputProp> = props => {
   }, [editedContent]);
 
   return (
-    <MentionInputWrapper ref={currentCommentRef}>
+    <MentionInputWrapper
+      ref={currentCommentRef}
+      className="overflow-auto"
+      style={
+        !isEdit
+          ? {
+              border: '1px solid var(--ant-color-border)',
+              borderRadius: 'var(--ant-border-radius)',
+              padding: '0.5rem',
+            }
+          : {}
+      }
+      onKeyDown={e => console.log(e)}
+    >
       <MentionsInput
         className="w-full"
         value={newComment}
@@ -61,7 +78,7 @@ const MentionInput: React.FC<MentionInputProp> = props => {
           onChangeMentions(e.target.value);
         }}
         placeholder="Write your comment here..."
-        // onBlur={ }
+        //onBlur={onBlur}
       >
         <Mention
           trigger="@"
@@ -69,12 +86,11 @@ const MentionInput: React.FC<MentionInputProp> = props => {
             id: user.id,
             display: user.name,
           }))}
-          className="text-blue-400 px-2 font-bold"
+          // className="text-blue-400 px-2 font-bold"
           renderSuggestion={({ id, display }) => {
             return <div className="p-2">{display}</div>;
           }}
           // onAdd={}
-
         />
       </MentionsInput>
     </MentionInputWrapper>

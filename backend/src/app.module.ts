@@ -31,6 +31,9 @@ import { AuthGuard } from './modules/auth/auth.guard';
 // Interceptors
 import { ResponseFormatInterceptor } from './interceptors/response-format.interceptor';
 import { UserService } from './modules/user/user.service';
+import { NotificationGateway } from './modules/notification/notification.gateway';
+import { NotificationController } from './modules/notification/notification.controller';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -61,6 +64,7 @@ import { UserService } from './modules/user/user.service';
     CaslModule,
     FileModule,
     CommentModule,
+    NotificationModule,
   ],
   controllers: [AppController, UserController],
   providers: [

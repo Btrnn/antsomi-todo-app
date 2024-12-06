@@ -8,7 +8,6 @@ export const About: React.FC<AboutProps> = props => {
   // State to store messages from the server
   const [response, setResponse] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
-
   // Create a socket connection and handle events
   useEffect(() => {
     //console.log('message: ', message);

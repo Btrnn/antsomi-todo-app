@@ -6,8 +6,10 @@ export const MentionInputWrapper = styled.div`
   border: none;
   outline: none;
   box-shadow: none;
+  display: flex;
 
   textarea {
+    width: 100%;
     border: none;
     outline: none;
     box-shadow: none;

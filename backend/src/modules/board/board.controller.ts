@@ -15,8 +15,7 @@ import { BoardService } from './board.service';
 import { IdentifyId, UserRequest } from '@app/types';
 
 // Decorators
-import { User } from '@app/decorators';
-import { RequiresPermission } from '@app/decorators/authorize.decorator';
+import { User, RequiresPermission } from '@app/decorators';
 
 // Constants
 import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';

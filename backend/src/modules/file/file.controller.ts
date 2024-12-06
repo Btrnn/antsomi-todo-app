@@ -11,9 +11,15 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 // Constants
 import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+
+// Services
 import { FileService } from './file.service';
+
+// Types
 import { IdentifyId } from '@app/types';
-import { RequiresPermission } from '@app/decorators/authorize.decorator';
+
+// Decorators
+import { RequiresPermission } from '@app/decorators';
 
 @Controller(ROUTES.FILE)
 export class FileController {

@@ -16,7 +16,10 @@ import {
 @Injectable()
 @ValidatorConstraint({ name: 'IsExistedUser', async: true })
 export class IsExistedUserConstraint implements ValidatorConstraintInterface {
-  constructor(@Inject(forwardRef(() => UserService))  private readonly userService: UserService) {}
+  constructor(
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+  ) {}
   async validate(id: IdentifyId, args: ValidationArguments): Promise<boolean> {
     if (!isUUID(id)) return false;
     const existUser = await this.userService.findOne(id);
