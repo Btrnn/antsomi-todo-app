@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+// Components
+import { Features, Footer, Hero } from './components';
+
 interface AboutProps {}
 
 export const About: React.FC<AboutProps> = props => {
@@ -35,6 +38,14 @@ export const About: React.FC<AboutProps> = props => {
     socket.emit('message', message);
     setMessage('');
   };
+
+  return (
+    <div className="h-screen flex flex-col justify-between">
+      <Hero />
+      <Features />
+      <Footer />
+    </div>
+  );
 
   return (
     <div>
