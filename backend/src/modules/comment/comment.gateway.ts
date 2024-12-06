@@ -102,11 +102,13 @@ export class CommentGateway
   @RequiresPermission(ROLE.VIEWER, OBJECT_TYPE.BOARD)
   async handleConnection(client: Socket) {
     const object = client.handshake.query[SOCKET_QUERY_KEY.OBJECT];
-    const chanel = JSON.parse(object as string).id;
-    client.join(chanel);
+    if (object) {
+      const chanel = JSON.parse(object as string).id;
+      client.join(chanel);
+    }
   }
 
-  handleDisconnect(client: Socket) { 
+  handleDisconnect(client: Socket) {
     //console.log(`Client disconnected: ${client.id}`);
   }
 
