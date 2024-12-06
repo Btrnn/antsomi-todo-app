@@ -58,7 +58,7 @@ const MentionInput: React.FC<MentionInputProp> = props => {
   return (
     <MentionInputWrapper
       ref={currentCommentRef}
-      className="overflow-auto"
+      // /className="overflow-x-auto"
       style={
         !isEdit
           ? {

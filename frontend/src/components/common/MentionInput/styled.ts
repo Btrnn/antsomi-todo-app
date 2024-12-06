@@ -14,7 +14,6 @@ export const MentionInputWrapper = styled.div`
     outline: none;
     box-shadow: none;
     resize: none;
-    overflow: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
