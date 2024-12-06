@@ -26,17 +26,16 @@ export const SOCKET_QUERY_KEY = {
   OBJECT: 'object',
 };
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 export const SOCKET_GATEWAY = {
   NAMESPACE: {
     COMMENT: 'comment',
     NOTIFICATION: 'notification',
   },
   CORS: {
-    ORIGIN: isProduction
-      ? 'https://antsomi-todo.vercel.app'
-      : 'http://localhost:3001',
+    ORIGIN:
+      process.env.NODE_ENV === 'production'
+        ? 'https://antsomi-todo.vercel.app'
+        : 'http://localhost:3001',
     METHODS: ['GET', 'POST'],
     ALLOWED_HEADERS: ['Content-Type', 'Authorization'],
   },
