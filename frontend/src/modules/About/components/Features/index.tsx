@@ -2,18 +2,18 @@ import React from 'react';
 
 const features = [
   {
-    title: 'Dễ dàng sử dụng',
-    description: 'Giao diện thân thiện và dễ dùng cho mọi đối tượng.',
+    title: 'Easy to Use',
+    description: 'A user-friendly interface for everyone.',
     icon: '📝',
   },
   {
-    title: 'Tổ chức hiệu quả',
-    description: 'Sắp xếp công việc theo danh mục và ưu tiên.',
+    title: 'Organized Effectively',
+    description: 'Categorize and prioritize tasks with ease.',
     icon: '📂',
   },
   {
-    title: 'Nhắc nhở thông minh',
-    description: 'Không bao giờ quên nhiệm vụ với tính năng nhắc nhở.',
+    title: 'Smart Reminders',
+    description: 'Never miss a task with our reminder feature.',
     icon: '⏰',
   },
 ];
@@ -22,7 +22,7 @@ export function Features() {
   return (
     <div className="py-16 bg-gray-100">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Tính năng nổi bật</h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Key Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div key={index} className="bg-white p-6 rounded-lg shadow-lg text-center">

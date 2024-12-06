@@ -7,10 +7,10 @@ export function Footer() {
         <p className="text-sm">© 2024 To-Do App. All rights reserved.</p>
         <div className="flex justify-center space-x-4 mt-4">
           <a href="#" className="text-gray-400 hover:text-white">
-            Chính sách bảo mật
+            Privacy Policy
           </a>
           <a href="#" className="text-gray-400 hover:text-white">
-            Điều khoản sử dụng
+            Terms of Use
           </a>
         </div>
       </div>
