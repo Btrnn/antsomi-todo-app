@@ -29,9 +29,6 @@ import { ObjectRequest, UserRequest } from '@app/types';
 // Services
 import { CommentService } from './comment.service';
 
-// Entity
-import { CommentEntity } from './comment.entity';
-
 // DTOs
 import { CommentCreateDto, CommentDeleteDto, CommentEditDto } from './dto';
 
@@ -111,18 +108,4 @@ export class CommentGateway
   handleDisconnect(client: Socket) {
     //console.log(`Client disconnected: ${client.id}`);
   }
-
-  // @SubscribeMessage(SOCKET_CHANEL.CHANGE_ROOM)
-  // handleChangeRoom(client: Socket, @Object() object: ObjectRequest) {
-  //   console.log('🚀 ~ handleChangeRoom ~ object:', object);
-  //   console.log('🚀 ~ handleChangeRoom ~ client:', client.rooms);
-  //   // client.leave(client.rooms[0]);
-  //   // client.join(object.id);
-  // }
-
-  // @SubscribeMessage('events')
-  // handleEvent(@MessageBody() data: string): string {
-  //   console.log(data);
-  //   return `Event received: ${data}`;
-  // }
 }

@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect, useRef, useState } from 'react';
-import { MentionsInput, Mention } from 'react-mentions';
+import { MentionsInput, Mention, OnChangeHandlerFunc } from 'react-mentions';
 
 // Styled
 import { MentionInputWrapper } from './styled';
@@ -15,6 +15,7 @@ interface MentionInputProp {
   editedContent: string;
   onChangeContent: (newContent: string) => void;
   isEdit: boolean;
+  onEnter: () => void;
   //onBlur: () => void;
 }
 
@@ -23,7 +24,7 @@ type TState = {
 };
 
 const MentionInput: React.FC<MentionInputProp> = props => {
-  const { editedContent, onChangeContent, userList, isEdit } = props;
+  const { editedContent, onChangeContent, userList, isEdit, onEnter } = props;
   const currentCommentRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<TState>({
@@ -31,12 +32,14 @@ const MentionInput: React.FC<MentionInputProp> = props => {
   });
   const { newComment } = state;
 
-  const onChangeMentions = (value: string) => {
-    //const currentMentions = value.match(/@\w+/g)?.map(m => m.slice(1)) || [];
-    setState(prev => ({
-      ...prev,
-      newComment: value,
-    }));
+  const onChangeComment = (e: { target: { value: string } }) => {
+    if (e.target.value !== '\n') {
+      onChangeContent(e.target.value);
+      setState(prev => ({
+        ...prev,
+        newComment: e.target.value,
+      }));
+    }
   };
 
   useEffect(() => {
@@ -68,15 +71,20 @@ const MentionInput: React.FC<MentionInputProp> = props => {
             }
           : {}
       }
-      onKeyDown={e => console.log(e)}
+      onKeyDown={e => {
+        if (e.key === 'Enter') {
+          onEnter();
+          setState(prev => ({
+            ...prev,
+            newComment: '',
+          }));
+        }
+      }}
     >
       <MentionsInput
         className="w-full"
         value={newComment}
-        onChange={e => {
-          onChangeContent(e.target.value);
-          onChangeMentions(e.target.value);
-        }}
+        onChange={onChangeComment}
         placeholder="Write your comment here..."
         //onBlur={onBlur}
       >

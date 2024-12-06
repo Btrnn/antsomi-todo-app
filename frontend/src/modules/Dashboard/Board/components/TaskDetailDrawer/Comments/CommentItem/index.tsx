@@ -112,7 +112,6 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
   };
 
   const onClickShowDropDown = () => {
-    // if (checkAuthority(permission, PERMISSION[ROLE_KEY.EDITOR])) {
     if (!isOpen) {
       setState(prev => ({
         ...prev,
@@ -124,7 +123,6 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
         isOpen: false,
       }));
     }
-    // }
   };
 
   const onClickDeleteComment = () => {
@@ -157,15 +155,19 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
   };
 
   const items: MenuProps['items'] = [
-    {
-      label: (
-        <div className="flex p-2">
-          <EditIcon className="mr-3" />
-          <div>Edit</div>
-        </div>
-      ),
-      key: MENU_KEY.KEY2,
-    },
+    ...(userID === comment.user_id
+      ? [
+          {
+            label: (
+              <div className="flex p-2">
+                <EditIcon className="mr-3" />
+                <div>Edit</div>
+              </div>
+            ),
+            key: MENU_KEY.KEY2,
+          },
+        ]
+      : []),
     {
       label: (
         <div
@@ -198,61 +200,6 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
     },
   ];
 
-  //   useEffect(() => {
-  //     socket.on("comment-received", (data: string) => {
-  //       const newId = comments.length + 1;
-  //       const newCommentObj: Comment = {
-  //         id: newId,
-  //         object_id: taskID,
-  //         user_id: Math.floor(Math.random() * 3) + 1,
-  //         object_type: "task",
-  //         content: data,
-  //         parentId: null,
-  //         threadId: newId,
-  //         created_at: new Date().toISOString(),
-  //         updated_at: new Date().toISOString(),
-  //       };
-  //       setState((prev) => ({
-  //         ...prev,
-  //         commentList: [...prev.commentList, newCommentObj],
-  //       }));
-  //     });
-
-  //     return () => {
-  //       socket.off("comment-received");
-  //     };
-  //   }, []);
-
-  // const sendMessage = () => {
-  //   const socket: Socket = io('http://localhost:4000');
-  //   // const commentData: Omit<Comment, 'id' | 'created_at' | 'user_id'> = {
-  //   //   object_id: taskID,
-
-  //   // };
-  //   socket.emit('comment', message);
-  //   setMessage('');
-  // };
-
-  // Handlers
-  //   const handleAddComment = () => {
-  //     if (newComment.trim() === "") {
-  //       return;
-  //     }
-
-  //     const socket: Socket = io("http://localhost:4000");
-  //     socket.emit("comment-sent", newComment);
-
-  //     setState((prev) => ({
-  //       ...prev,
-  //       newComment: "",
-  //     }));
-  //   };
-
-  //   const getUserName = (userId: React.Key): string => {
-  //     const user = users.find((u) => u.id === String(userId));
-  //     return user ? user.name : "Unknown User";
-  //   };
-
   return (
     <div className="w-full mb-2 p-[6px]">
       <div className="flex w-full justify-between items-center">
@@ -276,6 +223,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
                 onChangeContent={onChangeContent}
                 userList={accessList}
                 isEdit={true}
+                onEnter={onClickEditComment}
                 //onBlur={onClickEditComment}
               />
               <DoneIcon

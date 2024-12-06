@@ -273,12 +273,7 @@ export const Dashboard: React.FC = () => {
   // Handles
   const onClickSelectBoard = async (objectID: IdentifyId) => {
     try {
-      //const userPermission = await getPermission(objectID);
       navigate(`/dashboard/board/${objectID}`);
-      // setState((prev) => ({
-      //   ...prev,
-      //   userPermission: userPermission.data,
-      // }));
     } catch (error) {
       messageCreate.open({
         type: "error",
@@ -397,15 +392,9 @@ export const Dashboard: React.FC = () => {
       setState((prev) => ({
         ...prev,
         isSharing: true,
-        //currentObjectId: boardID as string,
         boardSharedName: boardName,
         targetObjectId: boardID as string,
       }));
-
-      // messageCreate.open({
-      //   type: "error",
-      //   content: error as string,
-      // });
     }
   };
 
@@ -418,17 +407,6 @@ export const Dashboard: React.FC = () => {
       isSharing: false,
     }));
   };
-
-  // const onShareComplete = async () => {
-  //   try {
-  //     const accessList = await getAccessList(currentObjectId, OBJECT_TYPE.BOARD);
-  //   } catch (error) {
-  //     messageCreate.open({
-  //       type: "error",
-  //       content: error as string,
-  //     });
-  //   }
-  // };
 
   // Handle "RENAME"
   const onClickBeginRenaming = (objectID: React.Key, objectName: string) => {
@@ -598,9 +576,6 @@ export const Dashboard: React.FC = () => {
                       autoFocus={true}
                       onBlur={onClickAddBoard}
                     />
-                    {/* <div className="p-[10px] w-full text-[#595959]">
-                      Press Enter to create new board
-                    </div> */}
                   </div>
                 ) : (
                   <Button
