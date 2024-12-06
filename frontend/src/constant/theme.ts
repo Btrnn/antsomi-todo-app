@@ -7,6 +7,7 @@ export const THEME: ThemeConfig = {
     colorPrimary: '#005fb8',
     colorInfo: '#005fb8',
     borderRadius: 10,
+    colorBorder: '#d9d9d9',
   },
   components: {
     Tag: {

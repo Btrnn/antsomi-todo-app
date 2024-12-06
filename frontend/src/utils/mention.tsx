@@ -18,8 +18,11 @@ export const formatMentions = (text: string) => {
 
       return (
         <Tooltip key={id} title={name}>
-          <span style={{ color: globalToken.colorPrimary }} className="font-bold cursor-pointer">
-            {name}
+          <span
+            style={{ color: globalToken.colorPrimary }}
+            className="font-bold cursor-pointer bg-blue-200 px-1 rounded-md"
+          >
+            @{name}
           </span>
         </Tooltip>
       );

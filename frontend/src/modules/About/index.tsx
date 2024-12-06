@@ -11,7 +11,6 @@ export const About: React.FC<AboutProps> = props => {
   // State to store messages from the server
   const [response, setResponse] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
-
   // Create a socket connection and handle events
   useEffect(() => {
     //console.log('message: ', message);
@@ -44,33 +43,6 @@ export const About: React.FC<AboutProps> = props => {
       <Hero />
       <Features />
       <Footer />
-    </div>
-  );
-
-  return (
-    <div>
-      <h1>About</h1>
-
-      {/* Display messages received from the server */}
-      <div>
-        <h3>Messages:</h3>
-        <div>
-          {response.map((msg, index) => (
-            <li key={index}>{msg}</li>
-          ))}
-        </div>
-      </div>
-
-      {/* Input to type the message */}
-      <div>
-        <input
-          type="text"
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          placeholder="Type a message"
-        />
-        <button onClick={sendMessage}>Send Message</button>
-      </div>
     </div>
   );
 };

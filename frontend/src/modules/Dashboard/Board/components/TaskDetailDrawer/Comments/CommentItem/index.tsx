@@ -1,7 +1,6 @@
 // Libraries
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -17,7 +16,7 @@ import { IdentifyId } from 'types';
 
 // Components
 import { ReplyIcon, MoreIcon, DeleteIcon, EditIcon, DoneIcon } from 'components/icons';
-import { Dropdown, Input, MenuInfo, MenuProps, Modal } from 'components/ui';
+import { Dropdown, MenuInfo, MenuProps, Modal } from 'components/ui';
 
 // Constants
 import {
@@ -25,7 +24,7 @@ import {
   OBJECT_TYPE,
   PERMISSION,
   ROLE_KEY,
-  SOCKET_CHANEL,
+  SOCKET_COMMENT_CHANEL,
   SOCKET_NAMESPACE,
 } from 'constant';
 import { checkAuthority, formatMentions } from 'utils';
@@ -129,7 +128,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
   };
 
   const onClickDeleteComment = () => {
-    socket.emit(SOCKET_CHANEL.DELETE_COMMENT, { id: comment.id });
+    socket.emit(SOCKET_COMMENT_CHANEL.DELETE_COMMENT, { id: comment.id });
   };
 
   const onClickBeginEditing = () => {
@@ -145,7 +144,7 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
   };
 
   const onClickEditComment = () => {
-    socket.emit(SOCKET_CHANEL.EDIT_COMMENT, {
+    socket.emit(SOCKET_COMMENT_CHANEL.EDIT_COMMENT, {
       id: comment.id,
       content: editedContent,
       updated_at: new Date(),
@@ -276,6 +275,8 @@ export const CommentItem: React.FC<CommentItemProp> = props => {
                 editedContent={comment.content}
                 onChangeContent={onChangeContent}
                 userList={accessList}
+                isEdit={true}
+                //onBlur={onClickEditComment}
               />
               <DoneIcon
                 className="px-1 hover:text-sky-900 hover:brightness-200"

@@ -1,7 +1,16 @@
-import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+// Libraries
 import { Controller, Get, Query } from '@nestjs/common';
+
+// Constants
+import { OBJECT_TYPE, PARAM_KEY, ROLE, ROUTES } from '@app/constants';
+
+// Services
 import { CommentService } from './comment.service';
-import { RequiresPermission } from '@app/decorators/authorize.decorator';
+
+// Decorators
+import { RequiresPermission } from '@app/decorators';
+
+// Types
 import { IdentifyId } from '@app/types';
 
 @Controller(ROUTES.COMMENT)
